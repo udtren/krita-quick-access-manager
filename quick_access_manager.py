@@ -168,12 +168,18 @@ class QuickAccessDockerWidget(QDockWidget):
         self.data_file = os.path.join(os.path.dirname(__file__), "grids_data.json")
         self.preset_dict = Krita.instance().resources('preset')
         self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
+        self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
         self.init_ui()
 
     def save_grids_data(self):
         save_grids_data(self.data_file, self.grids)
 
+
+    def save_grids_data(self):
+        save_grids_data(self.data_file, self.grids)
+
     def load_grids_data(self):
+        self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
         self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
 
     def init_ui(self):
