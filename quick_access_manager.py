@@ -4,6 +4,7 @@ from krita import Extension, DockWidgetFactory, DockWidgetFactoryBase, Krita
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget, QScrollArea, QHBoxLayout, QInputDialog, QApplication
 from PyQt5.QtCore import Qt, QMimeData, QPoint
 from PyQt5.QtGui import QIcon, QPixmap, QDrag
+from .data_manager import load_grids_data, save_grids_data
 
 class DraggableBrushButton(QPushButton):
     def __init__(self, preset, grid_info, parent_docker):
@@ -206,56 +207,14 @@ class QuickAccessDockerWidget(QDockWidget):
         self.grid_counter = 0
         self.data_file = os.path.join(os.path.dirname(__file__), "grids_data.json")
         self.preset_dict = Krita.instance().resources('preset')
-        self.load_grids_data()
+        self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
         self.init_ui()
-    
-    def load_grids_data(self):
-        # Load grid/brush info from file
-        self.grids = []
-        self.grid_counter = 0
-        if os.path.exists(self.data_file):
-            try:
-                with open(self.data_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                for grid_data in data.get("grids", []):
-                    self.grid_counter += 1
-                    grid_name = grid_data.get("name", f"Grid {self.grid_counter}")
-                    brush_names = grid_data.get("brush_presets", [])
-                    brush_presets = []
-                    for name in brush_names:
-                        preset = self.preset_dict.get(name)
-                        if preset:
-                            brush_presets.append(preset)
-                    grid_info = {
-                        'container': None,
-                        'widget': None,
-                        'layout': None,
-                        'name_label': None,
-                        'rename_button': None,
-                        'name': grid_name,
-                        'brush_presets': brush_presets,
-                        'is_active': False
-                    }
-                    self.grids.append(grid_info)
-            except Exception:
-                pass
-    
+
     def save_grids_data(self):
-        # Save grid/brush info to file
-        data = {
-            "grids": [
-                {
-                    "name": grid['name'],
-                    "brush_presets": [p.name() for p in grid['brush_presets']]
-                }
-                for grid in self.grids
-            ]
-        }
-        try:
-            with open(self.data_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-        except Exception:
-            pass
+        save_grids_data(self.data_file, self.grids)
+
+    def load_grids_data(self):
+        self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
 
     def init_ui(self):
         # Create a central widget for the dock
