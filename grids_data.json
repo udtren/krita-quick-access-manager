@@ -12,7 +12,15 @@
       "name": "Grid 2",
       "brush_presets": [
         "f) Bristles-5 Flat",
-        "k) Blender Blur"
+        "k) Blender Blur",
+        "v) Texture Pointillism",
+        "i) Wet Bristles"
+      ]
+    },
+    {
+      "name": "Basic",
+      "brush_presets": [
+        "j) Watercolor Texture"
       ]
     }
   ]
