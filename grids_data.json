@@ -1,0 +1,19 @@
+{
+  "grids": [
+    {
+      "name": "Grid 1",
+      "brush_presets": [
+        "f) Bristles-1 Details",
+        "b) Basic-5 Size Opacity",
+        "j) Waterpaint Hard Edges"
+      ]
+    },
+    {
+      "name": "Grid 2",
+      "brush_presets": [
+        "f) Bristles-5 Flat",
+        "k) Blender Blur"
+      ]
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import os
+import json
 from krita import Extension, DockWidgetFactory, DockWidgetFactoryBase, Krita
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget, QScrollArea, QHBoxLayout, QInputDialog, QApplication
 from PyQt5.QtCore import Qt, QMimeData, QPoint
@@ -144,6 +146,7 @@ class ClickableGridWidget(QWidget):
                         self.parent_docker.update_grid(source_grid)
                     
                     self.parent_docker.update_grid(self.grid_info)
+                    self.parent_docker.save_grids_data()
                     event.acceptProposedAction()
 
 class DraggableGridContainer(QWidget):
@@ -189,6 +192,7 @@ class DraggableGridContainer(QWidget):
                             target_index -= 1
                         self.parent_docker.grids.insert(target_index, source_grid)
                         self.parent_docker.rebuild_grid_layout()
+                        self.parent_docker.save_grids_data()
                         event.acceptProposedAction()
 
 class QuickAccessDockerWidget(QDockWidget):
@@ -200,15 +204,66 @@ class QuickAccessDockerWidget(QDockWidget):
         self.scroll_widget = None
         self.main_grid_layout = None
         self.grid_counter = 0
+        self.data_file = os.path.join(os.path.dirname(__file__), "grids_data.json")
+        self.preset_dict = Krita.instance().resources('preset')
+        self.load_grids_data()
         self.init_ui()
     
+    def load_grids_data(self):
+        # Load grid/brush info from file
+        self.grids = []
+        self.grid_counter = 0
+        if os.path.exists(self.data_file):
+            try:
+                with open(self.data_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                for grid_data in data.get("grids", []):
+                    self.grid_counter += 1
+                    grid_name = grid_data.get("name", f"Grid {self.grid_counter}")
+                    brush_names = grid_data.get("brush_presets", [])
+                    brush_presets = []
+                    for name in brush_names:
+                        preset = self.preset_dict.get(name)
+                        if preset:
+                            brush_presets.append(preset)
+                    grid_info = {
+                        'container': None,
+                        'widget': None,
+                        'layout': None,
+                        'name_label': None,
+                        'rename_button': None,
+                        'name': grid_name,
+                        'brush_presets': brush_presets,
+                        'is_active': False
+                    }
+                    self.grids.append(grid_info)
+            except Exception:
+                pass
+    
+    def save_grids_data(self):
+        # Save grid/brush info to file
+        data = {
+            "grids": [
+                {
+                    "name": grid['name'],
+                    "brush_presets": [p.name() for p in grid['brush_presets']]
+                }
+                for grid in self.grids
+            ]
+        }
+        try:
+            with open(self.data_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception:
+            pass
+
     def init_ui(self):
         # Create a central widget for the dock
         central_widget = QWidget()
         main_layout = QVBoxLayout()
         
         # Title label
-        title_label = QLabel("Quick Access Tools")
+        title_label = QLabel("Quick Brush Access")
         title_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(title_label)
         
@@ -252,86 +307,72 @@ class QuickAccessDockerWidget(QDockWidget):
         central_widget.setLayout(main_layout)
         self.setWidget(central_widget)
         
-        # Add initial grid
-        self.add_new_grid()
-    
-    def add_new_grid(self):
-        self.grid_counter += 1
-        
-        # Create new grid container (using draggable container)
-        grid_container = DraggableGridContainer(None, self)  # Will set grid_info later
+        # Add initial grid(s) from loaded data
+        if not self.grids:
+            self.add_new_grid()
+        else:
+            for grid_info in self.grids:
+                self._add_grid_ui(grid_info)
+            # Set first grid active
+            if self.grids:
+                self.set_active_grid(self.grids[0])
+
+    def _add_grid_ui(self, grid_info):
+        # Helper to add grid UI for loaded grids
+        grid_container = DraggableGridContainer(grid_info, self)
         container_layout = QVBoxLayout()
-        container_layout.setSpacing(2)  # Minimize spacing
-        container_layout.setContentsMargins(2, 2, 2, 2)  # Minimize margins
-        
-        # Grid header with name and rename button
+        container_layout.setSpacing(2)
+        container_layout.setContentsMargins(2, 2, 2, 2)
         header_layout = QHBoxLayout()
         header_layout.setSpacing(2)
         header_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Grid name label
-        grid_name = f"Grid {self.grid_counter}"
-        name_label = QLabel(grid_name)
+        name_label = QLabel(grid_info['name'])
         name_label.setStyleSheet("font-weight: bold; font-size: 12px;")
         header_layout.addWidget(name_label)
-        
-        # Spacer to push rename button to the right
         header_layout.addStretch()
-        
-        # Rename button
         rename_button = QPushButton("Rename")
         rename_button.setFixedSize(50, 20)
         rename_button.setStyleSheet("font-size: 10px;")
         header_layout.addWidget(rename_button)
-        
         container_layout.addLayout(header_layout)
-        
-        # Store grid info first (needed for ClickableGridWidget)
+        grid_info['container'] = grid_container
+        grid_info['name_label'] = name_label
+        grid_info['rename_button'] = rename_button
+        grid_widget = ClickableGridWidget(grid_info, self)
+        grid_widget.setFixedHeight(48 + 4)
+        grid_widget.setMinimumHeight(48 + 4)
+        grid_layout = QGridLayout()
+        grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        grid_layout.setSpacing(2)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_widget.setLayout(grid_layout)
+        container_layout.addWidget(grid_widget)
+        grid_container.setLayout(container_layout)
+        grid_info['widget'] = grid_widget
+        grid_info['layout'] = grid_layout
+        rename_button.clicked.connect(lambda: self.rename_grid(grid_info))
+        self.main_grid_layout.addWidget(grid_container)
+        self.update_grid(grid_info)
+
+    def add_new_grid(self):
+        self.grid_counter += 1
+        grid_name = f"Grid {self.grid_counter}"
         grid_info = {
-            'container': grid_container,
-            'widget': None,  # Will be set below
-            'layout': None,  # Will be set below
-            'name_label': name_label,
-            'rename_button': rename_button,
+            'container': None,
+            'widget': None,
+            'layout': None,
+            'name_label': None,
+            'rename_button': None,
             'name': grid_name,
             'brush_presets': [],
             'is_active': False
         }
-        
-        # Set grid_info for the container
-        grid_container.grid_info = grid_info
-        
-        # Grid widget for brush presets (using clickable widget)
-        grid_widget = ClickableGridWidget(grid_info, self)
-        # Set fixed height for one row (48px for icon + margins)
-        grid_widget.setFixedHeight(48 + 4)  # Icon height + margins
-        grid_widget.setMinimumHeight(48 + 4)
-        
-        grid_layout = QGridLayout()
-        grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        grid_layout.setSpacing(2)  # Minimize spacing between buttons
-        grid_layout.setContentsMargins(0, 0, 0, 0)
-        grid_widget.setLayout(grid_layout)
-        
-        container_layout.addWidget(grid_widget)
-        grid_container.setLayout(container_layout)
-        
-        # Update grid info with actual widget and layout
-        grid_info['widget'] = grid_widget
-        grid_info['layout'] = grid_layout
-        
         self.grids.append(grid_info)
-        
-        # Set as active grid if it's the first one
+        self._add_grid_ui(grid_info)
         if len(self.grids) == 1:
             self.set_active_grid(grid_info)
-        
-        # Connect rename button
-        rename_button.clicked.connect(lambda: self.rename_grid(grid_info))
-        
-        # Add to main layout
-        self.main_grid_layout.addWidget(grid_container)
-    
+        self.save_grids_data()
+
     def rename_grid(self, grid_info):
         # Show input dialog for new grid name
         new_name, ok = QInputDialog.getText(
@@ -344,7 +385,8 @@ class QuickAccessDockerWidget(QDockWidget):
         if ok and new_name.strip():
             grid_info['name'] = new_name.strip()
             grid_info['name_label'].setText(grid_info['name'])
-    
+            self.save_grids_data()
+
     def get_dynamic_columns(self):
         # Calculate columns based on docker width
         docker_width = self.width()
@@ -373,6 +415,7 @@ class QuickAccessDockerWidget(QDockWidget):
                 if current_preset.name() not in all_presets:
                     active_grid['brush_presets'].append(current_preset)
                     self.update_grid(active_grid)
+                    self.save_grids_data()
     
     def remove_current_brush(self):
         # Get current brush preset
@@ -389,6 +432,7 @@ class QuickAccessDockerWidget(QDockWidget):
                     if preset.name() == preset_name:
                         active_grid['brush_presets'].pop(i)
                         self.update_grid(active_grid)
+                        self.save_grids_data()
                         break
     
     def update_grid(self, grid_info):
@@ -416,6 +460,7 @@ class QuickAccessDockerWidget(QDockWidget):
             # Create draggable button for brush preset
             brush_button = DraggableBrushButton(preset, grid_info, self)
             layout.addWidget(brush_button, row, col)
+        self.save_grids_data()
     
     def set_active_grid(self, grid_info):
         # Deactivate all grids
@@ -441,7 +486,7 @@ class QuickAccessDockerWidget(QDockWidget):
             grid_info['name_label'].setStyleSheet("""
                 font-weight: bold; 
                 font-size: 12px; 
-                color: #0078d4;
+                color: #4FC3F7;
             """)
         else:
             # Inactive grid style
@@ -454,7 +499,7 @@ class QuickAccessDockerWidget(QDockWidget):
             grid_info['name_label'].setStyleSheet("""
                 font-weight: bold; 
                 font-size: 12px; 
-                color: #333333;
+                color: #ffffff;
             """)
     
     def resizeEvent(self, event):
@@ -485,6 +530,7 @@ class QuickAccessDockerWidget(QDockWidget):
         # Update styles
         for grid_info in self.grids:
             self.update_grid_style(grid_info)
+        self.save_grids_data()
 
 class QuickAccessDockerFactory(DockWidgetFactoryBase):
     def __init__(self):
