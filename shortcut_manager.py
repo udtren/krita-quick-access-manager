@@ -14,6 +14,8 @@ def load_common_config():
 COMMON_CONFIG = load_common_config()
 
 def shortcut_btn_style():
+    # 最新のCOMMON_CONFIGを毎回参照
+    from .quick_access_manager import COMMON_CONFIG
     color = COMMON_CONFIG["color"]["shortcut_button_background_color"]
     font_color = COMMON_CONFIG["color"]["shortcut_button_font_color"]
     font_size = COMMON_CONFIG["font"]["shortcut_button_font_size"]
@@ -112,6 +114,11 @@ class ShortcutAccessSection(QWidget):
         self.main_layout.setSpacing(8)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
+        # タイトルラベルを追加
+        title_label = QLabel("Quick Shortcut Access")
+        title_label.setAlignment(Qt.AlignCenter)
+        self.main_layout.addWidget(title_label)
+
         button_layout = QHBoxLayout()
         self.show_all_btn = QPushButton("ShowAllShortcut")
         self.show_all_btn.setStyleSheet(docker_btn_style())
@@ -121,37 +128,55 @@ class ShortcutAccessSection(QWidget):
         button_layout.addWidget(self.add_grid_btn)
         self.main_layout.addLayout(button_layout)
 
+        # RestoreShortGridボタンを追加
+        self.restore_grid_btn = QPushButton("RestoreShortcutGrid")
+        self.restore_grid_btn.setStyleSheet(docker_btn_style())
+        self.main_layout.addWidget(self.restore_grid_btn)
+
         self.setLayout(self.main_layout)
 
         self.show_all_btn.clicked.connect(self.show_all_shortcut_popup)
         self.add_grid_btn.clicked.connect(self.add_grid)
-
-    def showEvent(self, event):
-        super().showEvent(event)
-        if not hasattr(self, "_restored"):
-            self.restore_grids_from_file()
-            self._restored = True
+        self.restore_grid_btn.clicked.connect(self.restore_grids_from_file)
 
     def restore_grids_from_file(self):
+        # 既存グリッドを全て削除
+        for grid_widget in self.grids:
+            self.main_layout.removeWidget(grid_widget)
+            grid_widget.deleteLater()
+        self.grids = []
+        self.active_grid_idx = 0
+
         krita_instance = Krita.instance()
-        # 追加: 利用可能な全アクションIDをログ出力
-        all_action_ids = [a.objectName() for a in krita_instance.actions()]
-        log_shortcut_restore(f"Krita available action IDs: {all_action_ids}")
+        all_actions = {a.objectName(): a for a in krita_instance.actions()}
+        log_shortcut_restore(f"Krita available action IDs: {list(all_actions.keys())}")
 
         grids_data = load_shortcut_grids_data(self.data_file, krita_instance)
         log_shortcut_restore(f"restore_grids_from_file: loaded {len(grids_data) if grids_data else 0} grids from {self.data_file}")
-        if grids_data:
-            for grid_info in grids_data:
-                if 'shortcuts' in grid_info:
-                    actions_or_ids = grid_info['shortcuts']
-                    log_shortcut_restore(f"Restoring grid: {grid_info['name']}, shortcuts: {actions_or_ids}")
+
+        # グリッドを先に全て作成
+        grid_name_to_widget = {}
+        for grid_info in grids_data:
+            grid_widget = self.add_shortcut_grid(grid_info['name'], [], save=False)
+            grid_name_to_widget[grid_info['name']] = grid_widget
+
+        # 各グリッドにボタンを追加（AddShortCutボタンの仕様を流用）
+        for grid_info in grids_data:
+            grid_widget = grid_name_to_widget.get(grid_info['name'])
+            if not grid_widget:
+                continue
+            shortcut_ids = grid_info.get('shortcuts', [])
+            for shortcut_id in shortcut_ids:
+                action = all_actions.get(shortcut_id)
+                if action:
+                    grid_widget.add_shortcut_button(action)
+                    log_shortcut_restore(f"Restored action: {shortcut_id} in grid: {grid_info['name']}")
                 else:
-                    actions_or_ids = grid_info.get('actions', [])
-                    log_shortcut_restore(f"Restoring grid: {grid_info['name']}, actions: {[a.objectName() if hasattr(a, 'objectName') else str(a) for a in actions_or_ids]}")
-                self.add_shortcut_grid(grid_info['name'], actions_or_ids, save=False)
-        else:
-            log_shortcut_restore("No grids found, adding default grid.")
-            self.add_shortcut_grid("Shortcut Grid 1", save=False)
+                    log_shortcut_restore(f"Action not found: {shortcut_id} in grid: {grid_info['name']}")
+
+        # 最初のグリッドをアクティブにする（またはjsonのnameで特定してアクティブ化も可）
+        if self.grids:
+            self.set_active_grid(0)
 
     def add_grid(self):
         grid_name = f"Shortcut Grid {len(self.grids) + 1}"
@@ -179,6 +204,7 @@ class ShortcutAccessSection(QWidget):
         self.set_active_grid(len(self.grids) - 1)
         if save:
             self.save_grids_data()
+        return grid_widget  # 追加: 作成したウィジェットを返す
 
     def set_active_grid(self, idx):
         for i, grid_widget in enumerate(self.grids):
@@ -209,6 +235,20 @@ class ShortcutAccessSection(QWidget):
                 'actions': grid_widget.grid_info['actions'],
             })
         save_shortcut_grids_data(self.data_file, grids_data)
+
+    def move_grid(self, grid_widget, direction):
+        idx = self.grids.index(grid_widget)
+        new_idx = idx + direction
+        if 0 <= new_idx < len(self.grids):
+            self.grids.pop(idx)
+            self.grids.insert(new_idx, grid_widget)
+            # レイアウトから全て削除して再追加
+            for gw in self.grids:
+                self.main_layout.removeWidget(gw)
+            for gw in self.grids:
+                self.main_layout.addWidget(gw)
+            self.set_active_grid(new_idx)
+            self.save_grids_data()
 
 class SingleShortcutGridWidget(QWidget):
     def __init__(self, grid_info, parent_section):
@@ -263,6 +303,9 @@ class SingleShortcutGridWidget(QWidget):
 
         self.rename_btn.clicked.connect(self.rename_grid)
         self.active_btn.clicked.connect(self.activate_grid)
+        # 順位変更ボタンのコールバック修正
+        self.up_btn.clicked.connect(lambda: self.parent_section.move_grid(self, -1))
+        self.down_btn.clicked.connect(lambda: self.parent_section.move_grid(self, 1))
 
     def add_shortcut_button(self, action):
         self.grid_info['actions'].append(action)
@@ -391,6 +434,20 @@ class ShortcutDraggableButton(QPushButton):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and QApplication.keyboardModifiers() == Qt.ControlModifier:
             self.drag_start_position = event.pos()
+        # Ctrl+右クリックで削除
+        if event.button() == Qt.RightButton and QApplication.keyboardModifiers() == Qt.ControlModifier:
+            # グリッドからこのアクションを削除
+            for i, act in enumerate(self.grid_info['actions']):
+                if act.objectName() == self.action.objectName():
+                    self.grid_info['actions'].pop(i)
+                    self.parent_section.save_grids_data()
+                    # 自分が属するグリッドウィジェットを探してupdate_grid
+                    for grid_widget in self.parent_section.grids:
+                        if grid_widget.grid_info is self.grid_info:
+                            grid_widget.update_grid()
+                            break
+                    break
+            return
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):

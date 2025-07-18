@@ -1,11 +1,11 @@
 import os
 import json
 from krita import Extension, DockWidgetFactory, DockWidgetFactoryBase, Krita
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget, QScrollArea, QHBoxLayout, QInputDialog, QApplication
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget, QScrollArea, QHBoxLayout, QInputDialog, QApplication, QDialog, QLineEdit
 from PyQt5.QtCore import Qt, QMimeData, QPoint
 from PyQt5.QtGui import QIcon, QPixmap, QDrag
 from .data_manager import load_grids_data, save_grids_data
-from .shortcut_manager import ShortcutAccessSection
+from .shortcut_manager import ShortcutAccessSection, shortcut_btn_style
 
 def load_common_config():
     config_path = os.path.join(os.path.dirname(__file__), "config", "common.json")
@@ -24,6 +24,58 @@ def get_font_px(font_size_str):
         return int(str(font_size_str).replace("px", ""))
     except Exception:
         return 12
+
+class CommonConfigDialog(QDialog):
+    def __init__(self, config_path, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Settings")
+        self.config_path = config_path
+        self.resize(400, 300)
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # Load config
+        with open(config_path, "r", encoding="utf-8") as f:
+            self.config = json.load(f)
+
+        # Editable fields for color/font/layout
+        self.fields = {}
+        for section in ["color", "font", "layout"]:
+            group = self.config.get(section, {})
+            layout.addWidget(QLabel(f"[{section}]"))
+            for key, value in group.items():
+                hlayout = QHBoxLayout()
+                label = QLabel(key)
+                edit = QLineEdit(str(value))
+                hlayout.addWidget(label)
+                hlayout.addWidget(edit)
+                layout.addLayout(hlayout)
+                self.fields[(section, key)] = edit
+
+        btn_layout = QHBoxLayout()
+        self.save_btn = QPushButton("Save")
+        self.cancel_btn = QPushButton("Cancel")
+        btn_layout.addWidget(self.save_btn)
+        btn_layout.addWidget(self.cancel_btn)
+        layout.addLayout(btn_layout)
+
+        self.save_btn.clicked.connect(self.save_and_close)
+        self.cancel_btn.clicked.connect(self.reject)
+
+    def save_and_close(self):
+        # Save edits to config
+        for (section, key), edit in self.fields.items():
+            val = edit.text()
+            # 型変換
+            if section == "layout":
+                try:
+                    val = int(val)
+                except Exception:
+                    pass
+            self.config[section][key] = val
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            json.dump(self.config, f, indent=4)
+        self.accept()
 
 class DraggableBrushButton(QPushButton):
     def __init__(self, preset, grid_info, parent_docker):
@@ -50,6 +102,16 @@ class DraggableBrushButton(QPushButton):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and QApplication.keyboardModifiers() == Qt.ControlModifier:
             self.drag_start_position = event.pos()
+        # Ctrl+右クリックで削除
+        if event.button() == Qt.RightButton and QApplication.keyboardModifiers() == Qt.ControlModifier:
+            # グリッドからこのプリセットを削除
+            for i, p in enumerate(self.grid_info['brush_presets']):
+                if p.name() == self.preset.name():
+                    self.grid_info['brush_presets'].pop(i)
+                    self.parent_docker.update_grid(self.grid_info)
+                    self.parent_docker.save_grids_data()
+                    break
+            return
         super().mousePressEvent(event)
     
     def mouseMoveEvent(self, event):
@@ -189,14 +251,11 @@ class QuickAccessDockerWidget(QDockWidget):
         if not os.path.exists(config_dir):
             os.makedirs(config_dir)
         self.data_file = os.path.join(config_dir, "grids_data.json")
+        self.common_config_path = os.path.join(config_dir, "common.json")
         self.preset_dict = Krita.instance().resources('preset')
         self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
         self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
         self.init_ui()
-
-    def save_grids_data(self):
-        save_grids_data(self.data_file, self.grids)
-
 
     def save_grids_data(self):
         save_grids_data(self.data_file, self.grids)
@@ -232,17 +291,6 @@ class QuickAccessDockerWidget(QDockWidget):
         
         main_layout.addLayout(button_layout_1)
         
-        # Second button row (horizontal)
-        button_layout_2 = QHBoxLayout()
-        
-        # Remove Brush button
-        remove_brush_button = QPushButton("RemoveBrush")
-        remove_brush_button.setStyleSheet(docker_btn_style())
-        remove_brush_button.clicked.connect(self.remove_current_brush)
-        button_layout_2.addWidget(remove_brush_button)
-        
-        main_layout.addLayout(button_layout_2)
-        
         # Scroll area for brush presets grids
         scroll_area = QScrollArea()
         self.scroll_widget = QWidget()
@@ -259,6 +307,12 @@ class QuickAccessDockerWidget(QDockWidget):
         shortcut_section = ShortcutAccessSection(self)
         main_layout.addWidget(shortcut_section)
         
+        # Settingボタンを一番下に追加
+        setting_btn = QPushButton("Setting")
+        setting_btn.setStyleSheet(docker_btn_style())
+        main_layout.addWidget(setting_btn)
+        setting_btn.clicked.connect(self.show_settings_dialog)
+
         central_widget.setLayout(main_layout)
         self.setWidget(central_widget)
         
@@ -271,6 +325,65 @@ class QuickAccessDockerWidget(QDockWidget):
             # Set first grid active
             if self.grids:
                 self.set_active_grid(self.grids[0])
+
+    def show_settings_dialog(self):
+        dlg = CommonConfigDialog(self.common_config_path, self)
+        if dlg.exec_():
+            # 設定を再読み込みして即時反映
+            global COMMON_CONFIG
+            with open(self.common_config_path, "r", encoding="utf-8") as f:
+                COMMON_CONFIG = json.load(f)
+            self.refresh_styles()
+
+    def refresh_styles(self):
+        # ボタンやグリッドのスタイルを再適用
+        # ブラシグリッド
+        for grid in self.grids:
+            # グリッド名ラベル
+            if grid.get('name_label'):
+                grid['name_label'].setStyleSheet("font-weight: bold; font-size: 12px; color: #4FC3F7;" if grid.get('is_active') else "font-weight: bold; font-size: 12px; color: #ffffff;")
+            # ヘッダーボタン
+            for btn_key in ['rename_button', 'active_btn']:
+                if grid.get(btn_key):
+                    grid[btn_key].setStyleSheet(docker_btn_style())
+            # ↑↓ボタン
+            if grid.get('container'):
+                container = grid['container']
+                for btn in container.findChildren(QPushButton):
+                    btn.setStyleSheet(docker_btn_style())
+            # ブラシボタン
+            if grid.get('widget'):
+                layout = grid['layout']
+                for i in range(layout.count()):
+                    btn = layout.itemAt(i).widget()
+                    if btn:
+                        btn.setStyleSheet(docker_btn_style())
+        # ショートカットグリッド
+        shortcut_section = self.findChild(ShortcutAccessSection)
+        if shortcut_section:
+            for grid_widget in shortcut_section.grids:
+                # グリッド名ラベル
+                if hasattr(grid_widget, "grid_name_label"):
+                    grid_widget.grid_name_label.setStyleSheet(
+                        "font-weight: bold; font-size: 13px; color: #4FC3F7; background: none;" if grid_widget.is_active else
+                        "font-weight: bold; font-size: 13px; color: #ffffff; background: none;"
+                    )
+                # ヘッダーボタン
+                for btn in [getattr(grid_widget, "up_btn", None), getattr(grid_widget, "down_btn", None),
+                            getattr(grid_widget, "rename_btn", None), getattr(grid_widget, "active_btn", None)]:
+                    if btn:
+                        btn.setStyleSheet(docker_btn_style())
+                # ショートカットボタン
+                layout = getattr(grid_widget, "shortcut_grid_layout", None)
+                if layout:
+                    for i in range(layout.count()):
+                        btn = layout.itemAt(i).widget()
+                        if btn:
+                            btn.setStyleSheet(shortcut_btn_style())
+        # AddBrush/AddGrid/Settingボタンなども再適用
+        for btn in self.findChildren(QPushButton):
+            if btn.text() in ["AddBrush", "AddGrid", "Setting"]:
+                btn.setStyleSheet(docker_btn_style())
 
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
@@ -376,15 +489,9 @@ class QuickAccessDockerWidget(QDockWidget):
             self.save_grids_data()
 
     def get_dynamic_columns(self):
-        # Calculate columns based on docker width
-        docker_width = self.width()
-        button_size = 48
-        margin = 20
-        min_columns = 2
-        
-        available_width = docker_width - margin
-        columns = max(min_columns, available_width // button_size)
-        return int(columns)
+        # max_brush_per_rowを優先して返す
+        max_brush = COMMON_CONFIG.get("layout", {}).get("max_brush_per_row", 8)
+        return int(max_brush)
     
     def add_current_brush(self):
         # Get current brush preset
@@ -405,50 +512,22 @@ class QuickAccessDockerWidget(QDockWidget):
                     self.update_grid(active_grid)
                     self.save_grids_data()
     
-    def remove_current_brush(self):
-        # Get current brush preset
-        app = Krita.instance()
-        if app.activeWindow() and app.activeWindow().activeView() and self.active_grid:
-            current_preset = app.activeWindow().activeView().currentBrushPreset()
-            if current_preset:
-                # Find and remove the preset from active grid
-                active_grid = self.active_grid
-                preset_name = current_preset.name()
-                
-                # Remove preset if it exists in the active grid
-                for i, preset in enumerate(active_grid['brush_presets']):
-                    if preset.name() == preset_name:
-                        active_grid['brush_presets'].pop(i)
-                        self.update_grid(active_grid)
-                        self.save_grids_data()
-                        break
-    
     def update_grid(self, grid_info):
         # Clear existing buttons in this grid
         layout = grid_info['layout']
         for i in reversed(range(layout.count())):
             layout.itemAt(i).widget().setParent(None)
-        
-        # Get dynamic column count
+        # max_brush_per_rowを使う
         columns = self.get_dynamic_columns()
-        
-        # Calculate required rows
         preset_count = len(grid_info['brush_presets'])
         required_rows = (preset_count + columns - 1) // columns if preset_count > 0 else 1
-        
-        # Update grid widget height based on number of rows
-        new_height = required_rows * 48 + (required_rows - 1) * 2 + 4  # rows * icon_height + spacing + margins
+        new_height = required_rows * 48 + (required_rows - 1) * 2 + 4
         grid_info['widget'].setFixedHeight(new_height)
-        
-        # Add brush preset buttons to grid (using draggable buttons)
         for index, preset in enumerate(grid_info['brush_presets']):
             row = index // columns
             col = index % columns
-            
-            # Create draggable button for brush preset
             brush_button = DraggableBrushButton(preset, grid_info, self)
             layout.addWidget(brush_button, row, col)
-        self.save_grids_data()
     
     def set_active_grid(self, grid_info):
         # Deactivate all grids
@@ -488,19 +567,10 @@ class QuickAccessDockerWidget(QDockWidget):
             """)
     
     def resizeEvent(self, event):
-        # 対策: グリッドのボタン再生成は行わない
         super().resizeEvent(event)
-        # 必要ならレイアウト調整のみ（例: グリッドの高さや列数の調整）
-        # for grid_info in self.grids:
-        #     self.adjust_grid_layout(grid_info)
-
-    # def adjust_grid_layout(self, grid_info):
-    #     # ここでボタン再生成せず、レイアウトや高さのみ調整する
-    #     columns = self.get_dynamic_columns()
-    #     preset_count = len(grid_info['brush_presets'])
-    #     required_rows = (preset_count + columns - 1) // columns if preset_count > 0 else 1
-    #     new_height = required_rows * 48 + (required_rows - 1) * 2 + 4
-    #     grid_info['widget'].setFixedHeight(new_height)
+        # 幅が変わったら全グリッドのレイアウトを再計算
+        for grid_info in self.grids:
+            self.update_grid(grid_info)
     
     def select_brush_preset(self, preset):
         # Set the selected brush preset as current
@@ -537,7 +607,6 @@ class QuickAccessManagerExtension(Extension):
     def __init__(self, parent):
         super().__init__(parent)
         self.docker_factory = None
-        self.shortcut_section = None
 
     def setup(self):
         self.docker_factory = QuickAccessDockerFactory()
@@ -545,11 +614,7 @@ class QuickAccessManagerExtension(Extension):
 
     def createActions(self, window):
         # Kritaのウィンドウが初期化された後に呼ばれる
-        # ここでShortcutAccessSectionの復元処理を呼ぶ
-        docker = None
         for d in window.dockers():
-            if hasattr(d, "widget") and hasattr(d.widget(), "shortcut_section"):
-                docker = d.widget()
-                break
-        if docker and hasattr(docker, "shortcut_section"):
-            docker.shortcut_section.restore_grids_from_file()
+            widget = getattr(d, "widget", lambda: None)()
+            if widget and hasattr(widget, "shortcut_section"):
+                widget.shortcut_section.restore_grids_from_file()

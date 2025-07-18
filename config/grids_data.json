@@ -1,6 +1,17 @@
 {
   "grids": [
     {
+      "name": "Basic",
+      "brush_presets": [
+        "j) Watercolor Texture",
+        "k) Blender Rake",
+        "y) Texture Large Splat",
+        "rbp) Squaredissipate",
+        "rin) Velvety Ink",
+        "rin) Snirkel"
+      ]
+    },
+    {
       "name": "Grid 1",
       "brush_presets": [
         "f) Bristles-1 Details",
@@ -9,26 +20,30 @@
       ]
     },
     {
-      "name": "Basic",
-      "brush_presets": [
-        "j) Watercolor Texture",
-        "k) Blender Rake",
-        "y) Texture Large Splat"
-      ]
-    },
-    {
       "name": "Grid 2",
       "brush_presets": [
         "f) Bristles-5 Flat",
         "k) Blender Blur",
         "j) Waterpaint Hard Edges",
-        "v) Texture Pointillism"
+        "v) Texture Pointillism",
+        "rbr) Bristle",
+        "rbs) Liquidbristle",
+        "rbr) Bristlesplit",
+        "rbl) Wild",
+        "rbl) Rake Wet",
+        "rfr) Scattertufts"
       ]
     },
     {
-      "name": "Basic",
+      "name": "MyFav",
       "brush_presets": [
-        "j) Watercolor Texture"
+        "j) Watercolor Texture",
+        "rfr) Tufty Smudge Thin",
+        "rsl) Rotate Clockwise",
+        "rxd) Pixelspray",
+        "moo-draw-blueline",
+        "moo-draw-lead-pencil",
+        "moo-draw-oneraser"
       ]
     }
   ]

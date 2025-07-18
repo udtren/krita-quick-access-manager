@@ -1,25 +1,33 @@
 {
   "grids": [
     {
-      "name": "Shortcut Grid 1",
+      "name": "basic",
       "shortcuts": [
-        "showStatusBar",
-        "ruler_pixel_multiple2"
+        "Select Multiply Blending Mode",
+        "Select Lighten Blending Mode"
       ]
     },
     {
-      "name": "Shortcut Grid 2",
+      "name": "Shortcut Grid 1",
       "shortcuts": [
-        "rotate_canvas_right"
+        "showStatusBar"
       ]
     },
     {
       "name": "Shortcut Grid 3",
-      "shortcuts": []
+      "shortcuts": [
+        "blur_filters",
+        "artistic_filters",
+        "options_configure_toolbars",
+        "krita_filter_emboss"
+      ]
     },
     {
       "name": "Shortcut Grid 4",
-      "shortcuts": []
+      "shortcuts": [
+        "rulers_track_mouse",
+        "view_print_size"
+      ]
     }
   ]
 }
