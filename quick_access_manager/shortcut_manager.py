@@ -34,6 +34,11 @@ def get_font_px(font_size_str):
     except Exception:
         return 12
 
+def get_max_shortcut_per_row():
+    # 最新のCOMMON_CONFIGを毎回参照
+    from .quick_access_manager import COMMON_CONFIG
+    return int(COMMON_CONFIG.get("layout", {}).get("max_shortcut_per_row", 3))
+
 class ShortcutPopup(QDialog):
     def __init__(self, parent_section):
         super().__init__(parent_section)
@@ -237,6 +242,10 @@ class ShortcutAccessSection(QWidget):
             self.set_active_grid(new_idx)
             self.save_grids_data()
 
+    def refresh_layout(self):
+        for grid_widget in self.grids:
+            grid_widget.update_grid()
+
 class SingleShortcutGridWidget(QWidget):
     def __init__(self, grid_info, parent_section):
         super().__init__()
@@ -307,7 +316,7 @@ class SingleShortcutGridWidget(QWidget):
             if widget:
                 widget.setParent(None)
                 widget.deleteLater()
-        max_columns = COMMON_CONFIG.get("layout", {}).get("max_shortcut_per_row", 3)
+        max_columns = get_max_shortcut_per_row()
         for idx, action in enumerate(self.grid_info['actions']):
             action_id = action.objectName()
             shortcut_btn = ShortcutDraggableButton(action, self.grid_info, self.parent_section)
@@ -342,7 +351,7 @@ class SingleShortcutGridWidget(QWidget):
                         break
                 if source_action and source_grid:
                     drop_pos = event.pos()
-                    max_columns = COMMON_CONFIG.get("layout", {}).get("max_shortcut_per_row", 3)
+                    max_columns = get_max_shortcut_per_row()
                     col = min(drop_pos.x() // 90, max_columns - 1)
                     row = drop_pos.y() // 36
                     target_index = row * max_columns + col

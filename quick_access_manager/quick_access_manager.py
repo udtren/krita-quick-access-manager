@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLab
 from PyQt5.QtCore import Qt, QMimeData, QPoint
 from PyQt5.QtGui import QIcon, QPixmap, QDrag
 from .data_manager import load_grids_data, save_grids_data
-from .shortcut_manager import ShortcutAccessSection, shortcut_btn_style
+from .shortcut_manager import ShortcutAccessSection, SingleShortcutGridWidget, shortcut_btn_style
 
 def load_common_config():
     config_path = os.path.join(os.path.dirname(__file__), "config", "common.json")
@@ -304,8 +304,8 @@ class QuickAccessDockerWidget(QDockWidget):
         main_layout.addWidget(scroll_area)
         
         # Section 2: Quick Shortcut Access
-        shortcut_section = ShortcutAccessSection(self)
-        main_layout.addWidget(shortcut_section)
+        self.shortcut_section = ShortcutAccessSection(self)
+        main_layout.addWidget(self.shortcut_section)
         
         # Settingボタンを一番下に追加
         setting_btn = QPushButton("Setting")
@@ -334,6 +334,12 @@ class QuickAccessDockerWidget(QDockWidget):
             with open(self.common_config_path, "r", encoding="utf-8") as f:
                 COMMON_CONFIG = json.load(f)
             self.refresh_styles()
+            # ボタンサイズやレイアウトも再構築
+            for grid_info in self.grids:
+                self.update_grid(grid_info)
+            # ショートカットグリッドも再構築
+            if hasattr(self, "shortcut_section"):
+                self.shortcut_section.refresh_layout()
 
     def refresh_styles(self):
         # ボタンやグリッドのスタイルを再適用
