@@ -1,0 +1,72 @@
+2025-07-18T10:22:44.755076 Krita available action IDs: []
+2025-07-18T10:22:44.755076 load_shortcut_grids_data: grid=Shortcut Grid 1, action_id=showStatusBar
+2025-07-18T10:22:44.756076 load_shortcut_grids_data: grid=Shortcut Grid 1, action=None
+2025-07-18T10:22:44.756076 load_shortcut_grids_data: grid=Shortcut Grid 1, action_id=ruler_pixel_multiple2
+2025-07-18T10:22:44.756076 load_shortcut_grids_data: grid=Shortcut Grid 1, action=None
+2025-07-18T10:22:44.756076 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 1', 'actions': [], 'shortcuts': ['showStatusBar', 'ruler_pixel_multiple2']}
+2025-07-18T10:22:44.756076 load_shortcut_grids_data: grid=Shortcut Grid 2, action_id=rotate_canvas_right
+2025-07-18T10:22:44.757076 load_shortcut_grids_data: grid=Shortcut Grid 2, action=None
+2025-07-18T10:22:44.757076 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 2', 'actions': [], 'shortcuts': ['rotate_canvas_right']}
+2025-07-18T10:22:44.757076 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 3', 'actions': [], 'shortcuts': []}
+2025-07-18T10:22:44.757076 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 4', 'actions': [], 'shortcuts': []}
+2025-07-18T10:22:44.757076 restore_grids_from_file: loaded 4 grids from C:\Users\udtre\AppData\Roaming\krita\pykrita\quick_access_manager\config\shortcut_grid_data.json
+2025-07-18T10:22:44.757076 Restoring grid: Shortcut Grid 1, shortcuts: ['showStatusBar', 'ruler_pixel_multiple2']
+2025-07-18T10:22:44.758026 Converting action ids to QAction: ['showStatusBar', 'ruler_pixel_multiple2']
+2025-07-18T10:22:44.758026 Creating grid widget: Shortcut Grid 1, actions: []
+2025-07-18T10:22:44.758026 Restoring grid: Shortcut Grid 2, shortcuts: ['rotate_canvas_right']
+2025-07-18T10:22:44.759029 Converting action ids to QAction: ['rotate_canvas_right']
+2025-07-18T10:22:44.759029 Creating grid widget: Shortcut Grid 2, actions: []
+2025-07-18T10:22:44.759029 Restoring grid: Shortcut Grid 3, shortcuts: []
+2025-07-18T10:22:44.760029 Converting action ids to QAction: []
+2025-07-18T10:22:44.760029 Creating grid widget: Shortcut Grid 3, actions: []
+2025-07-18T10:22:44.760029 Restoring grid: Shortcut Grid 4, shortcuts: []
+2025-07-18T10:22:44.761029 Converting action ids to QAction: []
+2025-07-18T10:22:44.761029 Creating grid widget: Shortcut Grid 4, actions: []
+2025-07-18T10:26:49.304905 Krita available action IDs: []
+2025-07-18T10:26:49.305427 load_shortcut_grids_data: grid=Shortcut Grid 1, action_id=showStatusBar
+2025-07-18T10:26:49.305427 load_shortcut_grids_data: grid=Shortcut Grid 1, action=None
+2025-07-18T10:26:49.305941 load_shortcut_grids_data: grid=Shortcut Grid 1, action_id=ruler_pixel_multiple2
+2025-07-18T10:26:49.305941 load_shortcut_grids_data: grid=Shortcut Grid 1, action=None
+2025-07-18T10:26:49.305941 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 1', 'actions': [], 'shortcuts': ['showStatusBar', 'ruler_pixel_multiple2']}
+2025-07-18T10:26:49.306459 load_shortcut_grids_data: grid=Shortcut Grid 2, action_id=rotate_canvas_right
+2025-07-18T10:26:49.306459 load_shortcut_grids_data: grid=Shortcut Grid 2, action=None
+2025-07-18T10:26:49.306459 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 2', 'actions': [], 'shortcuts': ['rotate_canvas_right']}
+2025-07-18T10:26:49.306459 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 3', 'actions': [], 'shortcuts': []}
+2025-07-18T10:26:49.306973 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 4', 'actions': [], 'shortcuts': []}
+2025-07-18T10:26:49.306973 restore_grids_from_file: loaded 4 grids from C:\Users\udtre\AppData\Roaming\krita\pykrita\quick_access_manager\config\shortcut_grid_data.json
+2025-07-18T10:26:49.306973 Restoring grid: Shortcut Grid 1, shortcuts: ['showStatusBar', 'ruler_pixel_multiple2']
+2025-07-18T10:26:49.306973 Converting action ids to QAction: ['showStatusBar', 'ruler_pixel_multiple2']
+2025-07-18T10:26:49.307487 Creating grid widget: Shortcut Grid 1, actions: []
+2025-07-18T10:26:49.308002 Restoring grid: Shortcut Grid 2, shortcuts: ['rotate_canvas_right']
+2025-07-18T10:26:49.308002 Converting action ids to QAction: ['rotate_canvas_right']
+2025-07-18T10:26:49.308002 Creating grid widget: Shortcut Grid 2, actions: []
+2025-07-18T10:26:49.308516 Restoring grid: Shortcut Grid 3, shortcuts: []
+2025-07-18T10:26:49.309030 Converting action ids to QAction: []
+2025-07-18T10:26:49.309030 Creating grid widget: Shortcut Grid 3, actions: []
+2025-07-18T10:26:49.309551 Restoring grid: Shortcut Grid 4, shortcuts: []
+2025-07-18T10:26:49.309551 Converting action ids to QAction: []
+2025-07-18T10:26:49.310065 Creating grid widget: Shortcut Grid 4, actions: []
+2025-07-18T10:29:40.773296 Krita available action IDs: []
+2025-07-18T10:29:40.774296 load_shortcut_grids_data: grid=Shortcut Grid 1, action_id=showStatusBar
+2025-07-18T10:29:40.774296 load_shortcut_grids_data: grid=Shortcut Grid 1, action=None
+2025-07-18T10:29:40.774296 load_shortcut_grids_data: grid=Shortcut Grid 1, action_id=ruler_pixel_multiple2
+2025-07-18T10:29:40.774296 load_shortcut_grids_data: grid=Shortcut Grid 1, action=None
+2025-07-18T10:29:40.774296 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 1', 'actions': [], 'shortcuts': ['showStatusBar', 'ruler_pixel_multiple2']}
+2025-07-18T10:29:40.775296 load_shortcut_grids_data: grid=Shortcut Grid 2, action_id=rotate_canvas_right
+2025-07-18T10:29:40.775296 load_shortcut_grids_data: grid=Shortcut Grid 2, action=None
+2025-07-18T10:29:40.775296 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 2', 'actions': [], 'shortcuts': ['rotate_canvas_right']}
+2025-07-18T10:29:40.775296 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 3', 'actions': [], 'shortcuts': []}
+2025-07-18T10:29:40.775296 load_shortcut_grids_data: grid_info={'name': 'Shortcut Grid 4', 'actions': [], 'shortcuts': []}
+2025-07-18T10:29:40.775296 restore_grids_from_file: loaded 4 grids from C:\Users\udtre\AppData\Roaming\krita\pykrita\quick_access_manager\config\shortcut_grid_data.json
+2025-07-18T10:29:40.775296 Restoring grid: Shortcut Grid 1, shortcuts: ['showStatusBar', 'ruler_pixel_multiple2']
+2025-07-18T10:29:40.776296 Converting action ids to QAction: ['showStatusBar', 'ruler_pixel_multiple2']
+2025-07-18T10:29:40.776296 Creating grid widget: Shortcut Grid 1, actions: []
+2025-07-18T10:29:40.776296 Restoring grid: Shortcut Grid 2, shortcuts: ['rotate_canvas_right']
+2025-07-18T10:29:40.777296 Converting action ids to QAction: ['rotate_canvas_right']
+2025-07-18T10:29:40.777296 Creating grid widget: Shortcut Grid 2, actions: []
+2025-07-18T10:29:40.777296 Restoring grid: Shortcut Grid 3, shortcuts: []
+2025-07-18T10:29:40.778296 Converting action ids to QAction: []
+2025-07-18T10:29:40.778296 Creating grid widget: Shortcut Grid 3, actions: []
+2025-07-18T10:29:40.778296 Restoring grid: Shortcut Grid 4, shortcuts: []
+2025-07-18T10:29:40.779296 Converting action ids to QAction: []
+2025-07-18T10:29:40.779296 Creating grid widget: Shortcut Grid 4, actions: []

@@ -7,6 +7,24 @@ from PyQt5.QtGui import QIcon, QPixmap, QDrag
 from .data_manager import load_grids_data, save_grids_data
 from .shortcut_manager import ShortcutAccessSection
 
+def load_common_config():
+    config_path = os.path.join(os.path.dirname(__file__), "config", "common.json")
+    with open(config_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+COMMON_CONFIG = load_common_config()
+
+def docker_btn_style():
+    color = COMMON_CONFIG["color"]["docker_button_background_color"]
+    font_color = COMMON_CONFIG["color"]["docker_button_font_color"]
+    font_size = COMMON_CONFIG["font"]["docker_button_font_size"]
+    return f"background-color: {color}; color: {font_color}; font-size: {font_size};"
+
+def get_font_px(font_size_str):
+    try:
+        return int(str(font_size_str).replace("px", ""))
+    except Exception:
+        return 12
+
 class DraggableBrushButton(QPushButton):
     def __init__(self, preset, grid_info, parent_docker):
         super().__init__()
@@ -30,12 +48,15 @@ class DraggableBrushButton(QPushButton):
         self.clicked.connect(lambda: self.parent_docker.select_brush_preset(preset))
     
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.LeftButton and QApplication.keyboardModifiers() == Qt.ControlModifier:
             self.drag_start_position = event.pos()
         super().mousePressEvent(event)
     
     def mouseMoveEvent(self, event):
         if not (event.buttons() & Qt.LeftButton):
+            return
+        
+        if QApplication.keyboardModifiers() != Qt.ControlModifier:
             return
         
         if ((event.pos() - self.drag_start_position).manhattanLength() < 
@@ -54,7 +75,7 @@ class DraggableBrushButton(QPushButton):
             pixmap = QPixmap(32, 32)
             pixmap.fill(Qt.gray)
         
-        drag.setPixmap(pixmap)
+        drag.setPixmap(self.icon().pixmap(32, 32))
         drag.setHotSpot(QPoint(16, 16))
         
         dropAction = drag.exec_(Qt.MoveAction)
@@ -130,23 +151,22 @@ class ClickableGridWidget(QWidget):
                     row = drop_pos.y() // (button_size + spacing)
                     target_index = row * columns + col
                     
+                    # Remove from old position
+                    source_grid['brush_presets'].pop(source_index)
+                    
                     # If dropping on the same grid, reorder
                     if source_grid == self.grid_info:
                         # Remove from old position
-                        source_grid['brush_presets'].pop(source_index)
-                        # Insert at new position
                         target_index = min(target_index, len(source_grid['brush_presets']))
-                        if source_index < target_index:
-                            target_index -= 1
                         source_grid['brush_presets'].insert(target_index, source_preset)
+                        self.parent_docker.update_grid(source_grid)
                     else:
                         # Move between grids
-                        source_grid['brush_presets'].pop(source_index)
                         target_index = min(target_index, len(self.grid_info['brush_presets']))
                         self.grid_info['brush_presets'].insert(target_index, source_preset)
                         self.parent_docker.update_grid(source_grid)
+                        self.parent_docker.update_grid(self.grid_info)
                     
-                    self.parent_docker.update_grid(self.grid_info)
                     self.parent_docker.save_grids_data()
                     event.acceptProposedAction()
 
@@ -165,7 +185,10 @@ class QuickAccessDockerWidget(QDockWidget):
         self.scroll_widget = None
         self.main_grid_layout = None
         self.grid_counter = 0
-        self.data_file = os.path.join(os.path.dirname(__file__), "grids_data.json")
+        config_dir = os.path.join(os.path.dirname(__file__), "config")
+        if not os.path.exists(config_dir):
+            os.makedirs(config_dir)
+        self.data_file = os.path.join(config_dir, "grids_data.json")
         self.preset_dict = Krita.instance().resources('preset')
         self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
         self.grids, self.grid_counter = load_grids_data(self.data_file, self.preset_dict)
@@ -197,11 +220,13 @@ class QuickAccessDockerWidget(QDockWidget):
         
         # Add Brush button
         add_brush_button = QPushButton("AddBrush")
+        add_brush_button.setStyleSheet(docker_btn_style())
         add_brush_button.clicked.connect(self.add_current_brush)
         button_layout_1.addWidget(add_brush_button)
         
         # Add Grid button
         add_grid_button = QPushButton("AddGrid")
+        add_grid_button.setStyleSheet(docker_btn_style())
         add_grid_button.clicked.connect(self.add_new_grid)
         button_layout_1.addWidget(add_grid_button)
         
@@ -212,6 +237,7 @@ class QuickAccessDockerWidget(QDockWidget):
         
         # Remove Brush button
         remove_brush_button = QPushButton("RemoveBrush")
+        remove_brush_button.setStyleSheet(docker_btn_style())
         remove_brush_button.clicked.connect(self.remove_current_brush)
         button_layout_2.addWidget(remove_brush_button)
         
@@ -259,19 +285,23 @@ class QuickAccessDockerWidget(QDockWidget):
         header_layout.addWidget(name_label, alignment=Qt.AlignLeft)
         header_layout.addStretch()
 
-        # ↑↓Rename Activeボタン追加
+        # ボタン幅をフォントサイズに応じて動的に
+        font_px = get_font_px(COMMON_CONFIG["font"]["docker_button_font_size"])
+        btn_height = int(font_px * 2)
+        btn_width = int(font_px * 2.5)
+
         up_btn = QPushButton("↑")
-        up_btn.setFixedSize(24, 20)
-        up_btn.setStyleSheet("font-size: 10px;")
+        up_btn.setFixedSize(btn_width, btn_height)
+        up_btn.setStyleSheet(docker_btn_style())
         down_btn = QPushButton("↓")
-        down_btn.setFixedSize(24, 20)
-        down_btn.setStyleSheet("font-size: 10px;")
+        down_btn.setFixedSize(btn_width, btn_height)
+        down_btn.setStyleSheet(docker_btn_style())
         rename_button = QPushButton("Rename")
-        rename_button.setFixedSize(50, 20)
-        rename_button.setStyleSheet("font-size: 10px;")
+        rename_button.setFixedSize(btn_width * 2, btn_height)
+        rename_button.setStyleSheet(docker_btn_style())
         active_btn = QPushButton("Active")
-        active_btn.setFixedSize(50, 20)
-        active_btn.setStyleSheet("font-size: 10px;")
+        active_btn.setFixedSize(btn_width * 2, btn_height)
+        active_btn.setStyleSheet(docker_btn_style())
         header_layout.addWidget(up_btn)
         header_layout.addWidget(down_btn)
         header_layout.addWidget(rename_button)
@@ -507,11 +537,19 @@ class QuickAccessManagerExtension(Extension):
     def __init__(self, parent):
         super().__init__(parent)
         self.docker_factory = None
-    
+        self.shortcut_section = None
+
     def setup(self):
-        # Register the docker factory during setup
         self.docker_factory = QuickAccessDockerFactory()
         Krita.instance().addDockWidgetFactory(self.docker_factory)
-    
+
     def createActions(self, window):
-        pass
+        # Kritaのウィンドウが初期化された後に呼ばれる
+        # ここでShortcutAccessSectionの復元処理を呼ぶ
+        docker = None
+        for d in window.dockers():
+            if hasattr(d, "widget") and hasattr(d.widget(), "shortcut_section"):
+                docker = d.widget()
+                break
+        if docker and hasattr(docker, "shortcut_section"):
+            docker.shortcut_section.restore_grids_from_file()

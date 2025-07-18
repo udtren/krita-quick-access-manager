@@ -1,0 +1,25 @@
+{
+  "grids": [
+    {
+      "name": "Shortcut Grid 1",
+      "shortcuts": [
+        "showStatusBar",
+        "ruler_pixel_multiple2"
+      ]
+    },
+    {
+      "name": "Shortcut Grid 2",
+      "shortcuts": [
+        "rotate_canvas_right"
+      ]
+    },
+    {
+      "name": "Shortcut Grid 3",
+      "shortcuts": []
+    },
+    {
+      "name": "Shortcut Grid 4",
+      "shortcuts": []
+    }
+  ]
+}

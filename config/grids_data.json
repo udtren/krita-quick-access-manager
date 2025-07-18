@@ -5,7 +5,15 @@
       "brush_presets": [
         "f) Bristles-1 Details",
         "b) Basic-5 Size Opacity",
-        "j) Waterpaint Hard Edges"
+        "i) Wet Bristles"
+      ]
+    },
+    {
+      "name": "Basic",
+      "brush_presets": [
+        "j) Watercolor Texture",
+        "k) Blender Rake",
+        "y) Texture Large Splat"
       ]
     },
     {
@@ -13,14 +21,8 @@
       "brush_presets": [
         "f) Bristles-5 Flat",
         "k) Blender Blur",
-        "v) Texture Pointillism",
-        "i) Wet Bristles"
-      ]
-    },
-    {
-      "name": "Basic",
-      "brush_presets": [
-        "j) Watercolor Texture"
+        "j) Waterpaint Hard Edges",
+        "v) Texture Pointillism"
       ]
     },
     {
