@@ -2,6 +2,8 @@
 
 A plugin for Krita that provides quick access to brush presets and shortcut management.
 
+The purpose of creating this plugin was to have a function similar to the Quick Access Tool in Clip Studio Paint.
+
 ![Sample](./quick_access_manager/image/000.jpg)
 ---
 
@@ -59,7 +61,6 @@ If you want to reset or backup your settings, you can copy or edit these files d
 - Add a new grid: Click the "AddGrid" button to create a new grid.
 - Rename a grid: Use the "Rename" button to edit the grid name.
 - Reorder grids: Use the "↑" and "↓" buttons to change the grid order.
-- Remove a grid: Use the "Remove" button in the grid header to delete the grid.
 - Change settings: Use the "Setting" button to edit UI and layout settings.
 ![Setting](./quick_access_manager/image/image3.jpg)
 
