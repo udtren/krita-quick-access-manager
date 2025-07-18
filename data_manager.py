@@ -1,14 +1,14 @@
 import os
 import json
 
-def log_shortcut_restore(msg):
-    import datetime
-    log_dir = os.path.join(os.path.dirname(__file__), "logs")
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    log_path = os.path.join(log_dir, "shortcut_grid.log")
-    with open(log_path, "a", encoding="utf-8") as f:
-        f.write(f"{datetime.datetime.now().isoformat()} {msg}\n")
+# def log_shortcut_restore(msg):
+#     import datetime
+#     log_dir = os.path.join(os.path.dirname(__file__), "logs")
+#     if not os.path.exists(log_dir):
+#         os.makedirs(log_dir)
+#     log_path = os.path.join(log_dir, "shortcut_grid.log")
+#     with open(log_path, "a", encoding="utf-8") as f:
+#         f.write(f"{datetime.datetime.now().isoformat()} {msg}\n")
 
 def load_grids_data(data_file, preset_dict):
     grids = []
@@ -70,9 +70,9 @@ def load_shortcut_grids_data(data_file, krita_instance):
                 shortcut_ids = grid_data.get("shortcuts", [])
                 actions = []
                 for action_id in shortcut_ids:
-                    log_shortcut_restore(f"load_shortcut_grids_data: grid={grid_name}, action_id={action_id}")
+                    # log_shortcut_restore(f"load_shortcut_grids_data: grid={grid_name}, action_id={action_id}")
                     action = krita_instance.action(action_id) if action_id else None
-                    log_shortcut_restore(f"load_shortcut_grids_data: grid={grid_name}, action={action}")
+                    # log_shortcut_restore(f"load_shortcut_grids_data: grid={grid_name}, action={action}")
                     if action:
                         actions.append(action)
                 grid_info = {
@@ -81,9 +81,10 @@ def load_shortcut_grids_data(data_file, krita_instance):
                     'shortcuts': shortcut_ids
                 }
                 grids.append(grid_info)
-                log_shortcut_restore(f"load_shortcut_grids_data: grid_info={grid_info}")
+                # log_shortcut_restore(f"load_shortcut_grids_data: grid_info={grid_info}")
         except Exception as e:
-            log_shortcut_restore(f"load_shortcut_grids_data: Exception: {e}")
+            # log_shortcut_restore(f"load_shortcut_grids_data: Exception: {e}")
+            pass
     return grids
 
 def save_shortcut_grids_data(data_file, grids):
