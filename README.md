@@ -28,14 +28,33 @@ However, the shortcut settings will not be loaded automatically because it is di
 Therefore, you need to click the [RestoreShortcutGrid] button manually to restore the shortcut settings.
 
 ## Sort/Remove
-Sort a brush or shortcut: Ctrl + left-click on the icon/button to move it inside the same or different grid.
 
-Remove a brush or shortcut: Ctrl + right-click on the icon/button to remove it from the grid.
+**Sort:**  
+To reorder a brush or shortcut button within a grid or move it between grids, hold <kbd>Ctrl</kbd> and left-click and drag the button to the desired position or grid.
+
+**Remove:**  
+To remove a brush or shortcut from a grid, hold <kbd>Ctrl</kbd> and right-click on the button you want to remove.
+
+**Remove Grid:**  
+To delete an entire grid, click the "Remove" button located at the top right of each grid's header.
+
+## Config file
+
+The configuration files for grids and shortcuts are stored in `./quick_access_manager/config`.
+
+- `grids_data.json`: Stores the brush preset grids.
+- `shortcut_grid_data.json`: Stores the shortcut grids.
+- `common.json`: Stores UI and layout settings.
+
+**Note:**  
+There is no profile management function, but you can manually edit these files while Krita is closed.  
+If you want to reset or backup your settings, you can copy or edit these files directly.
 
 ## Other Usage 
 - Add a new grid: Click the "AddGrid" button to create a new grid.
 - Rename a grid: Use the "Rename" button to edit the grid name.
 - Reorder grids: Use the "↑" and "↓" buttons to change the grid order.
+- Remove a grid: Use the "Remove" button in the grid header to delete the grid.
 - Change settings: Use the "Setting" button to edit UI and layout settings.
 ![Setting](./quick_access_manager/image/image3.jpg)
 
