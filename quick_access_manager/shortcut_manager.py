@@ -281,10 +281,14 @@ class SingleShortcutGridWidget(QWidget):
         self.active_btn = QPushButton("Active")
         self.active_btn.setFixedSize(btn_width * 2, btn_height)
         self.active_btn.setStyleSheet(docker_btn_style())
+        self.remove_btn = QPushButton("Remove")
+        self.remove_btn.setFixedSize(btn_width * 2, btn_height)
+        self.remove_btn.setStyleSheet(docker_btn_style())
         header_layout.addWidget(self.up_btn)
         header_layout.addWidget(self.down_btn)
         header_layout.addWidget(self.rename_btn)
         header_layout.addWidget(self.active_btn)
+        header_layout.addWidget(self.remove_btn)
         main_layout.addLayout(header_layout)
 
         self.shortcut_grid_layout = QGridLayout()
@@ -299,9 +303,9 @@ class SingleShortcutGridWidget(QWidget):
 
         self.rename_btn.clicked.connect(self.rename_grid)
         self.active_btn.clicked.connect(self.activate_grid)
-        # 順位変更ボタンのコールバック修正
         self.up_btn.clicked.connect(lambda: self.parent_section.move_grid(self, -1))
         self.down_btn.clicked.connect(lambda: self.parent_section.move_grid(self, 1))
+        self.remove_btn.clicked.connect(self.remove_grid)
 
     def add_shortcut_button(self, action):
         self.grid_info['actions'].append(action)
@@ -412,6 +416,19 @@ class SingleShortcutGridWidget(QWidget):
         if ok and new_name.strip():
             self.grid_info['name'] = new_name.strip()
             self.grid_name_label.setText(self.grid_info['name'])
+
+    def remove_grid(self):
+        if self in self.parent_section.grids:
+            idx = self.parent_section.grids.index(self)
+            self.parent_section.main_layout.removeWidget(self)
+            self.setParent(None)
+            self.deleteLater()
+            self.parent_section.grids.remove(self)
+            if self.parent_section.grids:
+                self.parent_section.set_active_grid(0)
+            else:
+                self.parent_section.active_grid_idx = 0
+            self.parent_section.save_grids_data()
 
 class ShortcutDraggableButton(QPushButton):
     def __init__(self, action, grid_info, parent_section):

@@ -349,7 +349,7 @@ class QuickAccessDockerWidget(QDockWidget):
             if grid.get('name_label'):
                 grid['name_label'].setStyleSheet("font-weight: bold; font-size: 12px; color: #4FC3F7;" if grid.get('is_active') else "font-weight: bold; font-size: 12px; color: #ffffff;")
             # ヘッダーボタン
-            for btn_key in ['rename_button', 'active_btn']:
+            for btn_key in ['rename_button', 'active_btn', 'remove_btn']:
                 if grid.get(btn_key):
                     grid[btn_key].setStyleSheet(docker_btn_style())
             # ↑↓ボタン
@@ -421,20 +421,27 @@ class QuickAccessDockerWidget(QDockWidget):
         active_btn = QPushButton("Active")
         active_btn.setFixedSize(btn_width * 2, btn_height)
         active_btn.setStyleSheet(docker_btn_style())
+        # Removeボタン追加
+        remove_btn = QPushButton("Remove")
+        remove_btn.setFixedSize(btn_width * 2, btn_height)
+        remove_btn.setStyleSheet(docker_btn_style())
         header_layout.addWidget(up_btn)
         header_layout.addWidget(down_btn)
         header_layout.addWidget(rename_button)
         header_layout.addWidget(active_btn)
+        header_layout.addWidget(remove_btn)  # 右端に追加
         container_layout.addLayout(header_layout)
         grid_info['container'] = grid_container
         grid_info['name_label'] = name_label
         grid_info['rename_button'] = rename_button
         grid_info['active_btn'] = active_btn
+        grid_info['remove_btn'] = remove_btn
 
         up_btn.clicked.connect(lambda: self.move_grid(grid_info, -1))
         down_btn.clicked.connect(lambda: self.move_grid(grid_info, 1))
         rename_button.clicked.connect(lambda: self.rename_grid(grid_info))
         active_btn.clicked.connect(lambda: self.set_active_grid(grid_info))
+        remove_btn.clicked.connect(lambda: self.remove_grid(grid_info))  # 削除処理
 
         grid_widget = ClickableGridWidget(grid_info, self)
         grid_widget.setFixedHeight(48 + 4)
@@ -450,6 +457,24 @@ class QuickAccessDockerWidget(QDockWidget):
         grid_info['layout'] = grid_layout
         self.main_grid_layout.addWidget(grid_container)
         self.update_grid(grid_info)
+
+    def remove_grid(self, grid_info):
+        # グリッドを削除
+        if grid_info in self.grids:
+            idx = self.grids.index(grid_info)
+            # レイアウトから削除
+            container = grid_info.get('container')
+            if container:
+                self.main_grid_layout.removeWidget(container)
+                container.setParent(None)
+                container.deleteLater()
+            self.grids.remove(grid_info)
+            # アクティブグリッドの再設定
+            if self.grids:
+                self.set_active_grid(self.grids[0])
+            else:
+                self.active_grid = None
+            self.save_grids_data()
 
     def move_grid(self, grid_info, direction):
         idx = self.grids.index(grid_info)
@@ -470,6 +495,7 @@ class QuickAccessDockerWidget(QDockWidget):
             'name_label': None,
             'rename_button': None,
             'active_btn': None,
+            'remove_btn': None,
             'name': grid_name,
             'brush_presets': [],
             'is_active': False
