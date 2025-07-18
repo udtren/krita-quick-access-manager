@@ -1,4 +1,4 @@
-# Krita Quick Access Managerrita
+# Krita Quick Access Manager
 
 A plugin for Krita that provides quick access to brush presets and shortcut management.
 
