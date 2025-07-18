@@ -25,12 +25,15 @@ When Krita starts, the brush preset settings will be loaded automatically.
 However, the shortcut settings will not be loaded automatically because it is difficult to track the timing when Krita loads all shortcut actions.
 Therefore, you need to click the [RestoreShortcutGrid] button manually to restore the shortcut settings.
 
+## Sort/Remove
+Sort a brush or shortcut: Ctrl + left-click on the icon/button to move it inside the same or different grid.
+Remove a brush or shortcut: Ctrl + right-click on the icon/button to remove it from the grid.
+
 ## Other Usage 
 - Add a new grid: Click the "AddGrid" button to create a new grid.
 - Rename a grid: Use the "Rename" button to edit the grid name.
 - Reorder grids: Use the "↑" and "↓" buttons to change the grid order.
-- Sort a brush or shortcut: Ctrl + left-click on the icon/button to move it inside the same or different grid.
-- Remove a brush or shortcut: Ctrl + right-click on the icon/button to remove it from the grid.
 - Change settings: Use the "Setting" button to edit UI and layout settings.
+![How to Add a Brush Preset](./setting/image/image3.jpg)
 
 ## Notes- If you edit config files directly, please close Krita first.
