@@ -29,6 +29,7 @@ Therefore, you need to click the [RestoreShortcutGrid] button manually to restor
 - Add a new grid: Click the "AddGrid" button to create a new grid.
 - Rename a grid: Use the "Rename" button to edit the grid name.
 - Reorder grids: Use the "↑" and "↓" buttons to change the grid order.
+- Sort a brush or shortcut: Ctrl + left-click on the icon/button to move it inside the same or different grid.
 - Remove a brush or shortcut: Ctrl + right-click on the icon/button to remove it from the grid.
 - Change settings: Use the "Setting" button to edit UI and layout settings.
 
