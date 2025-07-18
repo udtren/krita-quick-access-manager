@@ -34,6 +34,6 @@ Remove a brush or shortcut: Ctrl + right-click on the icon/button to remove it f
 - Rename a grid: Use the "Rename" button to edit the grid name.
 - Reorder grids: Use the "↑" and "↓" buttons to change the grid order.
 - Change settings: Use the "Setting" button to edit UI and layout settings.
-![How to Add a Brush Preset](./setting/image/image3.jpg)
+![Setting](./quick_access_manager/image/image3.jpg)
 
 ## Notes- If you edit config files directly, please close Krita first.
