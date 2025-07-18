@@ -22,11 +22,14 @@ A plugin for Krita that provides quick access to brush presets and shortcut mana
 
 ## How the config restore works
 When Krita starts, the brush preset settings will be loaded automatically.
+
 However, the shortcut settings will not be loaded automatically because it is difficult to track the timing when Krita loads all shortcut actions.
+
 Therefore, you need to click the [RestoreShortcutGrid] button manually to restore the shortcut settings.
 
 ## Sort/Remove
 Sort a brush or shortcut: Ctrl + left-click on the icon/button to move it inside the same or different grid.
+
 Remove a brush or shortcut: Ctrl + right-click on the icon/button to remove it from the grid.
 
 ## Other Usage 
