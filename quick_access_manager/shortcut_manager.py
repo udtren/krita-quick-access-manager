@@ -34,14 +34,6 @@ def get_font_px(font_size_str):
     except Exception:
         return 12
 
-def log_shortcut_restore(msg):
-    log_dir = os.path.join(os.path.dirname(__file__), "logs")
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    log_path = os.path.join(log_dir, "shortcut_grid.log")
-    with open(log_path, "a", encoding="utf-8") as f:
-        f.write(f"{datetime.datetime.now().isoformat()} {msg}\n")
-
 class ShortcutPopup(QDialog):
     def __init__(self, parent_section):
         super().__init__(parent_section)
@@ -149,10 +141,8 @@ class ShortcutAccessSection(QWidget):
 
         krita_instance = Krita.instance()
         all_actions = {a.objectName(): a for a in krita_instance.actions()}
-        log_shortcut_restore(f"Krita available action IDs: {list(all_actions.keys())}")
 
         grids_data = load_shortcut_grids_data(self.data_file, krita_instance)
-        log_shortcut_restore(f"restore_grids_from_file: loaded {len(grids_data) if grids_data else 0} grids from {self.data_file}")
 
         # グリッドを先に全て作成
         grid_name_to_widget = {}
@@ -170,9 +160,8 @@ class ShortcutAccessSection(QWidget):
                 action = all_actions.get(shortcut_id)
                 if action:
                     grid_widget.add_shortcut_button(action)
-                    log_shortcut_restore(f"Restored action: {shortcut_id} in grid: {grid_info['name']}")
                 else:
-                    log_shortcut_restore(f"Action not found: {shortcut_id} in grid: {grid_info['name']}")
+                    pass
 
         # 最初のグリッドをアクティブにする（またはjsonのnameで特定してアクティブ化も可）
         if self.grids:
@@ -188,16 +177,14 @@ class ShortcutAccessSection(QWidget):
         if actions is None:
             actions = []
         elif all(isinstance(a, str) for a in actions):
-            log_shortcut_restore(f"Converting action ids to QAction: {actions}")
             actions = [krita_instance.action(aid) for aid in actions if krita_instance.action(aid)]
         else:
-            log_shortcut_restore(f"Using existing QAction list: {[a.objectName() for a in actions if hasattr(a, 'objectName')]}")
+            pass
         # それ以外（QActionリスト）はそのまま
         grid_info = {
             'name': grid_name,
             'actions': actions,
         }
-        log_shortcut_restore(f"Creating grid widget: {grid_name}, actions: {[a.objectName() for a in actions if hasattr(a, 'objectName')]}")
         grid_widget = SingleShortcutGridWidget(grid_info, self)
         self.grids.append(grid_widget)
         self.main_layout.addWidget(grid_widget)
@@ -314,7 +301,6 @@ class SingleShortcutGridWidget(QWidget):
             self.parent_section.save_grids_data()
 
     def update_grid(self):
-        log_shortcut_restore(f"update_grid: grid={self.grid_info['name']}, actions={[a.objectName() if hasattr(a, 'objectName') else str(a) for a in self.grid_info['actions']]}")
         while self.shortcut_grid_layout.count():
             item = self.shortcut_grid_layout.takeAt(0)
             widget = item.widget()
@@ -324,14 +310,12 @@ class SingleShortcutGridWidget(QWidget):
         max_columns = COMMON_CONFIG.get("layout", {}).get("max_shortcut_per_row", 3)
         for idx, action in enumerate(self.grid_info['actions']):
             action_id = action.objectName()
-            log_shortcut_restore(f"update_grid: grid={self.grid_info['name']}, adding button for action_id={action_id}")
             shortcut_btn = ShortcutDraggableButton(action, self.grid_info, self.parent_section)
             shortcut_btn.setMinimumSize(QSize(80, 32))
             shortcut_btn.setStyleSheet(shortcut_btn_style())
             row = idx // max_columns
             col = idx % max_columns
             self.shortcut_grid_layout.addWidget(shortcut_btn, row, col)
-        log_shortcut_restore(f"update_grid: grid={self.grid_info['name']}, total_buttons={len(self.grid_info['actions'])}")
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasText():

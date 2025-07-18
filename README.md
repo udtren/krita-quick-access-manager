@@ -1,11 +1,11 @@
 # Krita Quick Access Managerrita
 
 A plugin for Krita that provides quick access to brush presets and shortcut management.
+
 ![Sample](./image/000.jpg)
 ---
 
 ## How to Add a Brush Preset
-Contributions are welcome! Please feel free to submit issues or pull requests to improve the Quick Access Manager.
 1. In the "Quick Brush Access" section, activate the grid you want to add to.
 2. Select the brush preset you want to add from Krita's brush preset.
 3. Click the "AddBrush" button in the docker.
