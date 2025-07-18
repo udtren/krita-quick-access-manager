@@ -2,7 +2,7 @@
 
 A plugin for Krita that provides quick access to brush presets and shortcut management.
 
-![Sample](./image/000.jpg)
+![Sample](./quick_access_manager/image/000.jpg)
 ---
 
 ## How to Add a Brush Preset
@@ -10,7 +10,7 @@ A plugin for Krita that provides quick access to brush presets and shortcut mana
 2. Select the brush preset you want to add from Krita's brush preset.
 3. Click the "AddBrush" button in the docker.
 4. The selected preset will be added to the active grid.
-![ow to Add a Brush Preset](./image/image1.jpg)
+![How to Add a Brush Preset](./quick_access_manager/image/image1.jpg)
 
 ## How to Add a Shortcut. 
 1. In the "Quick Shortcut Access" section, activate the grid you want to add to.
@@ -18,7 +18,7 @@ A plugin for Krita that provides quick access to brush presets and shortcut mana
 3. Select the action you want to add from the table.
 4. Click the "AddShortCut" button.
 5. The selected shortcut will be added to the active grid.
-![How to Add a Shortcut](./image/image2.jpg)
+![How to Add a Shortcut](./quick_access_manager/image/image2.jpg)
 
 ## How the config restore works
 When Krita starts, the brush preset settings will be loaded automatically.
