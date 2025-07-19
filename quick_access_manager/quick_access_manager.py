@@ -385,7 +385,7 @@ class QuickAccessDockerWidget(QDockWidget):
                             btn.setStyleSheet(shortcut_btn_style())
         # AddBrush/AddGrid/Settingボタンなども再適用
         for btn in self.findChildren(QPushButton):
-            if btn.text() in ["AddBrush", "AddGrid", "Setting"]:
+            if btn.text() in ["AddBrush", "AddGrid", "Setting", "ShowAllShortcut", "RestoreShortcutGrid"]:
                 btn.setStyleSheet(docker_btn_style())
 
     def _add_grid_ui(self, grid_info):
