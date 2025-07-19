@@ -420,6 +420,8 @@ class SingleShortcutGridWidget(QWidget):
         if ok and new_name.strip():
             self.grid_info['name'] = new_name.strip()
             self.grid_name_label.setText(self.grid_info['name'])
+            self.parent_section.save_grids_data()
+
 
     def remove_grid(self):
         if self in self.parent_section.grids:
