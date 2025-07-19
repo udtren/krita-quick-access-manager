@@ -4,14 +4,12 @@ import datetime
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialog, QTableWidget, QTableWidgetItem, QLineEdit, QHeaderView, QMessageBox, QGridLayout, QInputDialog, QApplication
 from PyQt5.QtCore import Qt, QSize, QMimeData, QPoint
 from PyQt5.QtGui import QDrag
+from PyQt5.QtGui import QFontMetrics
 from krita import Krita
 from .data_manager import load_shortcut_grids_data, save_shortcut_grids_data
+from .preprocess import check_common_config
 
-def load_common_config():
-    config_path = os.path.join(os.path.dirname(__file__), "config", "common.json")
-    with open(config_path, "r", encoding="utf-8") as f:
-        return json.load(f)
-COMMON_CONFIG = load_common_config()
+COMMON_CONFIG = check_common_config()
 
 def shortcut_btn_style():
     # 最新のCOMMON_CONFIGを毎回参照
@@ -359,13 +357,19 @@ class SingleShortcutGridWidget(QWidget):
                     col = min(drop_pos.x() // 90, max_columns - 1)
                     row = drop_pos.y() // 36
                     target_index = row * max_columns + col
-                    source_grid['actions'].pop(source_index)
+
+                    # 同じグリッド内で移動の場合
                     if self.grid_info == source_grid:
-                        target_index = min(target_index, len(source_grid['actions']))
+                        # 削除前にtarget_indexを計算し、削除後に調整
+                        if target_index > source_index:
+                            target_index -= 1
+                        source_grid['actions'].pop(source_index)
+                        target_index = max(0, min(target_index, len(source_grid['actions'])))
                         source_grid['actions'].insert(target_index, source_action)
                         self.update_grid()
                     else:
-                        target_index = min(target_index, len(self.grid_info['actions']))
+                        source_grid['actions'].pop(source_index)
+                        target_index = max(0, min(target_index, len(self.grid_info['actions'])))
                         self.grid_info['actions'].insert(target_index, source_action)
                         grid_widget = self.parent_section.grids[self.parent_section.grids.index(self)]
                         grid_widget.update_grid()
@@ -440,6 +444,50 @@ class ShortcutDraggableButton(QPushButton):
         self.setStyleSheet(shortcut_btn_style())
         self.drag_start_position = QPoint()
         self.clicked.connect(lambda: self.parent_section.run_krita_action(action.objectName()))
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.adjust_text_to_fit()
+
+    def adjust_text_to_fit(self):
+        text = self.action.objectName()
+        font = self.font()
+        metrics = QFontMetrics(font)
+        max_width = self.width() - 8  # padding
+        max_height = self.height() - 8
+
+        # 初期フォントサイズ
+        font_size = font.pointSize()
+        if font_size <= 0:
+            font_size = 12
+
+        # 改行処理
+        def wrap_text(text, max_width, font):
+            words = text.split('_')
+            lines = []
+            line = ""
+            for word in words:
+                test_line = line + ("_" if line else "") + word
+                if QFontMetrics(font).width(test_line) > max_width and line:
+                    lines.append(line)
+                    line = word
+                else:
+                    line = test_line
+            if line:
+                lines.append(line)
+            return "\n".join(lines)
+
+        # フォントサイズ調整
+        while font_size > 7:
+            font.setPointSize(font_size)
+            wrapped = wrap_text(text, max_width, font)
+            lines = wrapped.split('\n')
+            if len(lines) * QFontMetrics(font).height() <= max_height:
+                break
+            font_size -= 1
+
+        self.setFont(font)
+        self.setText(wrapped)    
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and QApplication.keyboardModifiers() == Qt.ControlModifier:

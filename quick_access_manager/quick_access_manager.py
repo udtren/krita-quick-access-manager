@@ -6,12 +6,9 @@ from PyQt5.QtCore import Qt, QMimeData, QPoint
 from PyQt5.QtGui import QIcon, QPixmap, QDrag
 from .data_manager import load_grids_data, save_grids_data
 from .shortcut_manager import ShortcutAccessSection, SingleShortcutGridWidget, shortcut_btn_style
+from .preprocess import check_common_config
 
-def load_common_config():
-    config_path = os.path.join(os.path.dirname(__file__), "config", "common.json")
-    with open(config_path, "r", encoding="utf-8") as f:
-        return json.load(f)
-COMMON_CONFIG = load_common_config()
+COMMON_CONFIG = check_common_config()
 
 def docker_btn_style():
     color = COMMON_CONFIG["color"]["docker_button_background_color"]
