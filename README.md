@@ -30,9 +30,11 @@ However, the shortcut settings will not be loaded automatically because it is di
 Therefore, you need to click the [RestoreShortcutGrid] button manually to restore the shortcut settings.
 
 ## Resize Docker
-When resizing the docker, please do it slowly.
+<del>When resizing the docker, please do it slowly.</del>
 
-If you resize too quickly, small Brush Preset popup windows may appear repeatedly, and you will need to close them manually.
+<del>If you resize too quickly, small Brush Preset popup windows may appear repeatedly, and you will need to close them manually.</del>
+
+Since the grid update process for Brush Presets has been disabled during docker resizing, this issue should no longer occur.
 
 ## Sort/Remove
 
