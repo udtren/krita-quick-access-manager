@@ -490,16 +490,42 @@ class ShortcutDraggableButton(QPushButton):
         self.setText(wrapped)    
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and QApplication.keyboardModifiers() == Qt.ControlModifier:
+        modifiers = QApplication.keyboardModifiers()
+        # Ctrl+Shift+Alt+左クリック: Indexを-1
+        if (event.button() == Qt.LeftButton and
+            modifiers == (Qt.ControlModifier | Qt.ShiftModifier | Qt.AltModifier)):
+            idx = self.grid_info['actions'].index(self.action)
+            if idx > 0:
+                self.grid_info['actions'].pop(idx)
+                self.grid_info['actions'].insert(idx - 1, self.action)
+                self.parent_section.save_grids_data()
+                for grid_widget in self.parent_section.grids:
+                    if grid_widget.grid_info is self.grid_info:
+                        grid_widget.update_grid()
+                        break
+            return
+        # Ctrl+Shift+Alt+右クリック: Indexを+1
+        if (event.button() == Qt.RightButton and
+            modifiers == (Qt.ControlModifier | Qt.ShiftModifier | Qt.AltModifier)):
+            idx = self.grid_info['actions'].index(self.action)
+            if idx < len(self.grid_info['actions']) - 1:
+                self.grid_info['actions'].pop(idx)
+                self.grid_info['actions'].insert(idx + 1, self.action)
+                self.parent_section.save_grids_data()
+                for grid_widget in self.parent_section.grids:
+                    if grid_widget.grid_info is self.grid_info:
+                        grid_widget.update_grid()
+                        break
+            return
+        # Ctrl+左クリック: グリッド間移動(ドラッグ)
+        if event.button() == Qt.LeftButton and modifiers == Qt.ControlModifier:
             self.drag_start_position = event.pos()
-        # Ctrl+右クリックで削除
-        if event.button() == Qt.RightButton and QApplication.keyboardModifiers() == Qt.ControlModifier:
-            # グリッドからこのアクションを削除
+        # Ctrl+右クリック: 削除
+        if event.button() == Qt.RightButton and modifiers == Qt.ControlModifier:
             for i, act in enumerate(self.grid_info['actions']):
                 if act.objectName() == self.action.objectName():
                     self.grid_info['actions'].pop(i)
                     self.parent_section.save_grids_data()
-                    # 自分が属するグリッドウィジェットを探してupdate_grid
                     for grid_widget in self.parent_section.grids:
                         if grid_widget.grid_info is self.grid_info:
                             grid_widget.update_grid()

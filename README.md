@@ -39,6 +39,10 @@ If you resize too quickly, small Brush Preset popup windows may appear repeatedl
 **Sort:**  
 To reorder a brush or shortcut button within a grid or move it between grids, hold <kbd>Ctrl</kbd> and left-click and drag the button to the desired position or grid.
 
+**Advanced Sort:**  
+- To move a shortcut button up by one position within the same grid, hold <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Alt</kbd> and left-click the button.
+- To move a shortcut button down by one position within the same grid, hold <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Alt</kbd> and right-click the button.
+
 **Remove:**  
 To remove a brush or shortcut from a grid, hold <kbd>Ctrl</kbd> and right-click on the button you want to remove.
 
