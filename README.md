@@ -21,7 +21,7 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 4. Click the "AddShortCut" button.
 5. The selected shortcut will be added to the active grid.
 ![How to Add a Shortcut](./quick_access_manager/image/image2.jpg)
-
+ 
 ## How the config restore works
 When Krita starts, the brush preset settings will be loaded automatically.
 
