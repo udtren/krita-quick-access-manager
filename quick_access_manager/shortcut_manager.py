@@ -463,11 +463,13 @@ class ShortcutDraggableButton(QPushButton):
 
         # 改行処理
         def wrap_text(text, max_width, font):
-            words = text.split('_')
+            import re
+            # _ またはスペースで分割
+            words = re.split(r'[_\s]', text)
             lines = []
             line = ""
             for word in words:
-                test_line = line + ("_" if line else "") + word
+                test_line = (line + " " if line else "") + word
                 if QFontMetrics(font).width(test_line) > max_width and line:
                     lines.append(line)
                     line = word
