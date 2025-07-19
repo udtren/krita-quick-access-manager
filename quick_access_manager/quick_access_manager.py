@@ -373,7 +373,8 @@ class QuickAccessDockerWidget(QDockWidget):
                     )
                 # ヘッダーボタン
                 for btn in [getattr(grid_widget, "up_btn", None), getattr(grid_widget, "down_btn", None),
-                            getattr(grid_widget, "rename_btn", None), getattr(grid_widget, "active_btn", None)]:
+                            getattr(grid_widget, "rename_btn", None), getattr(grid_widget, "active_btn", None),
+                            getattr(grid_widget, "remove_btn", None)]:
                     if btn:
                         btn.setStyleSheet(docker_btn_style())
                 # ショートカットボタン
