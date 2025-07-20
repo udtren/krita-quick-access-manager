@@ -1,6 +1,5 @@
 import os
 import json
-import time
 from krita import Extension, DockWidgetFactory, DockWidgetFactoryBase, Krita
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget, QScrollArea, QHBoxLayout, QInputDialog, QApplication, QDialog, QLineEdit
 from PyQt5.QtCore import Qt, QMimeData, QPoint
@@ -599,10 +598,6 @@ class QuickAccessDockerWidget(QDockWidget):
     
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        # time.sleep(0.5)
-        # # 幅が変わったら全グリッドのレイアウトを再計算
-        # for grid_info in self.grids:
-        #     self.update_grid(grid_info)
     
     def select_brush_preset(self, preset):
         # Set the selected brush preset as current
@@ -647,6 +642,9 @@ class QuickAccessManagerExtension(Extension):
     def createActions(self, window):
         # Kritaのウィンドウが初期化された後に呼ばれる
         for d in window.dockers():
-            widget = getattr(d, "widget", lambda: None)()
+            widget = None
+            if hasattr(d, "widget"):
+                w = d.widget
+                widget = w() if callable(w) else w
             if widget and hasattr(widget, "shortcut_section"):
                 widget.shortcut_section.restore_grids_from_file()

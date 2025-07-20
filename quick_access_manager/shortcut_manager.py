@@ -1,6 +1,5 @@
 import json
 import os
-import datetime
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialog, QTableWidget, QTableWidgetItem, QLineEdit, QHeaderView, QMessageBox, QGridLayout, QInputDialog, QApplication
 from PyQt5.QtCore import Qt, QSize, QMimeData, QPoint
 from PyQt5.QtGui import QDrag
