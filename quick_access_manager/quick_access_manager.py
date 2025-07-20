@@ -1,7 +1,7 @@
 import os
 import json
 from krita import Extension, DockWidgetFactory, DockWidgetFactoryBase, Krita
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget, QScrollArea, QHBoxLayout, QInputDialog, QApplication, QDialog, QLineEdit
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget, QScrollArea, QHBoxLayout, QInputDialog, QApplication, QDialog, QLineEdit, QMessageBox
 from PyQt5.QtCore import Qt, QMimeData, QPoint
 from PyQt5.QtGui import QIcon, QPixmap, QDrag
 from .data_manager import load_grids_data, save_grids_data
@@ -642,9 +642,16 @@ class QuickAccessManagerExtension(Extension):
     def createActions(self, window):
         # Kritaのウィンドウが初期化された後に呼ばれる
         for d in window.dockers():
-            widget = None
-            if hasattr(d, "widget"):
-                w = d.widget
-                widget = w() if callable(w) else w
-            if widget and hasattr(widget, "shortcut_section"):
-                widget.shortcut_section.restore_grids_from_file()
+            try:
+                widget = None
+                if hasattr(d, "widget"):
+                    w = d.widget
+                    widget = w() if callable(w) else w
+                if widget and hasattr(widget, "shortcut_section"):
+                    widget.shortcut_section.restore_grids_from_file()
+            except Exception:
+                QMessageBox.warning(
+                    None,
+                    "QuickAccessManagerExtension Error",
+                    "Something wrong is happening on QuickAccessManagerExtension.createActions.\n\nYou can try disable other plugin and start Krita again."
+                )
