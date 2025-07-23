@@ -1,0 +1,76 @@
+2025-07-24T00:55:33.825631 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x000001BE825AEE60>
+2025-07-24T00:55:33.825631 save_grids_data shortcut_configs: []
+2025-07-24T00:55:33.825631 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": []}]}
+2025-07-24T00:55:37.029522 config: {'actionName': 'reset_display', 'customName': 'reset_display', 'fontSize': '14', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T00:55:37.029522 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x000001BE825AEE60>
+2025-07-24T00:55:37.029522 save_grids_data shortcut_configs: [{'actionName': 'reset_display', 'customName': 'reset_display', 'fontSize': '14', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T00:55:37.029522 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "reset_display", "customName": "reset_display", "fontSize": "14", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T00:55:37.029522 font_size: 14
+2025-07-24T00:55:37.029522 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x000001BE825AEE60>
+2025-07-24T00:55:37.029522 save_grids_data shortcut_configs: [{'actionName': 'reset_display', 'customName': 'reset_display', 'fontSize': '14', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T00:55:37.029522 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "reset_display", "customName": "reset_display", "fontSize": "14", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T00:55:37.047488 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x000001BE825AEE60>
+2025-07-24T00:55:37.047488 save_grids_data shortcut_configs: [{'actionName': 'reset_display', 'customName': 'reset_display', 'fontSize': '14', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T00:55:37.047488 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "reset_display", "customName": "reset_display", "fontSize": "14", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T00:55:41.581415 config: {'actionName': 'reset_display', 'customName': 'test', 'fontSize': '-1', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T00:55:41.581415 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x000001BE825AEE60>
+2025-07-24T00:55:41.581415 save_grids_data shortcut_configs: [{'actionName': 'reset_display', 'customName': 'test', 'fontSize': '-1', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T00:55:41.581415 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "reset_display", "customName": "test", "fontSize": "-1", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T00:55:41.581415 font_size: -1
+2025-07-24T00:55:41.581415 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x000001BE825AEE60>
+2025-07-24T00:55:41.581415 save_grids_data shortcut_configs: [{'actionName': 'reset_display', 'customName': 'test', 'fontSize': '-1', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T00:55:41.581415 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "reset_display", "customName": "test", "fontSize": "-1", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T00:55:51.233469 config: {'actionName': 'reset_display', 'customName': 'test', 'fontSize': '20', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T00:55:51.233469 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x000001BE825AEE60>
+2025-07-24T00:55:51.233469 save_grids_data shortcut_configs: [{'actionName': 'reset_display', 'customName': 'test', 'fontSize': '20', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T00:55:51.233469 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "reset_display", "customName": "test", "fontSize": "20", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T00:55:51.233469 font_size: 20
+2025-07-24T00:55:51.233469 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x000001BE825AEE60>
+2025-07-24T00:55:51.233469 save_grids_data shortcut_configs: [{'actionName': 'reset_display', 'customName': 'test', 'fontSize': '20', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T00:55:51.233469 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "reset_display", "customName": "test", "fontSize": "20", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T01:01:02.651173 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:01:02.651173 save_grids_data shortcut_configs: []
+2025-07-24T01:01:02.651173 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": []}]}
+2025-07-24T01:01:05.283077 config: {'actionName': 'rulers_track_mouse', 'customName': 'rulers_track_mouse', 'fontSize': '14', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T01:01:05.283077 font_size: 14
+2025-07-24T01:01:05.283077 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:01:05.283077 save_grids_data shortcut_configs: [{'actionName': 'rulers_track_mouse', 'customName': 'rulers_track_mouse', 'fontSize': '14', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T01:01:05.297273 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "rulers_track_mouse", "customName": "rulers_track_mouse", "fontSize": "14", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T01:01:05.297273 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:01:05.297273 save_grids_data shortcut_configs: [{'actionName': 'rulers_track_mouse', 'customName': 'rulers_track_mouse', 'fontSize': '14', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T01:01:05.297273 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "rulers_track_mouse", "customName": "rulers_track_mouse", "fontSize": "14", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T01:01:10.831758 config: {'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '-1', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T01:01:10.831758 font_size: -1
+2025-07-24T01:01:10.831758 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:01:10.831758 save_grids_data shortcut_configs: [{'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '-1', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T01:01:10.831758 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "rulers_track_mouse", "customName": "test", "fontSize": "-1", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T01:01:14.898035 config: {'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '20', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T01:01:14.898035 font_size: 20
+2025-07-24T01:01:14.898035 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:01:14.899035 save_grids_data shortcut_configs: [{'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '20', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T01:01:14.899035 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "rulers_track_mouse", "customName": "test", "fontSize": "20", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T01:01:50.834111 config: {'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '-1', 'fontColor': '#ffffff', 'backgroundColor': '#ffffff'}
+2025-07-24T01:01:50.834111 font_size: -1
+2025-07-24T01:01:50.835991 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:01:50.835991 save_grids_data shortcut_configs: [{'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '-1', 'fontColor': '#ffffff', 'backgroundColor': '#ffffff'}]
+2025-07-24T01:01:50.835991 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "rulers_track_mouse", "customName": "test", "fontSize": "-1", "fontColor": "#ffffff", "backgroundColor": "#ffffff"}]}]}
+2025-07-24T01:01:58.835951 config: {'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '25', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T01:01:58.835951 font_size: 25
+2025-07-24T01:01:58.835951 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:01:58.835951 save_grids_data shortcut_configs: [{'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '25', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T01:01:58.835951 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "rulers_track_mouse", "customName": "test", "fontSize": "25", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T01:02:08.147222 config: {'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '7', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T01:02:08.147222 font_size: 7
+2025-07-24T01:02:08.147222 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:02:08.147222 save_grids_data shortcut_configs: [{'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '7', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T01:02:08.147222 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "rulers_track_mouse", "customName": "test", "fontSize": "7", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T01:02:12.969431 config: {'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '15', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T01:02:12.969431 font_size: 15
+2025-07-24T01:02:12.969431 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:02:12.969431 save_grids_data shortcut_configs: [{'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '15', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T01:02:12.985448 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "rulers_track_mouse", "customName": "test", "fontSize": "15", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}
+2025-07-24T01:02:17.453889 config: {'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '30', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}
+2025-07-24T01:02:17.453889 font_size: 30
+2025-07-24T01:02:17.453889 save_grids_data grid_widget: <quick_access_manager.shortcut_manager.SingleShortcutGridWidget object at 0x0000021D4F841F30>
+2025-07-24T01:02:17.453889 save_grids_data shortcut_configs: [{'actionName': 'rulers_track_mouse', 'customName': 'test', 'fontSize': '30', 'fontColor': '#ffffff', 'backgroundColor': '#100429'}]
+2025-07-24T01:02:17.453889 save_shortcut_grids_data: {"grids": [{"name": "Shortcut Grid 1", "shortcuts": [{"actionName": "rulers_track_mouse", "customName": "test", "fontSize": "30", "fontColor": "#ffffff", "backgroundColor": "#100429"}]}]}

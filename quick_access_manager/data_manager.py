@@ -1,14 +1,14 @@
 import os
 import json
+import datetime
 
-# def log_shortcut_restore(msg):
-#     import datetime
-#     log_dir = os.path.join(os.path.dirname(__file__), "logs")
-#     if not os.path.exists(log_dir):
-#         os.makedirs(log_dir)
-#     log_path = os.path.join(log_dir, "shortcut_grid.log")
-#     with open(log_path, "a", encoding="utf-8") as f:
-#         f.write(f"{datetime.datetime.now().isoformat()} {msg}\n")
+def log_save_grids_data(msg):
+    log_dir = os.path.join(os.path.dirname(__file__), "logs")
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    log_path = os.path.join(log_dir, "shortcut_grid.log")
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(f"{datetime.datetime.now().isoformat()} {msg}\n")
 
 def load_grids_data(data_file, preset_dict):
     grids = []
@@ -67,23 +67,31 @@ def load_shortcut_grids_data(data_file, krita_instance):
             for grid_data in data.get("grids", []):
                 grid_counter += 1
                 grid_name = grid_data.get("name", f"Shortcut Grid {grid_counter}")
-                shortcut_ids = grid_data.get("shortcuts", [])
+                shortcut_items = grid_data.get("shortcuts", [])
                 actions = []
-                for action_id in shortcut_ids:
-                    # log_shortcut_restore(f"load_shortcut_grids_data: grid={grid_name}, action_id={action_id}")
-                    action = krita_instance.action(action_id) if action_id else None
-                    # log_shortcut_restore(f"load_shortcut_grids_data: grid={grid_name}, action={action}")
-                    if action:
-                        actions.append(action)
+                shortcut_configs = []
+                for shortcut in shortcut_items:
+                    if isinstance(shortcut, dict):
+                        action_id = shortcut.get("actionName")
+                        action = krita_instance.action(action_id) if action_id else None
+                        if action:
+                            actions.append(action)
+                            shortcut_configs.append(shortcut)
+                    else:
+                        # 旧形式（strのみ）
+                        action = krita_instance.action(shortcut) if shortcut else None
+                        if action:
+                            actions.append(action)
+                            shortcut_configs.append({
+                                "actionName": shortcut
+                            })
                 grid_info = {
                     'name': grid_name,
                     'actions': actions,
-                    'shortcuts': shortcut_ids
+                    'shortcut_configs': shortcut_configs
                 }
                 grids.append(grid_info)
-                # log_shortcut_restore(f"load_shortcut_grids_data: grid_info={grid_info}")
-        except Exception as e:
-            # log_shortcut_restore(f"load_shortcut_grids_data: Exception: {e}")
+        except Exception:
             pass
     return grids
 
@@ -92,16 +100,14 @@ def save_shortcut_grids_data(data_file, grids):
         "grids": [
             {
                 "name": grid['name'],
-                "shortcuts": [
-                    a.objectName() if hasattr(a, "objectName") else str(a)
-                    for a in grid['actions']
-                ]
+                "shortcuts": grid['shortcuts'],
             }
             for grid in grids
         ]
     }
+    log_save_grids_data(f"save_shortcut_grids_data: {json.dumps(data, ensure_ascii=False)}")
     try:
         with open(data_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-    except Exception:
-        pass
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        log_save_grids_data(f"save_shortcut_grids_data ERROR: {str(e)}")
