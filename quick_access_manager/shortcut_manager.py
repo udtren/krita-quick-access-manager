@@ -65,7 +65,36 @@ class ShortcutPopup(QDialog):
         self.filter_edit.textChanged.connect(self.apply_filter)
 
     def populate_table(self):
-        self.actions = Krita.instance().actions()
+        # すべてのQActionを再帰的に取得
+        def get_all_actions():
+            all_actions = {}
+            app = Krita.instance()
+            main_window = app.activeWindow()
+            if not main_window:
+                return []
+            qwin = main_window.qwindow()
+            widgets = [qwin]
+            if hasattr(qwin, 'menuBar'):
+                widgets.append(qwin.menuBar())
+            if hasattr(qwin, 'toolBar'):
+                widgets.append(qwin.toolBar())
+            while widgets:
+                widget = widgets.pop()
+                if hasattr(widget, 'actions'):
+                    actions = widget.actions
+                    if callable(actions):
+                        actions = actions()
+                    for action in actions:
+                        if action and hasattr(action, "objectName") and action.objectName():
+                            all_actions[action.objectName()] = action
+                if hasattr(widget, 'children'):
+                    widgets.extend(child for child in widget.children() if hasattr(child, 'actions'))
+            for action in app.actions():
+                if action and hasattr(action, "objectName") and action.objectName():
+                    all_actions[action.objectName()] = action
+            return list(all_actions.values())
+        
+        self.actions = get_all_actions()
         self.table.setRowCount(len(self.actions))
         for i, action in enumerate(self.actions):
             id_item = QTableWidgetItem(action.objectName())
@@ -535,6 +564,17 @@ class ShortcutDraggableButton(QPushButton):
                             break
                     break
             return
+        # Alt+右クリック: 個別設定ポップアップ
+        if event.button() == Qt.RightButton and modifiers == Qt.AltModifier:
+            dlg = ShortcutButtonConfigDialog(self)
+            if dlg.exec_():
+                # 設定反映
+                self.setText(dlg.name_edit.text())
+                font = self.font()
+                font.setPointSize(int(dlg.font_size_edit.text()))
+                self.setFont(font)
+                self.setStyleSheet(f"background-color: {dlg.bg_color_edit.text()}; color: {dlg.font_color_edit.text()};")
+            return
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -550,3 +590,41 @@ class ShortcutDraggableButton(QPushButton):
         drag.setMimeData(mimeData)
         drag.setHotSpot(QPoint(16, 16))
         drag.exec_(Qt.MoveAction)
+
+class ShortcutButtonConfigDialog(QDialog):
+    def __init__(self, btn, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Shortcut Button Config")
+        self.resize(300, 180)
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # ボタン名
+        layout.addWidget(QLabel("Button Name:"))
+        self.name_edit = QLineEdit(btn.text())
+        layout.addWidget(self.name_edit)
+
+        # フォントサイズ
+        layout.addWidget(QLabel("Font Size:"))
+        self.font_size_edit = QLineEdit(str(btn.font().pointSize()))
+        layout.addWidget(self.font_size_edit)
+
+        # 背景色
+        layout.addWidget(QLabel("Background Color:"))
+        self.bg_color_edit = QLineEdit(btn.palette().color(btn.backgroundRole()).name())
+        layout.addWidget(self.bg_color_edit)
+
+        # フォント色
+        layout.addWidget(QLabel("Font Color:"))
+        self.font_color_edit = QLineEdit(btn.palette().color(btn.foregroundRole()).name())
+        layout.addWidget(self.font_color_edit)
+
+        btns = QHBoxLayout()
+        ok_btn = QPushButton("OK")
+        cancel_btn = QPushButton("Cancel")
+        btns.addWidget(ok_btn)
+        btns.addWidget(cancel_btn)
+        layout.addLayout(btns)
+
+        ok_btn.clicked.connect(self.accept)
+        cancel_btn.clicked.connect(self.reject)
