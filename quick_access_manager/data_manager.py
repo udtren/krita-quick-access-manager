@@ -105,7 +105,7 @@ def save_shortcut_grids_data(data_file, grids):
             for grid in grids
         ]
     }
-    log_save_grids_data(f"save_shortcut_grids_data: {json.dumps(data, ensure_ascii=False)}")
+    # log_save_grids_data(f"save_shortcut_grids_data: {json.dumps(data, ensure_ascii=False)}")
     try:
         with open(data_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)

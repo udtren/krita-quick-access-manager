@@ -22,6 +22,14 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 5. The selected shortcut will be added to the active grid.
 ![How to Add a Shortcut](./quick_access_manager/image/image2.jpg)
  
+## Global Config
+Use the "Setting" button to edit UI and layout settings.
+![Setting](./quick_access_manager/image/image3.jpg)
+
+## Shortcut Button Config
+Hold <kbd>Alt</kbd> and right-click the button.
+![Shortcut Button Config](./quick_access_manager/image/image4.jpg)
+
 ## How the config restore works
 When Krita starts, the brush preset settings will be loaded automatically.
 
@@ -67,7 +75,3 @@ If you want to reset or backup your settings, you can copy or edit these files d
 - Add a new grid: Click the "AddGrid" button to create a new grid.
 - Rename a grid: Use the "Rename" button to edit the grid name.
 - Reorder grids: Use the "↑" and "↓" buttons to change the grid order.
-- Change settings: Use the "Setting" button to edit UI and layout settings.
-![Setting](./quick_access_manager/image/image3.jpg)
-
-## Notes- If you edit config files directly, please close Krita first.

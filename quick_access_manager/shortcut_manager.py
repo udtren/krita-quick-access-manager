@@ -255,8 +255,8 @@ class ShortcutAccessSection(QWidget):
         grids_data = []
         for grid_widget in self.grids:
             # shortcut_configsを直接保存
-            log_save_grids_data(f"save_grids_data grid_widget: {grid_widget}")
-            log_save_grids_data(f"save_grids_data shortcut_configs: {grid_widget.grid_info.get('shortcut_configs', [])}")
+            # log_save_grids_data(f"save_grids_data grid_widget: {grid_widget}")
+            # log_save_grids_data(f"save_grids_data shortcut_configs: {grid_widget.grid_info.get('shortcut_configs', [])}")
 
             shortcuts = grid_widget.grid_info.get("shortcut_configs", [])
             grid_info = {
@@ -393,7 +393,7 @@ class SingleShortcutGridWidget(QWidget):
                     "fontColor": COMMON_CONFIG["color"]["shortcut_button_font_color"],
                     "backgroundColor": COMMON_CONFIG["color"]["shortcut_button_background_color"]
                 }
-            log_save_grids_data(f"config: {config}")
+            # log_save_grids_data(f"config: {config}")
 
             shortcut_btn = ShortcutDraggableButton(action, self.grid_info, self.parent_section, config)
             shortcut_btn.setMinimumSize(QSize(80, 32))
@@ -553,10 +553,16 @@ class ShortcutDraggableButton(QPushButton):
 
         # フォントサイズ・色・背景色を反映
         font = self.font()
-        font_size = int(config.get("fontSize", get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"]))) if config else get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"])
+        font_size_str = config.get("fontSize", get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"]))
+        try:
+            font_size = int(font_size_str)
+            if font_size < 7:
+                font_size = get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"])
+        except Exception:
+            font_size = get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"])
         font.setPointSize(font_size)
-        log_save_grids_data(f"font_size: {font_size}")
         self.setFont(font)
+
         font_color = config.get("fontColor", COMMON_CONFIG["color"]["shortcut_button_font_color"]) if config else COMMON_CONFIG["color"]["shortcut_button_font_color"]
         bg_color = config.get("backgroundColor", COMMON_CONFIG["color"]["shortcut_button_background_color"]) if config else COMMON_CONFIG["color"]["shortcut_button_background_color"]
         self.setStyleSheet(f"background-color: {bg_color}; color: {font_color};")
@@ -635,6 +641,15 @@ class ShortcutDraggableButton(QPushButton):
         if event.button() == Qt.RightButton and modifiers == Qt.AltModifier:
             dlg = ShortcutButtonConfigDialog(self)
             if dlg.exec_():
+                # フォントサイズのバリデーション
+                font_size_str = dlg.font_size_edit.text().strip()
+                try:
+                    font_size = int(font_size_str)
+                    if font_size < 7:  # 最小サイズ
+                        font_size = 12
+                except Exception:
+                    font_size = 12  # デフォルト
+
                 # 設定をgrid_infoのshortcut_configsに保存
                 idx = self.grid_info['actions'].index(self.action)
                 if "shortcut_configs" not in self.grid_info:
@@ -642,7 +657,7 @@ class ShortcutDraggableButton(QPushButton):
                 self.grid_info["shortcut_configs"][idx] = {
                     "actionName": self.action.objectName(),
                     "customName": dlg.name_edit.text(),
-                    "fontSize": dlg.font_size_edit.text(),
+                    "fontSize": str(font_size),
                     "fontColor": dlg.font_color_edit.text(),
                     "backgroundColor": dlg.bg_color_edit.text()
                 }
@@ -683,8 +698,10 @@ class ShortcutButtonConfigDialog(QDialog):
         layout.addWidget(self.name_edit)
 
         # フォントサイズ
-        layout.addWidget(QLabel("Font Size:"))
-        self.font_size_edit = QLineEdit(str(btn.font().pointSize()))
+        font_size = btn.config.get("fontSize") if btn.config else str(max(btn.font().pointSize(), 7))
+        if not font_size or font_size == "-1":
+            font_size = str(max(btn.font().pointSize(), 7))
+        self.font_size_edit = QLineEdit(str(font_size))
         layout.addWidget(self.font_size_edit)
 
         # 背景色
