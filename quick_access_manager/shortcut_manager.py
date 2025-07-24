@@ -712,6 +712,7 @@ class ShortcutButtonConfigDialog(QDialog):
         layout.addWidget(self.name_edit)
 
         # フォントサイズ
+        layout.addWidget(QLabel("Font Size:"))
         font_size = btn.config.get("fontSize") if btn.config else str(max(btn.font().pointSize(), 7))
         if not font_size or font_size == "-1":
             font_size = str(max(btn.font().pointSize(), 7))
