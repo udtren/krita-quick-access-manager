@@ -422,7 +422,7 @@ class SingleShortcutGridWidget(QWidget):
                     f"background-color: {bg_color}; color: {font_color}; font-size: {font_size}px;"
                 )
             else:
-                log_save_grids_data(f"is_custom: False")
+                # log_save_grids_data(f"is_custom: False")
                 shortcut_btn.setStyleSheet(shortcut_btn_style())
 
             row = idx // max_columns
