@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QSize, QMimeData, QPoint
 from PyQt5.QtGui import QDrag
 from PyQt5.QtGui import QFontMetrics
 from krita import Krita
-from .data_manager import load_shortcut_grids_data, save_shortcut_grids_data
+from .data_manager import load_shortcut_grids_data, save_shortcut_grids_data, log_save_grids_data
 from .preprocess import check_common_config
 
 COMMON_CONFIG = check_common_config()
@@ -23,6 +23,35 @@ def docker_btn_style():
     font_color = COMMON_CONFIG["color"]["docker_button_font_color"]
     font_size = COMMON_CONFIG["font"]["docker_button_font_size"]
     return f"background-color: {color}; color: {font_color}; font-size: {font_size};"
+
+# すべてのQActionを再帰的に取得
+def get_all_actions():
+    all_actions = {}
+    app = Krita.instance()
+    main_window = app.activeWindow()
+    if not main_window:
+        return []
+    qwin = main_window.qwindow()
+    widgets = [qwin]
+    if hasattr(qwin, 'menuBar'):
+        widgets.append(qwin.menuBar())
+    if hasattr(qwin, 'toolBar'):
+        widgets.append(qwin.toolBar())
+    while widgets:
+        widget = widgets.pop()
+        if hasattr(widget, 'actions'):
+            actions = widget.actions
+            if callable(actions):
+                actions = actions()
+            for action in actions:
+                if action and hasattr(action, "objectName") and action.objectName():
+                    all_actions[action.objectName()] = action
+        if hasattr(widget, 'children'):
+            widgets.extend(child for child in widget.children() if hasattr(child, 'actions'))
+    for action in app.actions():
+        if action and hasattr(action, "objectName") and action.objectName():
+            all_actions[action.objectName()] = action
+    return list(all_actions.values())
 
 def get_font_px(font_size_str):
     # "20px" -> 20
@@ -65,7 +94,7 @@ class ShortcutPopup(QDialog):
         self.filter_edit.textChanged.connect(self.apply_filter)
 
     def populate_table(self):
-        self.actions = Krita.instance().actions()
+        self.actions = get_all_actions()
         self.table.setRowCount(len(self.actions))
         for i, action in enumerate(self.actions):
             id_item = QTableWidgetItem(action.objectName())
@@ -142,30 +171,36 @@ class ShortcutAccessSection(QWidget):
         self.active_grid_idx = 0
 
         krita_instance = Krita.instance()
-        all_actions = {a.objectName(): a for a in krita_instance.actions()}
+        # すべてのQActionをobjectNameで辞書化
+        all_actions = {a.objectName(): a for a in get_all_actions()}
 
+        # JSONからグリッドデータを取得
         grids_data = load_shortcut_grids_data(self.data_file, krita_instance)
 
-        # グリッドを先に全て作成
+        # グリッドを全て作成
         grid_name_to_widget = {}
         for grid_info in grids_data:
             grid_widget = self.add_shortcut_grid(grid_info['name'], [], save=False)
             grid_name_to_widget[grid_info['name']] = grid_widget
+            # shortcut_configsも復元
+            grid_widget.grid_info["shortcut_configs"] = grid_info.get("shortcut_configs", grid_info.get("shortcuts", []))
 
-        # 各グリッドにボタンを追加（AddShortCutボタンの仕様を流用）
+        # 各グリッドにボタンを追加
         for grid_info in grids_data:
             grid_widget = grid_name_to_widget.get(grid_info['name'])
             if not grid_widget:
                 continue
-            shortcut_ids = grid_info.get('shortcuts', [])
-            for shortcut_id in shortcut_ids:
-                action = all_actions.get(shortcut_id)
+            shortcut_configs = grid_info.get("shortcut_configs", grid_info.get("shortcuts", []))
+            actions = []
+            for config in shortcut_configs:
+                action_id = config.get("actionName")
+                action = all_actions.get(action_id)
                 if action:
-                    grid_widget.add_shortcut_button(action)
-                else:
-                    pass
+                    actions.append(action)
+            grid_widget.grid_info['actions'] = actions
+            grid_widget.update_grid()
 
-        # 最初のグリッドをアクティブにする（またはjsonのnameで特定してアクティブ化も可）
+        # 最初のグリッドをアクティブにする
         if self.grids:
             self.set_active_grid(0)
 
@@ -219,11 +254,21 @@ class ShortcutAccessSection(QWidget):
     def save_grids_data(self):
         grids_data = []
         for grid_widget in self.grids:
-            grids_data.append({
+            # shortcut_configsを直接保存
+            # log_save_grids_data(f"save_grids_data grid_widget: {grid_widget}")
+            # log_save_grids_data(f"save_grids_data shortcut_configs: {grid_widget.grid_info.get('shortcut_configs', [])}")
+
+            shortcuts = grid_widget.grid_info.get("shortcut_configs", [])
+            grid_info = {
                 'name': grid_widget.grid_info['name'],
-                'actions': grid_widget.grid_info['actions'],
-            })
-        save_shortcut_grids_data(self.data_file, grids_data)
+                'shortcuts': shortcuts
+            }
+            grids_data.append(grid_info)
+        try:
+            save_shortcut_grids_data(self.data_file, grids_data)
+            # log_save_grids_data(f"save_grids_data called. File: {self.data_file} Grids: {len(grids_data)}")
+        except Exception as e:
+            log_save_grids_data(f"save_grids_data ERROR: {str(e)}")
 
     def move_grid(self, grid_widget, direction):
         idx = self.grids.index(grid_widget)
@@ -249,6 +294,7 @@ class SingleShortcutGridWidget(QWidget):
         self.grid_info = grid_info
         self.parent_section = parent_section
         self.is_active = False
+        self.shortcut_buttons = []
 
         self.setAcceptDrops(True)
 
@@ -306,6 +352,16 @@ class SingleShortcutGridWidget(QWidget):
 
     def add_shortcut_button(self, action):
         self.grid_info['actions'].append(action)
+        # 個別設定がなければデフォルト値で追加
+        if "shortcut_configs" not in self.grid_info:
+            self.grid_info["shortcut_configs"] = []
+        self.grid_info["shortcut_configs"].append({
+            "actionName": action.objectName(),
+            "customName": action.objectName(),
+            "fontSize": str(get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"])),
+            "fontColor": COMMON_CONFIG["color"]["shortcut_button_font_color"],
+            "backgroundColor": COMMON_CONFIG["color"]["shortcut_button_background_color"]
+        })
         self.update_grid()
         if hasattr(self.parent_section, "save_grids_data"):
             self.parent_section.save_grids_data()
@@ -317,15 +373,62 @@ class SingleShortcutGridWidget(QWidget):
             if widget:
                 widget.setParent(None)
                 widget.deleteLater()
+        self.shortcut_buttons = []
         max_columns = get_max_shortcut_per_row()
+        
         for idx, action in enumerate(self.grid_info['actions']):
-            action_id = action.objectName()
-            shortcut_btn = ShortcutDraggableButton(action, self.grid_info, self.parent_section)
+            config = None
+
+            # log_save_grids_data(f"self.grid_info['actions']: {self.grid_info['actions']}")
+            # log_save_grids_data(f"self.grid_info[shortcut_configs]: {self.grid_info['shortcut_configs']}")
+
+            if "shortcut_configs" in self.grid_info and idx < len(self.grid_info["shortcut_configs"]):
+                config = self.grid_info["shortcut_configs"][idx]
+            else:
+                # デフォルト値で補完
+                config = {
+                    "actionName": action.objectName(),
+                    "customName": action.objectName(),
+                    "fontSize": str(get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"])),
+                    "fontColor": COMMON_CONFIG["color"]["shortcut_button_font_color"],
+                    "backgroundColor": COMMON_CONFIG["color"]["shortcut_button_background_color"]
+                }
+            # log_save_grids_data(f"config: {config}")
+
+            shortcut_btn = ShortcutDraggableButton(action, self.grid_info, self.parent_section, config)
             shortcut_btn.setMinimumSize(QSize(80, 32))
-            shortcut_btn.setStyleSheet(shortcut_btn_style())
+
+            # 個別設定がグローバル値と異なる場合のみ個別設定を適用
+            font_color = config.get("fontColor", COMMON_CONFIG["color"]["shortcut_button_font_color"])
+            bg_color = config.get("backgroundColor", COMMON_CONFIG["color"]["shortcut_button_background_color"])
+            font_size = config.get("fontSize", COMMON_CONFIG["font"]["shortcut_button_font_size"])
+
+            is_custom = (
+                font_color != COMMON_CONFIG["color"]["shortcut_button_font_color"] or
+                bg_color != COMMON_CONFIG["color"]["shortcut_button_background_color"] or
+                f"{str(font_size)}px" != COMMON_CONFIG["font"]["shortcut_button_font_size"]
+            )
+
+            # log_save_grids_data(f'font_color: {font_color}')
+            # log_save_grids_data(f'shortcut_button_font_color: {COMMON_CONFIG["color"]["shortcut_button_font_color"]}')
+            # log_save_grids_data(f'bg_color: {bg_color}')
+            # log_save_grids_data(f'shortcut_button_background_color: {COMMON_CONFIG["color"]["shortcut_button_background_color"]}')
+            # log_save_grids_data(f'font_size: {f"{str(font_size)}px"}')
+            # log_save_grids_data(f'shortcut_button_font_size: {COMMON_CONFIG["font"]["shortcut_button_font_size"]}')
+
+            if is_custom:
+                # log_save_grids_data(f"is_custom: True")
+                shortcut_btn.setStyleSheet(
+                    f"background-color: {bg_color}; color: {font_color}; font-size: {font_size}px;"
+                )
+            else:
+                # log_save_grids_data(f"is_custom: False")
+                shortcut_btn.setStyleSheet(shortcut_btn_style())
+
             row = idx // max_columns
             col = idx % max_columns
             self.shortcut_grid_layout.addWidget(shortcut_btn, row, col)
+            self.shortcut_buttons.append(shortcut_btn)
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasText():
@@ -357,25 +460,38 @@ class SingleShortcutGridWidget(QWidget):
                     row = drop_pos.y() // 36
                     target_index = row * max_columns + col
 
+                    # shortcut_configsも同期して移動
+                    source_configs = source_grid.get("shortcut_configs", [])
+                    config_to_move = None
+                    if source_configs and source_index < len(source_configs):
+                        config_to_move = source_configs.pop(source_index)
+
                     # 同じグリッド内で移動の場合
                     if self.grid_info == source_grid:
-                        # 削除前にtarget_indexを計算し、削除後に調整
                         if target_index > source_index:
                             target_index -= 1
                         source_grid['actions'].pop(source_index)
-                        target_index = max(0, min(target_index, len(source_grid['actions'])))
+                        if config_to_move:
+                            source_configs.insert(target_index, config_to_move)
                         source_grid['actions'].insert(target_index, source_action)
                         self.update_grid()
                     else:
                         source_grid['actions'].pop(source_index)
+                        if config_to_move:
+                            source_configs  # 既にpop済み
                         target_index = max(0, min(target_index, len(self.grid_info['actions'])))
                         self.grid_info['actions'].insert(target_index, source_action)
+                        # shortcut_configsも追加
+                        target_configs = self.grid_info.setdefault("shortcut_configs", [])
+                        if config_to_move:
+                            target_configs.insert(target_index, config_to_move)
                         grid_widget = self.parent_section.grids[self.parent_section.grids.index(self)]
                         grid_widget.update_grid()
                         for gw in self.parent_section.grids:
                             if gw.grid_info == source_grid:
                                 gw.update_grid()
                                 break
+                    self.parent_section.save_grids_data()
                     event.acceptProposedAction()
 
     def set_active(self, active):
@@ -436,61 +552,47 @@ class SingleShortcutGridWidget(QWidget):
             self.parent_section.save_grids_data()
 
 class ShortcutDraggableButton(QPushButton):
-    def __init__(self, action, grid_info, parent_section):
-        super().__init__(action.objectName())
+    def __init__(self, action, grid_info, parent_section, config=None):
+        display_name = action.objectName()
+        if config:
+            custom_name = config.get("customName")
+            if custom_name:
+                display_name = custom_name
+        super().__init__(display_name)
         self.action = action
         self.grid_info = grid_info
         self.parent_section = parent_section
-        self.setToolTip(", ".join([str(s.toString()) for s in action.shortcuts()]))
-        self.setStyleSheet(shortcut_btn_style())
+        self.custom_name = config.get("customName") if config else None
+        self.config = config
+
+        # フォントサイズ・色・背景色を反映
+        font = self.font()
+        font_size_str = config.get("fontSize", get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"]))
+        try:
+            font_size = int(font_size_str)
+            if font_size < 7:
+                font_size = get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"])
+        except Exception:
+            font_size = get_font_px(COMMON_CONFIG["font"]["shortcut_button_font_size"])
+        font.setPointSize(font_size)
+        self.setFont(font)
+
+        font_color = config.get("fontColor", COMMON_CONFIG["color"]["shortcut_button_font_color"]) if config else COMMON_CONFIG["color"]["shortcut_button_font_color"]
+        bg_color = config.get("backgroundColor", COMMON_CONFIG["color"]["shortcut_button_background_color"]) if config else COMMON_CONFIG["color"]["shortcut_button_background_color"]
+        self.setStyleSheet(f"background-color: {bg_color}; color: {font_color};")
         self.drag_start_position = QPoint()
         self.clicked.connect(lambda: self.parent_section.run_krita_action(action.objectName()))
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.adjust_text_to_fit()
+    #     self.adjust_text_to_fit()
 
-    def adjust_text_to_fit(self):
-        text = self.action.objectName()
-        font = self.font()
-        metrics = QFontMetrics(font)
-        max_width = self.width() - 8  # padding
-        max_height = self.height() - 8
-
-        # 初期フォントサイズ
-        font_size = font.pointSize()
-        if font_size <= 0:
-            font_size = 12
-
-        # 改行処理
-        def wrap_text(text, max_width, font):
-            import re
-            # _ またはスペースで分割
-            words = re.split(r'[_\s]', text)
-            lines = []
-            line = ""
-            for word in words:
-                test_line = (line + " " if line else "") + word
-                if QFontMetrics(font).width(test_line) > max_width and line:
-                    lines.append(line)
-                    line = word
-                else:
-                    line = test_line
-            if line:
-                lines.append(line)
-            return "\n".join(lines)
-
-        # フォントサイズ調整
-        while font_size > 7:
-            font.setPointSize(font_size)
-            wrapped = wrap_text(text, max_width, font)
-            lines = wrapped.split('\n')
-            if len(lines) * QFontMetrics(font).height() <= max_height:
-                break
-            font_size -= 1
-
-        self.setFont(font)
-        self.setText(wrapped)    
+    # def adjust_text_to_fit(self):
+    #     font = self.font()
+    #     config = self.config
+    #     font_size = int(config.get("fontSize", 12)) if config else 12
+    #     font.setPointSize(font_size)
+    #     self.setFont(font)   
 
     def mousePressEvent(self, event):
         modifiers = QApplication.keyboardModifiers()
@@ -499,21 +601,31 @@ class ShortcutDraggableButton(QPushButton):
             modifiers == (Qt.ControlModifier | Qt.ShiftModifier | Qt.AltModifier)):
             idx = self.grid_info['actions'].index(self.action)
             if idx > 0:
+                # actionsの並び替え
                 self.grid_info['actions'].pop(idx)
                 self.grid_info['actions'].insert(idx - 1, self.action)
+                # shortcut_configsの並び替え
+                if "shortcut_configs" in self.grid_info and idx < len(self.grid_info["shortcut_configs"]):
+                    config = self.grid_info["shortcut_configs"].pop(idx)
+                    self.grid_info["shortcut_configs"].insert(idx - 1, config)
                 self.parent_section.save_grids_data()
                 for grid_widget in self.parent_section.grids:
                     if grid_widget.grid_info is self.grid_info:
                         grid_widget.update_grid()
                         break
             return
-        # Ctrl+Shift+Alt+右クリック: Indexを+1
+
         if (event.button() == Qt.RightButton and
             modifiers == (Qt.ControlModifier | Qt.ShiftModifier | Qt.AltModifier)):
             idx = self.grid_info['actions'].index(self.action)
             if idx < len(self.grid_info['actions']) - 1:
+                # actionsの並び替え
                 self.grid_info['actions'].pop(idx)
                 self.grid_info['actions'].insert(idx + 1, self.action)
+                # shortcut_configsの並び替え
+                if "shortcut_configs" in self.grid_info and idx < len(self.grid_info["shortcut_configs"]):
+                    config = self.grid_info["shortcut_configs"].pop(idx)
+                    self.grid_info["shortcut_configs"].insert(idx + 1, config)
                 self.parent_section.save_grids_data()
                 for grid_widget in self.parent_section.grids:
                     if grid_widget.grid_info is self.grid_info:
@@ -527,7 +639,11 @@ class ShortcutDraggableButton(QPushButton):
         if event.button() == Qt.RightButton and modifiers == Qt.ControlModifier:
             for i, act in enumerate(self.grid_info['actions']):
                 if act.objectName() == self.action.objectName():
+                    # actionsから削除
                     self.grid_info['actions'].pop(i)
+                    # shortcut_configsも同期して削除
+                    if "shortcut_configs" in self.grid_info and i < len(self.grid_info["shortcut_configs"]):
+                        self.grid_info["shortcut_configs"].pop(i)
                     self.parent_section.save_grids_data()
                     for grid_widget in self.parent_section.grids:
                         if grid_widget.grid_info is self.grid_info:
@@ -535,6 +651,37 @@ class ShortcutDraggableButton(QPushButton):
                             break
                     break
             return
+        # Alt+右クリック: 個別設定ポップアップ
+        if event.button() == Qt.RightButton and modifiers == Qt.AltModifier:
+            dlg = ShortcutButtonConfigDialog(self)
+            if dlg.exec_():
+                # フォントサイズのバリデーション
+                font_size_str = dlg.font_size_edit.text().strip()
+                try:
+                    font_size = int(font_size_str)
+                    if font_size < 7:  # 最小サイズ
+                        font_size = 12
+                except Exception:
+                    font_size = 12  # デフォルト
+
+                # 設定をgrid_infoのshortcut_configsに保存
+                idx = self.grid_info['actions'].index(self.action)
+                if "shortcut_configs" not in self.grid_info:
+                    self.grid_info["shortcut_configs"] = [{} for _ in self.grid_info["actions"]]
+                self.grid_info["shortcut_configs"][idx] = {
+                    "actionName": self.action.objectName(),
+                    "customName": dlg.name_edit.text(),
+                    "fontSize": str(font_size),
+                    "fontColor": dlg.font_color_edit.text(),
+                    "backgroundColor": dlg.bg_color_edit.text()
+                }
+                # update_gridで再生成時に反映
+                for grid_widget in self.parent_section.grids:
+                    if grid_widget.grid_info is self.grid_info:
+                        grid_widget.update_grid()
+                        break
+                self.parent_section.save_grids_data()
+                return
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -550,3 +697,43 @@ class ShortcutDraggableButton(QPushButton):
         drag.setMimeData(mimeData)
         drag.setHotSpot(QPoint(16, 16))
         drag.exec_(Qt.MoveAction)
+
+class ShortcutButtonConfigDialog(QDialog):
+    def __init__(self, btn, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Shortcut Button Config")
+        self.resize(300, 180)
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # ボタン名
+        layout.addWidget(QLabel("Button Name:"))
+        self.name_edit = QLineEdit(btn.text())
+        layout.addWidget(self.name_edit)
+
+        # フォントサイズ
+        font_size = btn.config.get("fontSize") if btn.config else str(max(btn.font().pointSize(), 7))
+        if not font_size or font_size == "-1":
+            font_size = str(max(btn.font().pointSize(), 7))
+        self.font_size_edit = QLineEdit(str(font_size))
+        layout.addWidget(self.font_size_edit)
+
+        # 背景色
+        layout.addWidget(QLabel("Background Color:"))
+        self.bg_color_edit = QLineEdit(btn.palette().color(btn.backgroundRole()).name())
+        layout.addWidget(self.bg_color_edit)
+
+        # フォント色
+        layout.addWidget(QLabel("Font Color:"))
+        self.font_color_edit = QLineEdit(btn.palette().color(btn.foregroundRole()).name())
+        layout.addWidget(self.font_color_edit)
+
+        btns = QHBoxLayout()
+        ok_btn = QPushButton("OK")
+        cancel_btn = QPushButton("Cancel")
+        btns.addWidget(ok_btn)
+        btns.addWidget(cancel_btn)
+        layout.addLayout(btns)
+
+        ok_btn.clicked.connect(self.accept)
+        cancel_btn.clicked.connect(self.reject)

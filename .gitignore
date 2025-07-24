@@ -1,2 +1,5 @@
 quick_access_manager/config/
+quick_access_manager/backup/
+quick_access_manager/doc/
+quick_access_manager/logs/
 quick_access_manager/__pycache__
