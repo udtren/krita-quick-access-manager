@@ -398,17 +398,31 @@ class SingleShortcutGridWidget(QWidget):
             shortcut_btn = ShortcutDraggableButton(action, self.grid_info, self.parent_section, config)
             shortcut_btn.setMinimumSize(QSize(80, 32))
 
-            # 個別設定があればそれを優先
-            if config and (
-                config.get("fontColor") or config.get("backgroundColor") or config.get("fontSize")
-            ):
-                font_color = config.get("fontColor", COMMON_CONFIG["color"]["shortcut_button_font_color"])
-                bg_color = config.get("backgroundColor", COMMON_CONFIG["color"]["shortcut_button_background_color"])
-                font_size = config.get("fontSize", COMMON_CONFIG["font"]["shortcut_button_font_size"])
+            # 個別設定がグローバル値と異なる場合のみ個別設定を適用
+            font_color = config.get("fontColor", COMMON_CONFIG["color"]["shortcut_button_font_color"])
+            bg_color = config.get("backgroundColor", COMMON_CONFIG["color"]["shortcut_button_background_color"])
+            font_size = config.get("fontSize", COMMON_CONFIG["font"]["shortcut_button_font_size"])
+
+            is_custom = (
+                font_color != COMMON_CONFIG["color"]["shortcut_button_font_color"] or
+                bg_color != COMMON_CONFIG["color"]["shortcut_button_background_color"] or
+                f"{str(font_size)}px" != COMMON_CONFIG["font"]["shortcut_button_font_size"]
+            )
+
+            # log_save_grids_data(f'font_color: {font_color}')
+            # log_save_grids_data(f'shortcut_button_font_color: {COMMON_CONFIG["color"]["shortcut_button_font_color"]}')
+            # log_save_grids_data(f'bg_color: {bg_color}')
+            # log_save_grids_data(f'shortcut_button_background_color: {COMMON_CONFIG["color"]["shortcut_button_background_color"]}')
+            # log_save_grids_data(f'font_size: {f"{str(font_size)}px"}')
+            # log_save_grids_data(f'shortcut_button_font_size: {COMMON_CONFIG["font"]["shortcut_button_font_size"]}')
+
+            if is_custom:
+                # log_save_grids_data(f"is_custom: True")
                 shortcut_btn.setStyleSheet(
                     f"background-color: {bg_color}; color: {font_color}; font-size: {font_size}px;"
                 )
             else:
+                log_save_grids_data(f"is_custom: False")
                 shortcut_btn.setStyleSheet(shortcut_btn_style())
 
             row = idx // max_columns

@@ -23,11 +23,12 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 ![How to Add a Shortcut](./quick_access_manager/image/image2.jpg)
  
 ## Global Config
-Use the "Setting" button to edit UI and layout settings.
+Use the "Setting" button to customize the UI and layout, including the default font color, background color, and font size for shortcut buttons.
 ![Setting](./quick_access_manager/image/image3.jpg)
 
 ## Shortcut Button Config
-Hold <kbd>Alt</kbd> and right-click the button.
+To customize an individual shortcut button, hold <kbd>Alt</kbd> and right-click the button.
+If you set the font size or color to a value different from the global config, that button will keep its individual settings and will not be affected by future changes to the global config.
 ![Shortcut Button Config](./quick_access_manager/image/image4.jpg)
 
 ## How the config restore works
