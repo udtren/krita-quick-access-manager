@@ -16,7 +16,10 @@ def check_common_config():
         },
         "layout": {
             "max_shortcut_per_row": 2,
-            "max_brush_per_row": 8
+            "max_brush_per_row": 8,
+            "spacing_between_buttons": 1,
+            "spacing_between_grids": 1,
+            "brush_icon_size": 40
         }
     }
     if not os.path.exists(config_path):

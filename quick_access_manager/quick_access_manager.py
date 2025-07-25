@@ -4,11 +4,14 @@ from krita import Extension, DockWidgetFactory, DockWidgetFactoryBase, Krita
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget, QScrollArea, QHBoxLayout, QInputDialog, QApplication, QDialog, QLineEdit, QMessageBox
 from PyQt5.QtCore import Qt, QMimeData, QPoint
 from PyQt5.QtGui import QIcon, QPixmap, QDrag
-from .data_manager import load_grids_data, save_grids_data, spacingValue, iconSize
+from .data_manager import load_grids_data, save_grids_data
 from .shortcut_manager import ShortcutAccessSection, SingleShortcutGridWidget, shortcut_btn_style
 from .preprocess import check_common_config
 
 COMMON_CONFIG = check_common_config()
+spacingBetweenGridsValue = COMMON_CONFIG["layout"]["spacing_between_grids"]
+spacingBetweenButtonsValue = COMMON_CONFIG["layout"]["spacing_between_buttons"]
+iconSize = COMMON_CONFIG["layout"]["brush_icon_size"]
 
 def docker_btn_style():
     color = COMMON_CONFIG["color"]["docker_button_background_color"]
@@ -21,6 +24,15 @@ def get_font_px(font_size_str):
         return int(str(font_size_str).replace("px", ""))
     except Exception:
         return 12
+
+def get_spacing_between_buttons():
+    return COMMON_CONFIG["layout"]["spacing_between_buttons"]
+
+def get_spacing_between_grids():
+    return COMMON_CONFIG["layout"]["spacing_between_grids"]
+
+def get_brush_icon_size():
+    return COMMON_CONFIG["layout"]["brush_icon_size"]
 
 class CommonConfigDialog(QDialog):
     def __init__(self, config_path, parent=None):
@@ -292,8 +304,8 @@ class QuickAccessDockerWidget(QDockWidget):
         scroll_area = QScrollArea()
         self.scroll_widget = QWidget()
         self.main_grid_layout = QVBoxLayout()
-        self.main_grid_layout.setSpacing(spacingValue)  # Minimize spacing between grids
-        self.main_grid_layout.setContentsMargins(1, 1, 1, 1)  # Minimize margins
+        self.main_grid_layout.setSpacing(spacingBetweenGridsValue)  # Minimize spacing between grids
+        self.main_grid_layout.setContentsMargins(0, 0, 0, 0)  # Minimize margins
         self.scroll_widget.setLayout(self.main_grid_layout)
         scroll_area.setWidget(self.scroll_widget)
         scroll_area.setWidgetResizable(True)
@@ -330,9 +342,24 @@ class QuickAccessDockerWidget(QDockWidget):
             global COMMON_CONFIG
             with open(self.common_config_path, "r", encoding="utf-8") as f:
                 COMMON_CONFIG = json.load(f)
+            # ここで再取得
+            global iconSize
+            iconSize = get_brush_icon_size()
+            global spacingBetweenGridsValue
+            spacingBetweenGridsValue = get_spacing_between_grids()
+            global spacingBetweenButtonsValue
+            spacingBetweenButtonsValue = get_spacing_between_buttons()
+
             self.refresh_styles()
             # ボタンサイズやレイアウトも再構築
             for grid_info in self.grids:
+                # spacingBetweenGridsValueを再適用
+                if grid_info.get('container'):
+                    container_layout = grid_info['container'].layout()
+                    if container_layout:
+                        container_layout.setSpacing(1)
+                if grid_info.get('layout'):
+                    grid_info['layout'].setSpacing(spacingBetweenButtonsValue)
                 self.update_grid(grid_info)
             # ショートカットグリッドも再構築
             if hasattr(self, "shortcut_section"):
@@ -392,10 +419,10 @@ class QuickAccessDockerWidget(QDockWidget):
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
         container_layout = QVBoxLayout()
-        container_layout.setSpacing(spacingValue)
-        container_layout.setContentsMargins(2, 2, 2, 2)
+        container_layout.setSpacing(1)
+        container_layout.setContentsMargins(0, 0, 0, 0)
         header_layout = QHBoxLayout()
-        header_layout.setSpacing(spacingValue)
+        header_layout.setSpacing(1)
         header_layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(grid_info['name'])
         name_label.setStyleSheet("font-weight: bold; font-size: 12px;")
@@ -446,7 +473,7 @@ class QuickAccessDockerWidget(QDockWidget):
         grid_widget.setMinimumHeight(iconSize + 4)
         grid_layout = QGridLayout()
         grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        grid_layout.setSpacing(spacingValue)
+        grid_layout.setSpacing(spacingBetweenButtonsValue)
         grid_layout.setContentsMargins(0, 0, 0, 0)
         grid_widget.setLayout(grid_layout)
         container_layout.addWidget(grid_widget)
