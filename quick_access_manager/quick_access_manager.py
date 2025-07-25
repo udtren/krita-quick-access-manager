@@ -392,10 +392,10 @@ class QuickAccessDockerWidget(QDockWidget):
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
         container_layout = QVBoxLayout()
-        container_layout.setSpacing(2)
-        container_layout.setContentsMargins(2, 2, 2, 2)
+        container_layout.setSpacing(1)
+        container_layout.setContentsMargins(1, 1, 1, 1)
         header_layout = QHBoxLayout()
-        header_layout.setSpacing(2)
+        header_layout.setSpacing(1)
         header_layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(grid_info['name'])
         name_label.setStyleSheet("font-weight: bold; font-size: 12px;")
@@ -404,8 +404,8 @@ class QuickAccessDockerWidget(QDockWidget):
 
         # ボタン幅をフォントサイズに応じて動的に
         font_px = get_font_px(COMMON_CONFIG["font"]["docker_button_font_size"])
-        btn_height = int(font_px * 1.2)
-        btn_width = int(font_px * 1.2)
+        btn_height = int(font_px * 1.5)
+        btn_width = int(font_px * 1.8)
 
         up_btn = QPushButton("↑")
         up_btn.setFixedSize(btn_width, btn_height)
@@ -446,7 +446,7 @@ class QuickAccessDockerWidget(QDockWidget):
         grid_widget.setMinimumHeight(32 + 4)
         grid_layout = QGridLayout()
         grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        grid_layout.setSpacing(2)
+        grid_layout.setSpacing(1)
         grid_layout.setContentsMargins(0, 0, 0, 0)
         grid_widget.setLayout(grid_layout)
         container_layout.addWidget(grid_widget)

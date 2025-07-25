@@ -134,7 +134,7 @@ class ShortcutAccessSection(QWidget):
         self.data_file = os.path.join(self.config_dir, "shortcut_grid_data.json")
 
         self.main_layout = QVBoxLayout()
-        self.main_layout.setSpacing(8)
+        self.main_layout.setSpacing(4)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         # タイトルラベルを追加
@@ -299,8 +299,8 @@ class SingleShortcutGridWidget(QWidget):
         self.setAcceptDrops(True)
 
         main_layout = QVBoxLayout()
-        main_layout.setSpacing(4)
-        main_layout.setContentsMargins(2, 2, 2, 2)
+        main_layout.setSpacing(2)
+        main_layout.setContentsMargins(1, 1, 1, 1)
 
         header_layout = QHBoxLayout()
         self.grid_name_label = QLabel(self.grid_info['name'])
@@ -309,8 +309,8 @@ class SingleShortcutGridWidget(QWidget):
         header_layout.addStretch()
 
         font_px = get_font_px(COMMON_CONFIG["font"]["docker_button_font_size"])
-        btn_height = int(font_px * 1.2)
-        btn_width = int(font_px * 1.2)
+        btn_height = int(font_px * 1.5)
+        btn_width = int(font_px * 1.8)
 
         self.up_btn = QPushButton("↑")
         self.up_btn.setFixedSize(btn_width, btn_height)
@@ -335,7 +335,7 @@ class SingleShortcutGridWidget(QWidget):
         main_layout.addLayout(header_layout)
 
         self.shortcut_grid_layout = QGridLayout()
-        self.shortcut_grid_layout.setSpacing(2)
+        self.shortcut_grid_layout.setSpacing(1)
         self.shortcut_grid_layout.setContentsMargins(1, 1, 1, 1)
         grid_area = QWidget()
         grid_area.setLayout(self.shortcut_grid_layout)
