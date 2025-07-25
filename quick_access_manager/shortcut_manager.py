@@ -396,7 +396,7 @@ class SingleShortcutGridWidget(QWidget):
             # log_save_grids_data(f"config: {config}")
 
             shortcut_btn = ShortcutDraggableButton(action, self.grid_info, self.parent_section, config)
-            shortcut_btn.setMinimumSize(QSize(80, 32))
+            shortcut_btn.setMinimumSize(QSize(40, 28))
 
             # 個別設定がグローバル値と異なる場合のみ個別設定を適用
             font_color = config.get("fontColor", COMMON_CONFIG["color"]["shortcut_button_font_color"])
