@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QSize, QMimeData, QPoint
 from PyQt5.QtGui import QDrag
 from PyQt5.QtGui import QFontMetrics
 from krita import Krita
-from .data_manager import load_shortcut_grids_data, save_shortcut_grids_data, log_save_grids_data, spacingValue
+from .data_manager import load_shortcut_grids_data, save_shortcut_grids_data, log_save_grids_data
 from .preprocess import check_common_config
 
 COMMON_CONFIG = check_common_config()
@@ -23,6 +23,14 @@ def docker_btn_style():
     font_color = COMMON_CONFIG["color"]["docker_button_font_color"]
     font_size = COMMON_CONFIG["font"]["docker_button_font_size"]
     return f"background-color: {color}; color: {font_color}; font-size: {font_size};"
+
+def get_spacing_between_buttons():
+    from .quick_access_manager import COMMON_CONFIG
+    return COMMON_CONFIG["layout"]["spacing_between_buttons"]
+
+def get_spacing_between_grids():
+    from .quick_access_manager import COMMON_CONFIG
+    return COMMON_CONFIG["layout"]["spacing_between_grids"]
 
 # すべてのQActionを再帰的に取得
 def get_all_actions():
@@ -134,7 +142,7 @@ class ShortcutAccessSection(QWidget):
         self.data_file = os.path.join(self.config_dir, "shortcut_grid_data.json")
 
         self.main_layout = QVBoxLayout()
-        self.main_layout.setSpacing(spacingValue)
+        self.main_layout.setSpacing(get_spacing_between_grids())
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         # タイトルラベルを追加
@@ -285,8 +293,10 @@ class ShortcutAccessSection(QWidget):
             self.save_grids_data()
 
     def refresh_layout(self):
-        for grid_widget in self.grids:
-            grid_widget.update_grid()
+            # main_layoutのspacingを再適用
+            self.main_layout.setSpacing(get_spacing_between_grids())
+            for grid_widget in self.grids:
+                grid_widget.refresh_spacing_and_update()
 
 class SingleShortcutGridWidget(QWidget):
     def __init__(self, grid_info, parent_section):
@@ -299,7 +309,7 @@ class SingleShortcutGridWidget(QWidget):
         self.setAcceptDrops(True)
 
         main_layout = QVBoxLayout()
-        main_layout.setSpacing(spacingValue)
+        main_layout.setSpacing(get_spacing_between_buttons())
         main_layout.setContentsMargins(2, 2, 2, 2)
 
         header_layout = QHBoxLayout()
@@ -335,7 +345,7 @@ class SingleShortcutGridWidget(QWidget):
         main_layout.addLayout(header_layout)
 
         self.shortcut_grid_layout = QGridLayout()
-        self.shortcut_grid_layout.setSpacing(spacingValue)
+        self.shortcut_grid_layout.setSpacing(get_spacing_between_buttons())
         self.shortcut_grid_layout.setContentsMargins(2, 2, 2, 2)
         grid_area = QWidget()
         grid_area.setLayout(self.shortcut_grid_layout)
@@ -349,6 +359,20 @@ class SingleShortcutGridWidget(QWidget):
         self.up_btn.clicked.connect(lambda: self.parent_section.move_grid(self, -1))
         self.down_btn.clicked.connect(lambda: self.parent_section.move_grid(self, 1))
         self.remove_btn.clicked.connect(self.remove_grid)
+
+    def refresh_spacing_and_update(self):
+            # main_layout, header_layout, shortcut_grid_layoutのspacingを再適用
+            layout = self.layout()
+            if layout:
+                layout.setSpacing(get_spacing_between_buttons())
+            # header_layoutはmain_layoutのitemAt(0)
+            if layout and layout.count() > 0:
+                header_layout = layout.itemAt(0).layout()
+                if header_layout:
+                    header_layout.setSpacing(1)
+            if hasattr(self, "shortcut_grid_layout"):
+                self.shortcut_grid_layout.setSpacing(get_spacing_between_buttons())
+            self.update_grid()
 
     def add_shortcut_button(self, action):
         self.grid_info['actions'].append(action)
@@ -367,6 +391,7 @@ class SingleShortcutGridWidget(QWidget):
             self.parent_section.save_grids_data()
 
     def update_grid(self):
+        self.shortcut_grid_layout.setSpacing(get_spacing_between_buttons())
         while self.shortcut_grid_layout.count():
             item = self.shortcut_grid_layout.takeAt(0)
             widget = item.widget()
@@ -379,9 +404,6 @@ class SingleShortcutGridWidget(QWidget):
         for idx, action in enumerate(self.grid_info['actions']):
             config = None
 
-            # log_save_grids_data(f"self.grid_info['actions']: {self.grid_info['actions']}")
-            # log_save_grids_data(f"self.grid_info[shortcut_configs]: {self.grid_info['shortcut_configs']}")
-
             if "shortcut_configs" in self.grid_info and idx < len(self.grid_info["shortcut_configs"]):
                 config = self.grid_info["shortcut_configs"][idx]
             else:
@@ -393,7 +415,6 @@ class SingleShortcutGridWidget(QWidget):
                     "fontColor": COMMON_CONFIG["color"]["shortcut_button_font_color"],
                     "backgroundColor": COMMON_CONFIG["color"]["shortcut_button_background_color"]
                 }
-            # log_save_grids_data(f"config: {config}")
 
             shortcut_btn = ShortcutDraggableButton(action, self.grid_info, self.parent_section, config)
             shortcut_btn.setMinimumSize(QSize(40, 28))
@@ -408,13 +429,6 @@ class SingleShortcutGridWidget(QWidget):
                 bg_color != COMMON_CONFIG["color"]["shortcut_button_background_color"] or
                 f"{str(font_size)}px" != COMMON_CONFIG["font"]["shortcut_button_font_size"]
             )
-
-            # log_save_grids_data(f'font_color: {font_color}')
-            # log_save_grids_data(f'shortcut_button_font_color: {COMMON_CONFIG["color"]["shortcut_button_font_color"]}')
-            # log_save_grids_data(f'bg_color: {bg_color}')
-            # log_save_grids_data(f'shortcut_button_background_color: {COMMON_CONFIG["color"]["shortcut_button_background_color"]}')
-            # log_save_grids_data(f'font_size: {f"{str(font_size)}px"}')
-            # log_save_grids_data(f'shortcut_button_font_size: {COMMON_CONFIG["font"]["shortcut_button_font_size"]}')
 
             if is_custom:
                 # log_save_grids_data(f"is_custom: True")

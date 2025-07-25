@@ -38,9 +38,6 @@ However, the shortcut settings will not be loaded automatically because it is di
 
 Therefore, you need to click the [RestoreShortcutGrid] button manually to restore the shortcut settings.
 
-## Change icon size or spacing
-You can change the value of "spacingValue" and "iconSize" in `data_manager.py` to customize the spacing between buttons or grid elements and the size of brush icons.
-
 ## Resize Docker
 <del>When resizing the docker, please do it slowly.</del>
 
