@@ -2,6 +2,9 @@ import os
 import json
 import datetime
 
+spacingValue = 1  # The spacing (in pixels) between buttons or grid elements
+iconSize = 40     # The default icon size (in pixels) for brush preset buttons
+
 def log_save_grids_data(msg):
     log_dir = os.path.join(os.path.dirname(__file__), "logs")
     if not os.path.exists(log_dir):

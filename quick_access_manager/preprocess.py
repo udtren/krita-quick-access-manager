@@ -11,8 +11,8 @@ def check_common_config():
             "shortcut_button_background_color": "#6c408c"
         },
         "font": {
-            "docker_button_font_size": "14px",
-            "shortcut_button_font_size": "14px"
+            "docker_button_font_size": "10px",
+            "shortcut_button_font_size": "10px"
         },
         "layout": {
             "max_shortcut_per_row": 2,
