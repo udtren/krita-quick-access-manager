@@ -4,7 +4,7 @@ from krita import Extension, DockWidgetFactory, DockWidgetFactoryBase, Krita
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget, QScrollArea, QHBoxLayout, QInputDialog, QApplication, QDialog, QLineEdit, QMessageBox
 from PyQt5.QtCore import Qt, QMimeData, QPoint
 from PyQt5.QtGui import QIcon, QPixmap, QDrag
-from .data_manager import load_grids_data, save_grids_data
+from .data_manager import load_grids_data, save_grids_data, spacingValue, iconSize
 from .shortcut_manager import ShortcutAccessSection, SingleShortcutGridWidget, shortcut_btn_style
 from .preprocess import check_common_config
 
@@ -83,7 +83,7 @@ class DraggableBrushButton(QPushButton):
         self.drag_start_position = QPoint()
         
         self.setToolTip(preset.name())
-        self.setFixedSize(48, 48)
+        self.setFixedSize(iconSize, iconSize)
         
         # Set brush preset icon
         if preset.image():
@@ -203,7 +203,7 @@ class ClickableGridWidget(QWidget):
                     # Calculate drop position in grid
                     drop_pos = event.pos()
                     columns = self.parent_docker.get_dynamic_columns()
-                    button_size = 48
+                    button_size = iconSize
                     spacing = 2
                     
                     col = min(drop_pos.x() // (button_size + spacing), columns - 1)
@@ -292,8 +292,8 @@ class QuickAccessDockerWidget(QDockWidget):
         scroll_area = QScrollArea()
         self.scroll_widget = QWidget()
         self.main_grid_layout = QVBoxLayout()
-        self.main_grid_layout.setSpacing(2)  # Minimize spacing between grids
-        self.main_grid_layout.setContentsMargins(2, 2, 2, 2)  # Minimize margins
+        self.main_grid_layout.setSpacing(spacingValue)  # Minimize spacing between grids
+        self.main_grid_layout.setContentsMargins(1, 1, 1, 1)  # Minimize margins
         self.scroll_widget.setLayout(self.main_grid_layout)
         scroll_area.setWidget(self.scroll_widget)
         scroll_area.setWidgetResizable(True)
@@ -392,10 +392,10 @@ class QuickAccessDockerWidget(QDockWidget):
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
         container_layout = QVBoxLayout()
-        container_layout.setSpacing(2)
+        container_layout.setSpacing(spacingValue)
         container_layout.setContentsMargins(2, 2, 2, 2)
         header_layout = QHBoxLayout()
-        header_layout.setSpacing(2)
+        header_layout.setSpacing(spacingValue)
         header_layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(grid_info['name'])
         name_label.setStyleSheet("font-weight: bold; font-size: 12px;")
@@ -442,11 +442,11 @@ class QuickAccessDockerWidget(QDockWidget):
         remove_btn.clicked.connect(lambda: self.remove_grid(grid_info))  # 削除処理
 
         grid_widget = ClickableGridWidget(grid_info, self)
-        grid_widget.setFixedHeight(48 + 4)
-        grid_widget.setMinimumHeight(48 + 4)
+        grid_widget.setFixedHeight(iconSize + 4)
+        grid_widget.setMinimumHeight(iconSize + 4)
         grid_layout = QGridLayout()
         grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        grid_layout.setSpacing(2)
+        grid_layout.setSpacing(spacingValue)
         grid_layout.setContentsMargins(0, 0, 0, 0)
         grid_widget.setLayout(grid_layout)
         container_layout.addWidget(grid_widget)
@@ -551,7 +551,7 @@ class QuickAccessDockerWidget(QDockWidget):
         columns = self.get_dynamic_columns()
         preset_count = len(grid_info['brush_presets'])
         required_rows = (preset_count + columns - 1) // columns if preset_count > 0 else 1
-        new_height = required_rows * 48 + (required_rows - 1) * 2 + 4
+        new_height = required_rows * iconSize + (required_rows - 1) * 2 + 4
         grid_info['widget'].setFixedHeight(new_height)
         for index, preset in enumerate(grid_info['brush_presets']):
             row = index // columns

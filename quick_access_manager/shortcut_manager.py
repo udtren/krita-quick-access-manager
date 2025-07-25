@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QSize, QMimeData, QPoint
 from PyQt5.QtGui import QDrag
 from PyQt5.QtGui import QFontMetrics
 from krita import Krita
-from .data_manager import load_shortcut_grids_data, save_shortcut_grids_data, log_save_grids_data
+from .data_manager import load_shortcut_grids_data, save_shortcut_grids_data, log_save_grids_data, spacingValue
 from .preprocess import check_common_config
 
 COMMON_CONFIG = check_common_config()
@@ -134,7 +134,7 @@ class ShortcutAccessSection(QWidget):
         self.data_file = os.path.join(self.config_dir, "shortcut_grid_data.json")
 
         self.main_layout = QVBoxLayout()
-        self.main_layout.setSpacing(8)
+        self.main_layout.setSpacing(spacingValue)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         # タイトルラベルを追加
@@ -299,7 +299,7 @@ class SingleShortcutGridWidget(QWidget):
         self.setAcceptDrops(True)
 
         main_layout = QVBoxLayout()
-        main_layout.setSpacing(4)
+        main_layout.setSpacing(spacingValue)
         main_layout.setContentsMargins(2, 2, 2, 2)
 
         header_layout = QHBoxLayout()
@@ -335,7 +335,7 @@ class SingleShortcutGridWidget(QWidget):
         main_layout.addLayout(header_layout)
 
         self.shortcut_grid_layout = QGridLayout()
-        self.shortcut_grid_layout.setSpacing(4)
+        self.shortcut_grid_layout.setSpacing(spacingValue)
         self.shortcut_grid_layout.setContentsMargins(2, 2, 2, 2)
         grid_area = QWidget()
         grid_area.setLayout(self.shortcut_grid_layout)
