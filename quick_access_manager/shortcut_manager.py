@@ -309,8 +309,8 @@ class SingleShortcutGridWidget(QWidget):
         header_layout.addStretch()
 
         font_px = get_font_px(COMMON_CONFIG["font"]["docker_button_font_size"])
-        btn_height = int(font_px * 2)
-        btn_width = int(font_px * 2.5)
+        btn_height = int(font_px * 1.2)
+        btn_width = int(font_px * 1.2)
 
         self.up_btn = QPushButton("↑")
         self.up_btn.setFixedSize(btn_width, btn_height)
@@ -335,8 +335,8 @@ class SingleShortcutGridWidget(QWidget):
         main_layout.addLayout(header_layout)
 
         self.shortcut_grid_layout = QGridLayout()
-        self.shortcut_grid_layout.setSpacing(4)
-        self.shortcut_grid_layout.setContentsMargins(2, 2, 2, 2)
+        self.shortcut_grid_layout.setSpacing(2)
+        self.shortcut_grid_layout.setContentsMargins(1, 1, 1, 1)
         grid_area = QWidget()
         grid_area.setLayout(self.shortcut_grid_layout)
         grid_area.setStyleSheet("background: none;")
@@ -396,7 +396,7 @@ class SingleShortcutGridWidget(QWidget):
             # log_save_grids_data(f"config: {config}")
 
             shortcut_btn = ShortcutDraggableButton(action, self.grid_info, self.parent_section, config)
-            shortcut_btn.setMinimumSize(QSize(80, 32))
+            shortcut_btn.setMinimumSize(QSize(40, 14))
 
             # 個別設定がグローバル値と異なる場合のみ個別設定を適用
             font_color = config.get("fontColor", COMMON_CONFIG["color"]["shortcut_button_font_color"])

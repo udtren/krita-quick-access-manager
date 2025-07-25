@@ -83,7 +83,7 @@ class DraggableBrushButton(QPushButton):
         self.drag_start_position = QPoint()
         
         self.setToolTip(preset.name())
-        self.setFixedSize(48, 48)
+        self.setFixedSize(32, 32)
         
         # Set brush preset icon
         if preset.image():
@@ -203,7 +203,7 @@ class ClickableGridWidget(QWidget):
                     # Calculate drop position in grid
                     drop_pos = event.pos()
                     columns = self.parent_docker.get_dynamic_columns()
-                    button_size = 48
+                    button_size = 32
                     spacing = 2
                     
                     col = min(drop_pos.x() // (button_size + spacing), columns - 1)
@@ -292,8 +292,8 @@ class QuickAccessDockerWidget(QDockWidget):
         scroll_area = QScrollArea()
         self.scroll_widget = QWidget()
         self.main_grid_layout = QVBoxLayout()
-        self.main_grid_layout.setSpacing(2)  # Minimize spacing between grids
-        self.main_grid_layout.setContentsMargins(2, 2, 2, 2)  # Minimize margins
+        self.main_grid_layout.setSpacing(1)  # Minimize spacing between grids
+        self.main_grid_layout.setContentsMargins(1, 1, 1, 1)  # Minimize margins
         self.scroll_widget.setLayout(self.main_grid_layout)
         scroll_area.setWidget(self.scroll_widget)
         scroll_area.setWidgetResizable(True)
@@ -404,8 +404,8 @@ class QuickAccessDockerWidget(QDockWidget):
 
         # ボタン幅をフォントサイズに応じて動的に
         font_px = get_font_px(COMMON_CONFIG["font"]["docker_button_font_size"])
-        btn_height = int(font_px * 2)
-        btn_width = int(font_px * 2.5)
+        btn_height = int(font_px * 1.2)
+        btn_width = int(font_px * 1.2)
 
         up_btn = QPushButton("↑")
         up_btn.setFixedSize(btn_width, btn_height)
@@ -442,8 +442,8 @@ class QuickAccessDockerWidget(QDockWidget):
         remove_btn.clicked.connect(lambda: self.remove_grid(grid_info))  # 削除処理
 
         grid_widget = ClickableGridWidget(grid_info, self)
-        grid_widget.setFixedHeight(48 + 4)
-        grid_widget.setMinimumHeight(48 + 4)
+        grid_widget.setFixedHeight(32 + 4)
+        grid_widget.setMinimumHeight(32 + 4)
         grid_layout = QGridLayout()
         grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         grid_layout.setSpacing(2)
@@ -551,7 +551,7 @@ class QuickAccessDockerWidget(QDockWidget):
         columns = self.get_dynamic_columns()
         preset_count = len(grid_info['brush_presets'])
         required_rows = (preset_count + columns - 1) // columns if preset_count > 0 else 1
-        new_height = required_rows * 48 + (required_rows - 1) * 2 + 4
+        new_height = required_rows * 32 + (required_rows - 1) * 2 + 4
         grid_info['widget'].setFixedHeight(new_height)
         for index, preset in enumerate(grid_info['brush_presets']):
             row = index // columns
