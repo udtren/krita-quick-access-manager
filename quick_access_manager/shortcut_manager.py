@@ -77,11 +77,11 @@ class ShortcutPopup(QDialog):
     def __init__(self, parent_section):
         super().__init__(parent_section)
         self.parent_section = parent_section
-        self.setWindowTitle("All Krita Shortcuts")
+        self.setWindowTitle("Krita Actions")
         self.resize(600, 400)
         layout = QVBoxLayout()
 
-        self.add_shortcut_btn = QPushButton("AddShortCut")
+        self.add_shortcut_btn = QPushButton("AddAction")
         self.add_shortcut_btn.setStyleSheet(docker_btn_style())
         layout.addWidget(self.add_shortcut_btn)
         self.add_shortcut_btn.clicked.connect(self.add_selected_shortcut_to_grid)
@@ -145,24 +145,17 @@ class ShortcutAccessSection(QWidget):
         self.main_layout.setSpacing(get_spacing_between_grids())
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # タイトルラベルを追加
-        title_label = QLabel("Quick Shortcut Access")
-        title_label.setAlignment(Qt.AlignCenter)
-        self.main_layout.addWidget(title_label)
-
         button_layout = QHBoxLayout()
-        self.show_all_btn = QPushButton("ShowAllShortcut")
+        self.show_all_btn = QPushButton("Actions")
         self.show_all_btn.setStyleSheet(docker_btn_style())
         self.add_grid_btn = QPushButton("AddGrid")
         self.add_grid_btn.setStyleSheet(docker_btn_style())
+        self.restore_grid_btn = QPushButton("RestoreActions")
+        self.restore_grid_btn.setStyleSheet(docker_btn_style())
         button_layout.addWidget(self.show_all_btn)
         button_layout.addWidget(self.add_grid_btn)
+        button_layout.addWidget(self.restore_grid_btn)
         self.main_layout.addLayout(button_layout)
-
-        # RestoreShortGridボタンを追加
-        self.restore_grid_btn = QPushButton("RestoreShortcutGrid")
-        self.restore_grid_btn.setStyleSheet(docker_btn_style())
-        self.main_layout.addWidget(self.restore_grid_btn)
 
         self.setLayout(self.main_layout)
 
@@ -310,7 +303,7 @@ class SingleShortcutGridWidget(QWidget):
 
         main_layout = QVBoxLayout()
         main_layout.setSpacing(get_spacing_between_buttons())
-        main_layout.setContentsMargins(2, 2, 2, 2)
+        main_layout.setContentsMargins(1, 1, 1, 1)
 
         header_layout = QHBoxLayout()
         self.grid_name_label = QLabel(self.grid_info['name'])
@@ -318,47 +311,40 @@ class SingleShortcutGridWidget(QWidget):
         header_layout.addWidget(self.grid_name_label, alignment=Qt.AlignLeft)
         header_layout.addStretch()
 
-        font_px = get_font_px(COMMON_CONFIG["font"]["docker_button_font_size"])
-        btn_height = int(font_px * 2)
-        btn_width = int(font_px * 2.5)
-
-        self.up_btn = QPushButton("↑")
-        self.up_btn.setFixedSize(btn_width, btn_height)
-        self.up_btn.setStyleSheet(docker_btn_style())
-        self.down_btn = QPushButton("↓")
-        self.down_btn.setFixedSize(btn_width, btn_height)
-        self.down_btn.setStyleSheet(docker_btn_style())
-        self.rename_btn = QPushButton("Rename")
-        self.rename_btn.setFixedSize(btn_width * 2, btn_height)
-        self.rename_btn.setStyleSheet(docker_btn_style())
-        self.active_btn = QPushButton("Active")
-        self.active_btn.setFixedSize(btn_width * 2, btn_height)
-        self.active_btn.setStyleSheet(docker_btn_style())
-        self.remove_btn = QPushButton("Remove")
-        self.remove_btn.setFixedSize(btn_width * 2, btn_height)
-        self.remove_btn.setStyleSheet(docker_btn_style())
-        header_layout.addWidget(self.up_btn)
-        header_layout.addWidget(self.down_btn)
-        header_layout.addWidget(self.rename_btn)
-        header_layout.addWidget(self.active_btn)
-        header_layout.addWidget(self.remove_btn)
         main_layout.addLayout(header_layout)
 
         self.shortcut_grid_layout = QGridLayout()
         self.shortcut_grid_layout.setSpacing(get_spacing_between_buttons())
-        self.shortcut_grid_layout.setContentsMargins(2, 2, 2, 2)
+        self.shortcut_grid_layout.setContentsMargins(1, 1, 1, 1)
         grid_area = QWidget()
         grid_area.setLayout(self.shortcut_grid_layout)
         grid_area.setStyleSheet("background: none;")
         main_layout.addWidget(grid_area)
-
         self.setLayout(main_layout)
 
-        self.rename_btn.clicked.connect(self.rename_grid)
-        self.active_btn.clicked.connect(self.activate_grid)
-        self.up_btn.clicked.connect(lambda: self.parent_section.move_grid(self, -1))
-        self.down_btn.clicked.connect(lambda: self.parent_section.move_grid(self, 1))
-        self.remove_btn.clicked.connect(self.remove_grid)
+        # Grid名クリックイベント
+        def grid_name_label_mousePressEvent(event):
+            mods = QApplication.keyboardModifiers()
+            # Shift + 左クリックで↑
+            if event.button() == Qt.LeftButton and mods == Qt.ShiftModifier:
+                self.parent_section.move_grid(self, -1)
+            # Shift + 右クリックで↓
+            elif event.button() == Qt.RightButton and mods == Qt.ShiftModifier:
+                self.parent_section.move_grid(self, 1)
+            # 通常左クリックでActive
+            elif event.button() == Qt.LeftButton:
+                self.activate_grid()
+            # Alt + 右クリックでRename
+            elif event.button() == Qt.RightButton and mods == Qt.AltModifier:
+                self.rename_grid()
+            # Ctrl+Alt+Shift+右クリックでGrid削除
+            elif (
+                event.button() == Qt.RightButton and
+                (mods & (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier)) == (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier)
+            ):
+                self.remove_grid()
+
+        self.grid_name_label.mousePressEvent = grid_name_label_mousePressEvent
 
     def refresh_spacing_and_update(self):
             # main_layout, header_layout, shortcut_grid_layoutのspacingを再適用

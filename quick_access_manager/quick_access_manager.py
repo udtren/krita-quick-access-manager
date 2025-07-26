@@ -277,12 +277,7 @@ class QuickAccessDockerWidget(QDockWidget):
         # Create a central widget for the dock
         central_widget = QWidget()
         main_layout = QVBoxLayout()
-        
-        # Section 1: Quick Brush Access
-        title_label = QLabel("Quick Brush Access")
-        title_label.setAlignment(Qt.AlignCenter)
-        main_layout.addWidget(title_label)
-        
+               
         # First button row (horizontal)
         button_layout_1 = QHBoxLayout()
         
@@ -372,15 +367,7 @@ class QuickAccessDockerWidget(QDockWidget):
             # グリッド名ラベル
             if grid.get('name_label'):
                 grid['name_label'].setStyleSheet("font-weight: bold; font-size: 12px; color: #4FC3F7;" if grid.get('is_active') else "font-weight: bold; font-size: 12px; color: #ffffff;")
-            # ヘッダーボタン
-            for btn_key in ['rename_button', 'active_btn', 'remove_btn']:
-                if grid.get(btn_key):
-                    grid[btn_key].setStyleSheet(docker_btn_style())
-            # ↑↓ボタン
-            if grid.get('container'):
-                container = grid['container']
-                for btn in container.findChildren(QPushButton):
-                    btn.setStyleSheet(docker_btn_style())
+
             # ブラシボタン
             if grid.get('widget'):
                 layout = grid['layout']
@@ -398,12 +385,6 @@ class QuickAccessDockerWidget(QDockWidget):
                         "font-weight: bold; font-size: 13px; color: #4FC3F7; background: none;" if grid_widget.is_active else
                         "font-weight: bold; font-size: 13px; color: #ffffff; background: none;"
                     )
-                # ヘッダーボタン
-                for btn in [getattr(grid_widget, "up_btn", None), getattr(grid_widget, "down_btn", None),
-                            getattr(grid_widget, "rename_btn", None), getattr(grid_widget, "active_btn", None),
-                            getattr(grid_widget, "remove_btn", None)]:
-                    if btn:
-                        btn.setStyleSheet(docker_btn_style())
                 # ショートカットボタン
                 layout = getattr(grid_widget, "shortcut_grid_layout", None)
                 if layout:
@@ -413,7 +394,7 @@ class QuickAccessDockerWidget(QDockWidget):
                             btn.setStyleSheet(shortcut_btn_style())
         # AddBrush/AddGrid/Settingボタンなども再適用
         for btn in self.findChildren(QPushButton):
-            if btn.text() in ["AddBrush", "AddGrid", "Setting", "ShowAllShortcut", "RestoreShortcutGrid"]:
+            if btn.text() in ["AddBrush", "AddGrid", "Setting", "Actions", "RestoreActions"]:
                 btn.setStyleSheet(docker_btn_style())
 
     def _add_grid_ui(self, grid_info):
@@ -429,44 +410,33 @@ class QuickAccessDockerWidget(QDockWidget):
         header_layout.addWidget(name_label, alignment=Qt.AlignLeft)
         header_layout.addStretch()
 
-        # ボタン幅をフォントサイズに応じて動的に
-        font_px = get_font_px(COMMON_CONFIG["font"]["docker_button_font_size"])
-        btn_height = int(font_px * 2)
-        btn_width = int(font_px * 2.5)
-
-        up_btn = QPushButton("↑")
-        up_btn.setFixedSize(btn_width, btn_height)
-        up_btn.setStyleSheet(docker_btn_style())
-        down_btn = QPushButton("↓")
-        down_btn.setFixedSize(btn_width, btn_height)
-        down_btn.setStyleSheet(docker_btn_style())
-        rename_button = QPushButton("Rename")
-        rename_button.setFixedSize(btn_width * 2, btn_height)
-        rename_button.setStyleSheet(docker_btn_style())
-        active_btn = QPushButton("Active")
-        active_btn.setFixedSize(btn_width * 2, btn_height)
-        active_btn.setStyleSheet(docker_btn_style())
-        # Removeボタン追加
-        remove_btn = QPushButton("Remove")
-        remove_btn.setFixedSize(btn_width * 2, btn_height)
-        remove_btn.setStyleSheet(docker_btn_style())
-        header_layout.addWidget(up_btn)
-        header_layout.addWidget(down_btn)
-        header_layout.addWidget(rename_button)
-        header_layout.addWidget(active_btn)
-        header_layout.addWidget(remove_btn)  # 右端に追加
         container_layout.addLayout(header_layout)
         grid_info['container'] = grid_container
         grid_info['name_label'] = name_label
-        grid_info['rename_button'] = rename_button
-        grid_info['active_btn'] = active_btn
-        grid_info['remove_btn'] = remove_btn
 
-        up_btn.clicked.connect(lambda: self.move_grid(grid_info, -1))
-        down_btn.clicked.connect(lambda: self.move_grid(grid_info, 1))
-        rename_button.clicked.connect(lambda: self.rename_grid(grid_info))
-        active_btn.clicked.connect(lambda: self.set_active_grid(grid_info))
-        remove_btn.clicked.connect(lambda: self.remove_grid(grid_info))  # 削除処理
+        def name_label_mousePressEvent(event):
+            mods = QApplication.keyboardModifiers()
+            # Shift + 左クリックで↑
+            if event.button() == Qt.LeftButton and mods == Qt.ShiftModifier:
+                self.move_grid(grid_info, -1)
+            # Shift + 右クリックで↓
+            elif event.button() == Qt.RightButton and mods == Qt.ShiftModifier:
+                self.move_grid(grid_info, 1)
+            # 通常左クリックでActive
+            elif event.button() == Qt.LeftButton:
+                self.set_active_grid(grid_info)
+            # Alt + 右クリックでRename
+            elif event.button() == Qt.RightButton and mods == Qt.AltModifier:
+                self.rename_grid(grid_info)
+            # Ctrl+Alt+Shift+右クリックでGrid削除
+            elif (
+                event.button() == Qt.RightButton and
+                (mods & (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier)) == (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier)
+            ):
+                self.remove_grid(grid_info)
+            
+            
+        name_label.mousePressEvent = name_label_mousePressEvent
 
         grid_widget = ClickableGridWidget(grid_info, self)
         grid_widget.setFixedHeight(iconSize + 4)
@@ -518,9 +488,6 @@ class QuickAccessDockerWidget(QDockWidget):
             'widget': None,
             'layout': None,
             'name_label': None,
-            'rename_button': None,
-            'active_btn': None,
-            'remove_btn': None,
             'name': grid_name,
             'brush_presets': [],
             'is_active': False
