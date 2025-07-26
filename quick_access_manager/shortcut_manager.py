@@ -585,20 +585,11 @@ class ShortcutDraggableButton(QPushButton):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-    #     self.adjust_text_to_fit()
-
-    # def adjust_text_to_fit(self):
-    #     font = self.font()
-    #     config = self.config
-    #     font_size = int(config.get("fontSize", 12)) if config else 12
-    #     font.setPointSize(font_size)
-    #     self.setFont(font)   
 
     def mousePressEvent(self, event):
         modifiers = QApplication.keyboardModifiers()
-        # Ctrl+Shift+Alt+左クリック: Indexを-1
-        if (event.button() == Qt.LeftButton and
-            modifiers == (Qt.ControlModifier | Qt.ShiftModifier | Qt.AltModifier)):
+        # Shift+左クリック: Indexを-1
+        if event.button() == Qt.LeftButton and modifiers == Qt.ShiftModifier:
             idx = self.grid_info['actions'].index(self.action)
             if idx > 0:
                 # actionsの並び替え
@@ -614,9 +605,9 @@ class ShortcutDraggableButton(QPushButton):
                         grid_widget.update_grid()
                         break
             return
-
-        if (event.button() == Qt.RightButton and
-            modifiers == (Qt.ControlModifier | Qt.ShiftModifier | Qt.AltModifier)):
+        
+        # Shift+右クリック: Indexを+1
+        if event.button() == Qt.RightButton and modifiers == Qt.ShiftModifier:
             idx = self.grid_info['actions'].index(self.action)
             if idx < len(self.grid_info['actions']) - 1:
                 # actionsの並び替え
