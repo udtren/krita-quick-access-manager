@@ -16,9 +16,9 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 
 ## How to Add a Shortcut. 
 1. In the "Quick Shortcut Access" section, activate the grid you want to add to.
-2. Click the "ShowAllShortcut" button to open the shortcut selection popup.
+2. Click the "Actions" button to open the shortcut selection popup.
 3. Select the action you want to add from the table.
-4. Click the "AddShortCut" button.
+4. Click the "AddAction" button.
 5. The selected shortcut will be added to the active grid.
 ![How to Add a Shortcut](./quick_access_manager/image/image2.jpg)
  
@@ -36,7 +36,7 @@ When Krita starts, the brush preset settings will be loaded automatically.
 
 However, the shortcut settings will not be loaded automatically because it is difficult to track the timing when Krita loads all shortcut actions.
 
-Therefore, you need to click the [RestoreShortcutGrid] button manually to restore the shortcut settings.
+Therefore, you need to click the [RestoreActions] button manually to restore the shortcut settings.
 
 ## Resize Docker
 <del>When resizing the docker, please do it slowly.</del>
@@ -51,14 +51,22 @@ Since the grid update process for Brush Presets has been disabled during docker 
 To reorder a brush or shortcut button within a grid or move it between grids, hold <kbd>Ctrl</kbd> and left-click and drag the button to the desired position or grid.
 
 **Advanced Sort:**  
-- To move a shortcut button up by one position within the same grid, hold <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Alt</kbd> and left-click the button.
-- To move a shortcut button down by one position within the same grid, hold <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Alt</kbd> and right-click the button.
+- To move a shortcut button up by one position within the same grid, hold <kbd>Shift</kbd> and left-click the grid name.
+- To move a shortcut button down by one position within the same grid, hold <kbd>Shift</kbd> and right-click the grid name.
+- To move a grid up by one position, hold <kbd>Shift</kbd> and left-click the grid name.
+- To move a grid down by one position, hold <kbd>Shift</kbd> and right-click the grid name.
 
 **Remove:**  
 To remove a brush or shortcut from a grid, hold <kbd>Ctrl</kbd> and right-click on the button you want to remove.
 
 **Remove Grid:**  
-To delete an entire grid, click the "Remove" button located at the top right of each grid's header.
+To delete an entire grid, hold <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> and right-click the grid name.
+
+**Rename Grid:**  
+To rename a grid, hold <kbd>Alt</kbd> and right-click the grid name.
+
+**Activate Grid:**  
+To activate a grid, simply left-click the grid name.
 
 ## Config file
 
@@ -71,8 +79,3 @@ The configuration files for grids and shortcuts are stored in `./quick_access_ma
 **Note:**  
 There is no profile management function, but you can manually edit these files while Krita is closed.  
 If you want to reset or backup your settings, you can copy or edit these files directly.
-
-## Other Usage 
-- Add a new grid: Click the "AddGrid" button to create a new grid.
-- Rename a grid: Use the "Rename" button to edit the grid name.
-- Reorder grids: Use the "↑" and "↓" buttons to change the grid order.
