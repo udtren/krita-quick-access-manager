@@ -7,6 +7,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QDrag
 from .data_manager import load_grids_data, save_grids_data
 from .shortcut_manager import ShortcutAccessSection, SingleShortcutGridWidget, shortcut_btn_style
 from .preprocess import check_common_config
+from .brush_adjustment import BrushAdjustmentWidget
 
 COMMON_CONFIG = check_common_config()
 spacingBetweenGridsValue = COMMON_CONFIG["layout"]["spacing_between_grids"]
@@ -277,7 +278,16 @@ class QuickAccessDockerWidget(QDockWidget):
         # Create a central widget for the dock
         central_widget = QWidget()
         main_layout = QVBoxLayout()
-               
+
+        #####################################
+        ####   Brush Adjustments Section
+        #####################################
+        self.brush_adjustment_section = BrushAdjustmentWidget(self)
+        main_layout.addWidget(self.brush_adjustment_section)
+
+        #####################################
+        ####   BrushSets Section
+        #####################################
         # First button row (horizontal)
         button_layout_1 = QHBoxLayout()
         
@@ -307,10 +317,15 @@ class QuickAccessDockerWidget(QDockWidget):
         
         main_layout.addWidget(scroll_area)
         
-        # Section 2: Quick Shortcut Access
+        #####################################
+        ####   Quick Shortcut Access Section
+        #####################################
         self.shortcut_section = ShortcutAccessSection(self)
         main_layout.addWidget(self.shortcut_section)
-        
+
+        #####################################
+        ####   Other
+        #####################################
         # Settingボタンを一番下に追加
         setting_btn = QPushButton("Setting")
         setting_btn.setStyleSheet(docker_btn_style())
@@ -396,6 +411,9 @@ class QuickAccessDockerWidget(QDockWidget):
         for btn in self.findChildren(QPushButton):
             if btn.text() in ["AddBrush", "AddGrid", "Setting", "Actions", "RestoreActions"]:
                 btn.setStyleSheet(docker_btn_style())
+        # Brush adjustment section
+        if hasattr(self, "brush_adjustment_section"):
+            self.brush_adjustment_section.refresh_styles()
 
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
