@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QGridLayout
 from PyQt5.QtCore import Qt, QTimer
 from krita import Krita
 from .preprocess import check_common_config
@@ -30,15 +30,15 @@ class BrushAdjustmentWidget(QWidget):
     def init_ui(self):
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
-        layout.setSpacing(8)  # Reduced spacing for more compact look
+        layout.setSpacing(8)
         
-        # Brush Size - compact single line
+        # Create horizontal layout for single row
+        main_layout = QHBoxLayout()
+        main_layout.setSpacing(8)
+        
+        # Size slider with value
         size_layout = QHBoxLayout()
-        size_layout.setSpacing(8)
-        
-        size_label = QLabel("Size:")
-        size_label.setStyleSheet(get_brush_adjustment_style())
-        size_label.setFixedWidth(40)  # Shorter label
+        size_layout.setSpacing(4)
         
         self.size_slider = QSlider(Qt.Horizontal)
         self.size_slider.setMinimum(1)
@@ -47,21 +47,16 @@ class BrushAdjustmentWidget(QWidget):
         self.size_slider.valueChanged.connect(self.on_size_changed)
         
         self.size_value_label = QLabel("10")
-        self.size_value_label.setFixedWidth(25)
         self.size_value_label.setStyleSheet(get_brush_adjustment_style())
+        self.size_value_label.setAlignment(Qt.AlignCenter)
+        self.size_value_label.setFixedWidth(30)
         
-        size_layout.addWidget(size_label)
-        size_layout.addWidget(self.size_slider, 1)  # Give slider most of the space
+        size_layout.addWidget(self.size_slider, 1)
         size_layout.addWidget(self.size_value_label)
-        layout.addLayout(size_layout)
         
-        # Brush Opacity - compact single line
+        # Opacity slider with value
         opacity_layout = QHBoxLayout()
-        opacity_layout.setSpacing(8)
-        
-        opacity_label = QLabel("Opacity:")
-        opacity_label.setStyleSheet(get_brush_adjustment_style())
-        opacity_label.setFixedWidth(40)  # Same width as other labels
+        opacity_layout.setSpacing(4)
         
         self.opacity_slider = QSlider(Qt.Horizontal)
         self.opacity_slider.setMinimum(0)
@@ -70,21 +65,16 @@ class BrushAdjustmentWidget(QWidget):
         self.opacity_slider.valueChanged.connect(self.on_opacity_changed)
         
         self.opacity_value_label = QLabel("100%")
-        self.opacity_value_label.setFixedWidth(30)  # Slightly wider for percentage
         self.opacity_value_label.setStyleSheet(get_brush_adjustment_style())
+        self.opacity_value_label.setAlignment(Qt.AlignCenter)
+        self.opacity_value_label.setFixedWidth(35)
         
-        opacity_layout.addWidget(opacity_label)
-        opacity_layout.addWidget(self.opacity_slider, 1)  # Give slider most of the space
+        opacity_layout.addWidget(self.opacity_slider, 1)
         opacity_layout.addWidget(self.opacity_value_label)
-        layout.addLayout(opacity_layout)
         
-        # Brush Rotation - compact single line
+        # Rotation slider with value
         rotation_layout = QHBoxLayout()
-        rotation_layout.setSpacing(8)
-        
-        rotation_label = QLabel("Rotation:")
-        rotation_label.setStyleSheet(get_brush_adjustment_style())
-        rotation_label.setFixedWidth(40)  # Same width as size label
+        rotation_layout.setSpacing(4)
         
         self.rotation_slider = QSlider(Qt.Horizontal)
         self.rotation_slider.setMinimum(0)
@@ -93,14 +83,19 @@ class BrushAdjustmentWidget(QWidget):
         self.rotation_slider.valueChanged.connect(self.on_rotation_changed)
         
         self.rotation_value_label = QLabel("0°")
-        self.rotation_value_label.setFixedWidth(25)
         self.rotation_value_label.setStyleSheet(get_brush_adjustment_style())
+        self.rotation_value_label.setAlignment(Qt.AlignCenter)
+        self.rotation_value_label.setFixedWidth(30)
         
-        rotation_layout.addWidget(rotation_label)
-        rotation_layout.addWidget(self.rotation_slider, 1)  # Give slider most of the space
+        rotation_layout.addWidget(self.rotation_slider, 1)
         rotation_layout.addWidget(self.rotation_value_label)
-        layout.addLayout(rotation_layout)
         
+        # Add all slider groups to main layout
+        main_layout.addLayout(size_layout, 1)
+        main_layout.addLayout(opacity_layout, 1)
+        main_layout.addLayout(rotation_layout, 1)
+        
+        layout.addLayout(main_layout)
         self.setLayout(layout)
         
         # Load current brush settings
