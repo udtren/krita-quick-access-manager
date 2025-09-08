@@ -2,7 +2,7 @@
 
 A plugin for Krita that provides quick access to brush presets and shortcut management.
 
-The purpose of creating this plugin was to have a function similar to the Quick Access Tool in Clip Studio Paint.
+The purpose of creating this plugin was to have a function similar to the Quick Access Palette in Clip Studio Paint.
 
 ![Sample](./quick_access_manager/image/000.jpg)
 ---
