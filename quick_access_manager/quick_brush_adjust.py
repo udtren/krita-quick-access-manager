@@ -13,6 +13,7 @@ from .quick_brush_adjust_widgets import (
     BRUSH_ADJUSTMENT_NUMBER_SIZE,
     COLOR_HISTORY_NUMBER,
     BRUSH_HISTORY_NUMBER,
+    COLOR_HISTORY_ICON_SIZE,
     BRUSH_HISTORY_ICON_SIZE,
     BLENDE_MODES
 )
@@ -155,7 +156,7 @@ class BrushAdjustmentWidget(QWidget):
         layout.addLayout(main_layout)
         
         # Add color history widget below the main controls
-        self.color_history_widget = ColorHistoryWidget(self, COLOR_HISTORY_NUMBER)
+        self.color_history_widget = ColorHistoryWidget(self, COLOR_HISTORY_NUMBER, COLOR_HISTORY_ICON_SIZE)
         layout.addWidget(self.color_history_widget)
         
         # Add brush history widget below the color history

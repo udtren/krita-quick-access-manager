@@ -7,9 +7,10 @@ from krita import Krita, ManagedColor
 class ColorHistoryWidget(QWidget):
     """Widget to display color history in a grid"""
     
-    def __init__(self, parent=None, color_history_number=20):
+    def __init__(self, parent=None, color_history_number=20, icon_size=30):
         super().__init__(parent)
         self.COLOR_HISTORY_NUMBER = color_history_number
+        self.ICON_SIZE = icon_size
         self.color_history = []
         self.color_buttons = []
         self.init_ui()
@@ -26,7 +27,7 @@ class ColorHistoryWidget(QWidget):
         
         # Create 2 rows for color history
         colors_per_row = self.COLOR_HISTORY_NUMBER // 2
-        button_size = 20
+        button_size = self.ICON_SIZE
         
         # First row
         row1_layout = QHBoxLayout()
