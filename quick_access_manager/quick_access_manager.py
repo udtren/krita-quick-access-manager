@@ -7,7 +7,6 @@ from PyQt5.QtGui import QIcon, QPixmap, QDrag
 from .data_manager import load_grids_data, save_grids_data
 from .shortcut_manager import ShortcutAccessSection, SingleShortcutGridWidget, shortcut_btn_style
 from .preprocess import check_common_config
-from .brush_adjustment import BrushAdjustmentWidget
 
 COMMON_CONFIG = check_common_config()
 spacingBetweenGridsValue = COMMON_CONFIG["layout"]["spacing_between_grids"]
@@ -280,12 +279,6 @@ class QuickAccessDockerWidget(QDockWidget):
         main_layout = QVBoxLayout()
 
         #####################################
-        ####   Brush Adjustments Section
-        #####################################
-        self.brush_adjustment_section = BrushAdjustmentWidget(self)
-        main_layout.addWidget(self.brush_adjustment_section)
-
-        #####################################
         ####   BrushSets Section
         #####################################
         # First button row (horizontal)
@@ -411,9 +404,6 @@ class QuickAccessDockerWidget(QDockWidget):
         for btn in self.findChildren(QPushButton):
             if btn.text() in ["AddBrush", "AddGrid", "Setting", "Actions", "RestoreActions"]:
                 btn.setStyleSheet(docker_btn_style())
-        # Brush adjustment section
-        if hasattr(self, "brush_adjustment_section"):
-            self.brush_adjustment_section.refresh_styles()
 
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
@@ -641,29 +631,3 @@ class QuickAccessDockerFactory(DockWidgetFactoryBase):
     
     def createDockWidget(self):
         return QuickAccessDockerWidget()
-
-class QuickAccessManagerExtension(Extension):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.docker_factory = None
-
-    def setup(self):
-        self.docker_factory = QuickAccessDockerFactory()
-        Krita.instance().addDockWidgetFactory(self.docker_factory)
-
-    def createActions(self, window):
-        # Kritaのウィンドウが初期化された後に呼ばれる
-        for d in window.dockers():
-            try:
-                widget = None
-                if hasattr(d, "widget"):
-                    w = d.widget
-                    widget = w() if callable(w) else w
-                if widget and hasattr(widget, "shortcut_section"):
-                    widget.shortcut_section.restore_grids_from_file()
-            except Exception:
-                QMessageBox.warning(
-                    None,
-                    "QuickAccessManagerExtension Error",
-                    "Something wrong is happening on QuickAccessManagerExtension.createActions.\n\nYou can try disable other plugin and start Krita again."
-                )
