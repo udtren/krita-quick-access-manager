@@ -385,49 +385,29 @@ class BrushAdjustmentWidget(QWidget):
                     print(f"Error setting blend mode: {e}")
     
     def reset_brush_settings(self):
-        """Reset brush settings to default values"""
-        print("Resetting brush settings to defaults")
+        """Reset brush settings by triggering Krita's reload preset action"""
+        print("Triggering Krita's reload preset action")
         
-        # Set default values
-        default_size = 10
-        default_opacity = 100
-        default_rotation = 0
-        default_blend_mode = "normal"
-        
-        # Update UI controls
-        self.size_slider.setValue(self.brush_size_to_slider(default_size))
-        self.size_value_label.setText(str(default_size))
-        
-        self.opacity_slider.setValue(default_opacity)
-        self.opacity_value_label.setText(f"{default_opacity}%")
-        
-        self.rotation_widget.setValue(default_rotation)
-        self.rotation_value_label.setText(f"{default_rotation}°")
-        
-        # Find and set normal blend mode
-        index = self.blend_combo.findData(default_blend_mode)
-        if index >= 0:
-            self.blend_combo.setCurrentIndex(index)
-        
-        # Apply changes to Krita
         app = Krita.instance()
-        if app.activeWindow() and app.activeWindow().activeView():
-            view = app.activeWindow().activeView()
-            try:
-                view.setBrushSize(float(default_size))
-                view.setPaintingOpacity(default_opacity / 100.0)
-                view.setBrushRotation(float(default_rotation))
-                view.setCurrentBlendingMode(default_blend_mode)
-                
-                # Update tracked values
-                self.current_brush_size = default_size
-                self.current_brush_opacity = default_opacity / 100.0
-                self.current_brush_rotation = default_rotation
-                self.current_blend_mode = default_blend_mode
-                
-                print("Successfully reset all brush settings")
-            except Exception as e:
-                print(f"Error resetting brush settings: {e}")
+        try:
+            # Trigger Krita's built-in reload preset action
+            app.action('reload_preset_action').trigger()
+            print("Successfully triggered reload_preset_action")
+            
+            # Clear tracked values to force UI refresh after reload
+            self.current_brush_name = None
+            self.current_brush_size = None
+            self.current_brush_opacity = None
+            self.current_brush_rotation = None
+            self.current_blend_mode = None
+            
+            # Update UI after a short delay to let Krita finish the reload
+            QTimer.singleShot(150, self.update_from_current_brush)
+            
+        except Exception as e:
+            print(f"Error triggering reload_preset_action: {e}")
+            # Fallback - just refresh the UI
+            self.update_from_current_brush()
     
     def force_update(self):
         """Force update from current brush - can be called externally"""
