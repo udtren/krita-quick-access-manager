@@ -13,8 +13,8 @@ BRUSH_HISTORY_NUMBER = 20
 BRUSH_HISTORY_ICON_SIZE = 30  # Size of brush history buttons and icons
 BLENDE_MODES = [
     "normal", "multiply", "screen", "overlay", "soft_light_svg", 
-    "hard_light", "color_dodge", "color_burn", "darken", "lighten",
-    "difference", "exclusion", "hue", "saturation", "color", "luminosity"
+    "hard_light", "dodge", "burn", "darken", "lighten",
+    "hue", "saturation", "color"
 ]
 
 __all__ = [
