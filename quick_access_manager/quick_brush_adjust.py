@@ -1,302 +1,21 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QGridLayout, QPushButton
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QGridLayout, QPushButton, QComboBox
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QPainter, QPen, QBrush, QColor, QPolygon
 from krita import Krita
 import math
 
-# Font size for brush adjustment labels (easily adjustable)
-BRUSH_ADJUSTMENT_FONT_SIZE = "12px"
-BRUSH_ADJUSTMENT_NUMBER_SIZE = "16px"
-COLOR_HISTORY_NUMBER = 20
-
-class ColorHistoryWidget(QWidget):
-    """Widget to display color history in a grid"""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.color_history = []
-        self.color_buttons = []
-        self.init_ui()
-        
-        # Timer to periodically check for color changes
-        self.color_check_timer = QTimer()
-        self.color_check_timer.timeout.connect(self.check_color_change)
-        self.color_check_timer.start(200)  # Check every 200ms for better responsiveness
-        
-    def init_ui(self):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
-        
-        # Create 2 rows for color history
-        colors_per_row = COLOR_HISTORY_NUMBER // 2
-        button_size = 20
-        
-        # First row
-        row1_layout = QHBoxLayout()
-        row1_layout.setSpacing(1)
-        row1_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Second row
-        row2_layout = QHBoxLayout()
-        row2_layout.setSpacing(1)
-        row2_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Create color buttons
-        for i in range(COLOR_HISTORY_NUMBER):
-            color_btn = QPushButton()
-            color_btn.setFixedSize(button_size, button_size)
-            color_btn.setStyleSheet("border: 1px solid #888; background-color: #f0f0f0;")
-            color_btn.clicked.connect(lambda checked, idx=i: self.on_color_clicked(idx))
-            self.color_buttons.append(color_btn)
-            
-            # Add to appropriate row
-            if i < colors_per_row:
-                row1_layout.addWidget(color_btn)
-            else:
-                row2_layout.addWidget(color_btn)
-        
-        layout.addLayout(row1_layout)
-        layout.addLayout(row2_layout)
-        self.setLayout(layout)
-        
-    def check_color_change(self):
-        """Check if the current foreground color has changed"""
-        app = Krita.instance()
-        if app.activeWindow() and app.activeWindow().activeView():
-            view = app.activeWindow().activeView()
-            try:
-                # Get current foreground color
-                fg_color = view.foregroundColor()
-                if fg_color:
-                    # Get color components and convert to 0-255 range
-                    components = fg_color.components()
-                    if len(components) >= 3:
-                        color_rgb = (
-                            int(components[0] * 255),
-                            int(components[1] * 255), 
-                            int(components[2] * 255)
-                        )
-                        
-                        # Add to history if it's different from the last color
-                        if not self.color_history or self.color_history[0] != color_rgb:
-                            self.add_color_to_history(color_rgb)
-            except Exception as e:
-                # Try alternative method
-                try:
-                    fg_color = view.foregroundColor()
-                    if fg_color:
-                        # Try using colorProfile and colorSpace
-                        color_rgb = (
-                            int(fg_color.red() * 255),
-                            int(fg_color.green() * 255),
-                            int(fg_color.blue() * 255)
-                        )
-                        
-                        # Add to history if it's different from the last color
-                        if not self.color_history or self.color_history[0] != color_rgb:
-                            self.add_color_to_history(color_rgb)
-                except Exception as e2:
-                    print(f"Error getting foreground color: {e2}")
-                    pass
-    
-    def add_color_to_history(self, color_rgb):
-        """Add a color to the history and update display"""
-        print(f"Adding color to history: RGB{color_rgb}")  # Debug output
-        
-        # Remove color if it already exists in history
-        if color_rgb in self.color_history:
-            self.color_history.remove(color_rgb)
-        
-        # Add to front of history
-        self.color_history.insert(0, color_rgb)
-        
-        # Limit history size
-        if len(self.color_history) > COLOR_HISTORY_NUMBER:
-            self.color_history = self.color_history[:COLOR_HISTORY_NUMBER]
-        
-        # Update button colors
-        self.update_color_buttons()
-        print(f"Color history now has {len(self.color_history)} colors")  # Debug output
-    
-    def update_color_buttons(self):
-        """Update the color buttons to show current history"""
-        for i, btn in enumerate(self.color_buttons):
-            if i < len(self.color_history):
-                r, g, b = self.color_history[i]
-                btn.setStyleSheet(f"border: 1px solid #888; background-color: rgb({r}, {g}, {b});")
-                btn.setToolTip(f"RGB({r}, {g}, {b})")
-            else:
-                btn.setStyleSheet("border: 1px solid #888; background-color: #f0f0f0;")
-                btn.setToolTip("")
-    
-    def on_color_clicked(self, index):
-        """Handle color button click to set foreground color"""
-        if index < len(self.color_history):
-            r, g, b = self.color_history[index]
-            print(f"Clicking color: RGB({r}, {g}, {b})")  # Debug output
-            
-            app = Krita.instance()
-            if app.activeWindow() and app.activeWindow().activeView():
-                view = app.activeWindow().activeView()
-                
-                success = False
-                
-                # Method 1: Try using ManagedColor with proper color space
-                try:
-                    from krita import ManagedColor
-                    color = ManagedColor("RGBA", "U8", "")
-                    
-                    # Try to get the document's color profile
-                    if view.document() and view.document().colorProfile():
-                        color.setColorProfile(view.document().colorProfile())
-                    elif view.canvas() and view.canvas().colorProfile():
-                        color.setColorProfile(view.canvas().colorProfile())
-                    
-                    # Set the color components directly
-                    color.setComponents([r/255.0, g/255.0, b/255.0, 1.0])
-                    view.setForeGroundColor(color)
-                    success = True
-                    print(f"Successfully set color using ManagedColor")
-                except Exception as e:
-                    print(f"Method 1 failed: {e}")
-                
-                # Method 2: Try using QColor conversion if Method 1 failed
-                if not success:
-                    try:
-                        from krita import ManagedColor
-                        color = ManagedColor("RGBA", "U8", "")
-                        color.fromQColor(QColor(r, g, b))
-                        view.setForeGroundColor(color)
-                        success = True
-                        print(f"Successfully set color using QColor conversion")
-                    except Exception as e:
-                        print(f"Method 2 failed: {e}")
-                
-                # Method 3: Try modifying existing foreground color if previous methods failed
-                if not success:
-                    try:
-                        current_color = view.foregroundColor()
-                        if current_color:
-                            current_color.setComponents([r/255.0, g/255.0, b/255.0, 1.0])
-                            view.setForeGroundColor(current_color)
-                            success = True
-                            print(f"Successfully set color by modifying existing color")
-                    except Exception as e:
-                        print(f"Method 3 failed: {e}")
-                
-                if success:
-                    # Move this color to front of history since it was used
-                    self.add_color_to_history((r, g, b))
-                    print(f"Color set successfully and moved to front of history")
-                else:
-                    print(f"All methods failed to set foreground color to RGB({r}, {g}, {b})")
-    
-    def force_color_update(self):
-        """Force an immediate color history update"""
-        self.check_color_change()
-    
-    def add_test_color(self):
-        """Add a test color to verify the widget is working"""
-        import random
-        test_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        self.add_color_to_history(test_color)
-        print(f"Added test color: RGB{test_color}")
-    
-    def closeEvent(self, event):
-        """Clean up timer when widget is closed"""
-        if hasattr(self, 'color_check_timer'):
-            self.color_check_timer.stop()
-        super().closeEvent(event)
-
-class CircularRotationWidget(QWidget):
-    """Custom circular rotation control widget"""
-    valueChanged = pyqtSignal(int)
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedSize(60, 60)  # Fixed square size
-        self.value = 0  # 0-360 degrees
-        self.dragging = False
-        self.setMouseTracking(True)
-        
-    def setValue(self, value):
-        """Set the rotation value (0-360)"""
-        self.value = max(0, min(360, value))
-        self.update()
-        
-    def getValue(self):
-        """Get the current rotation value"""
-        return self.value
-    
-    def paintEvent(self, event):
-        """Custom paint event to draw the circular control"""
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        
-        # Get widget center and radius
-        center_x = self.width() // 2
-        center_y = self.height() // 2
-        radius = min(center_x, center_y) - 5
-        
-        # Draw outer circle (track)
-        painter.setPen(QPen(QColor(128, 128, 128), 2))
-        painter.setBrush(QBrush(QColor(240, 240, 240)))
-        painter.drawEllipse(center_x - radius, center_y - radius, radius * 2, radius * 2)
-        
-        # Draw rotation indicator line
-        angle_rad = math.radians(self.value - 90)  # -90 to start from top
-        end_x = center_x + (radius - 10) * math.cos(angle_rad)
-        end_y = center_y + (radius - 10) * math.sin(angle_rad)
-        
-        painter.setPen(QPen(QColor(50, 150, 250), 3))
-        painter.drawLine(center_x, center_y, int(end_x), int(end_y))
-        
-        # Draw center dot
-        painter.setBrush(QBrush(QColor(50, 150, 250)))
-        painter.setPen(QPen(QColor(50, 150, 250)))
-        painter.drawEllipse(center_x - 3, center_y - 3, 6, 6)
-        
-    def mousePressEvent(self, event):
-        """Handle mouse press for dragging"""
-        if event.button() == Qt.LeftButton:
-            self.dragging = True
-            self.updateValueFromMouse(event.pos())
-            
-    def mouseMoveEvent(self, event):
-        """Handle mouse move for dragging"""
-        if self.dragging:
-            self.updateValueFromMouse(event.pos())
-            
-    def mouseReleaseEvent(self, event):
-        """Handle mouse release"""
-        if event.button() == Qt.LeftButton:
-            self.dragging = False
-            
-    def updateValueFromMouse(self, pos):
-        """Update rotation value based on mouse position"""
-        center_x = self.width() // 2
-        center_y = self.height() // 2
-        
-        # Calculate angle from center to mouse position
-        dx = pos.x() - center_x
-        dy = pos.y() - center_y
-        
-        angle_rad = math.atan2(dy, dx)
-        angle_deg = math.degrees(angle_rad) + 90  # +90 to start from top
-        
-        # Normalize to 0-360
-        if angle_deg < 0:
-            angle_deg += 360
-        elif angle_deg >= 360:
-            angle_deg -= 360
-            
-        old_value = self.value
-        self.value = int(angle_deg)
-        
-        if old_value != self.value:
-            self.update()
-            self.valueChanged.emit(self.value)
+# Import widgets from the quick_brush_adjust_widgets package
+from .quick_brush_adjust_widgets import (
+    ColorHistoryWidget, 
+    CircularRotationWidget, 
+    BrushHistoryWidget,
+    BRUSH_ADJUSTMENT_FONT_SIZE,
+    BRUSH_ADJUSTMENT_NUMBER_SIZE,
+    COLOR_HISTORY_NUMBER,
+    BRUSH_HISTORY_NUMBER,
+    BRUSH_HISTORY_ICON_SIZE,
+    BLENDE_MODES
+)
 
 class BrushAdjustmentWidget(QWidget):
     def __init__(self, parent=None):
@@ -306,6 +25,7 @@ class BrushAdjustmentWidget(QWidget):
         self.current_brush_size = None
         self.current_brush_opacity = None  # Add opacity tracking
         self.current_brush_rotation = None
+        self.current_blend_mode = None  # Add blend mode tracking
         self.updating_from_brush = False  # Flag to prevent recursive updates
         self.init_ui()
         
@@ -379,6 +99,37 @@ class BrushAdjustmentWidget(QWidget):
         left_layout.addLayout(size_layout)
         left_layout.addLayout(opacity_layout)
         
+        # Blending Mode row: Label | Dropdown
+        blend_layout = QHBoxLayout()
+        blend_layout.setSpacing(6)
+        
+        blend_label = QLabel("Blend:")
+        blend_label.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};")
+        blend_label.setFixedWidth(50)
+        blend_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        
+        self.blend_combo = QComboBox()
+        self.blend_combo.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};")
+        # Add common blending modes
+        blend_modes = BLENDE_MODES
+        for mode in blend_modes:
+            self.blend_combo.addItem(mode.replace("_", " ").title(), mode)
+        
+        self.blend_combo.currentTextChanged.connect(self.on_blend_mode_changed)
+        
+        blend_layout.addWidget(blend_label)
+        blend_layout.addWidget(self.blend_combo, 1)
+        
+        # Reset button
+        reset_btn = QPushButton("Reset")
+        reset_btn.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;")
+        reset_btn.clicked.connect(self.reset_brush_settings)
+        reset_btn.setFixedWidth(50)
+        
+        blend_layout.addWidget(reset_btn)
+        
+        left_layout.addLayout(blend_layout)
+        
         # Right side: Rotation widget and value
         right_layout = QHBoxLayout()
         right_layout.setSpacing(6)
@@ -404,8 +155,12 @@ class BrushAdjustmentWidget(QWidget):
         layout.addLayout(main_layout)
         
         # Add color history widget below the main controls
-        self.color_history_widget = ColorHistoryWidget(self)
+        self.color_history_widget = ColorHistoryWidget(self, COLOR_HISTORY_NUMBER)
         layout.addWidget(self.color_history_widget)
+        
+        # Add brush history widget below the color history
+        self.brush_history_widget = BrushHistoryWidget(self, BRUSH_HISTORY_NUMBER, BRUSH_HISTORY_ICON_SIZE)
+        layout.addWidget(self.brush_history_widget)
         
         self.setLayout(layout)
         
@@ -449,6 +204,7 @@ class BrushAdjustmentWidget(QWidget):
                     current_size = None
                     current_opacity = None
                     current_rotation = None
+                    current_blend_mode = None
                     
                     try:
                         current_size = view.brushSize()
@@ -465,17 +221,24 @@ class BrushAdjustmentWidget(QWidget):
                     except:
                         pass
                     
+                    try:
+                        current_blend_mode = view.currentBlendingMode()
+                    except:
+                        pass
+                    
                     # Check if brush name changed OR if properties changed (for reload preset action)
                     brush_changed = brush_name != self.current_brush_name
                     size_changed = current_size != self.current_brush_size
                     opacity_changed = current_opacity != self.current_brush_opacity
                     rotation_changed = current_rotation != self.current_brush_rotation
+                    blend_changed = current_blend_mode != self.current_blend_mode
                     
-                    if brush_changed or size_changed or opacity_changed or rotation_changed:
+                    if brush_changed or size_changed or opacity_changed or rotation_changed or blend_changed:
                         self.current_brush_name = brush_name
                         self.current_brush_size = current_size
                         self.current_brush_opacity = current_opacity
                         self.current_brush_rotation = current_rotation
+                        self.current_blend_mode = current_blend_mode
                         self.update_from_current_brush()
             except:
                 pass
@@ -527,6 +290,24 @@ class BrushAdjustmentWidget(QWidget):
                 self.rotation_widget.setValue(0)
                 self.rotation_value_label.setText("0°")
                 self.current_brush_rotation = 0
+            
+            # Get current blend mode
+            try:
+                blend_mode = view.currentBlendingMode()
+                if blend_mode:
+                    # Find the blend mode in the combo box
+                    index = self.blend_combo.findData(blend_mode)
+                    if index >= 0:
+                        self.blend_combo.setCurrentIndex(index)
+                    else:
+                        # If not found, add it to the combo
+                        self.blend_combo.addItem(blend_mode.replace("_", " ").title(), blend_mode)
+                        self.blend_combo.setCurrentIndex(self.blend_combo.count() - 1)
+                    self.current_blend_mode = blend_mode
+            except:
+                # Fallback if blend mode method doesn't exist
+                self.blend_combo.setCurrentIndex(0)  # Set to "Normal"
+                self.current_blend_mode = "normal"
         
         self.updating_from_brush = False
 
@@ -582,16 +363,87 @@ class BrushAdjustmentWidget(QWidget):
             except Exception as e:
                 print(f"Error setting brush rotation: {e}")
     
+    def on_blend_mode_changed(self, text):
+        """Handle blend mode change"""
+        if self.updating_from_brush:
+            return
+        
+        # Get the blend mode data from the combo box
+        blend_mode = self.blend_combo.currentData()
+        if blend_mode:
+            self.current_blend_mode = blend_mode  # Update tracked value
+            
+            app = Krita.instance()
+            if app.activeWindow() and app.activeWindow().activeView():
+                view = app.activeWindow().activeView()
+                try:
+                    # Set blend mode directly on the view
+                    view.setCurrentBlendingMode(blend_mode)
+                    print(f"Set blend mode to: {blend_mode}")
+                except Exception as e:
+                    print(f"Error setting blend mode: {e}")
+    
+    def reset_brush_settings(self):
+        """Reset brush settings to default values"""
+        print("Resetting brush settings to defaults")
+        
+        # Set default values
+        default_size = 10
+        default_opacity = 100
+        default_rotation = 0
+        default_blend_mode = "normal"
+        
+        # Update UI controls
+        self.size_slider.setValue(self.brush_size_to_slider(default_size))
+        self.size_value_label.setText(str(default_size))
+        
+        self.opacity_slider.setValue(default_opacity)
+        self.opacity_value_label.setText(f"{default_opacity}%")
+        
+        self.rotation_widget.setValue(default_rotation)
+        self.rotation_value_label.setText(f"{default_rotation}°")
+        
+        # Find and set normal blend mode
+        index = self.blend_combo.findData(default_blend_mode)
+        if index >= 0:
+            self.blend_combo.setCurrentIndex(index)
+        
+        # Apply changes to Krita
+        app = Krita.instance()
+        if app.activeWindow() and app.activeWindow().activeView():
+            view = app.activeWindow().activeView()
+            try:
+                view.setBrushSize(float(default_size))
+                view.setPaintingOpacity(default_opacity / 100.0)
+                view.setBrushRotation(float(default_rotation))
+                view.setCurrentBlendingMode(default_blend_mode)
+                
+                # Update tracked values
+                self.current_brush_size = default_size
+                self.current_brush_opacity = default_opacity / 100.0
+                self.current_brush_rotation = default_rotation
+                self.current_blend_mode = default_blend_mode
+                
+                print("Successfully reset all brush settings")
+            except Exception as e:
+                print(f"Error resetting brush settings: {e}")
+    
     def force_update(self):
         """Force update from current brush - can be called externally"""
         self.current_brush_name = None
         self.current_brush_size = None
         self.current_brush_opacity = None
         self.current_brush_rotation = None
+        self.current_blend_mode = None
         self.update_from_current_brush()
         # Also force color history update
         if hasattr(self, 'color_history_widget'):
             self.color_history_widget.force_color_update()
+        # Also force brush history update
+        if hasattr(self, 'brush_history_widget'):
+            self.brush_history_widget.force_brush_update()
+            # Add a test brush to verify functionality
+            self.brush_history_widget.add_test_brush()
     
     def refresh_styles(self):
         """Refresh styles when settings change"""
@@ -606,4 +458,6 @@ class BrushAdjustmentWidget(QWidget):
             self.brush_check_timer.stop()
         if hasattr(self, 'color_history_widget'):
             self.color_history_widget.closeEvent(event)
+        if hasattr(self, 'brush_history_widget'):
+            self.brush_history_widget.closeEvent(event)
         super().closeEvent(event)

@@ -1,24 +1,24 @@
 from krita import DockWidgetFactory, DockWidgetFactoryBase
 from PyQt5.QtWidgets import QDockWidget
-from .brush_adjustment import BrushAdjustmentWidget
+from .quick_brush_adjust import BrushAdjustmentWidget
 
-class BrushSettingDockerFactory(DockWidgetFactoryBase):
-    """Factory for creating the Brush Settings Docker"""
-    
+class BrushAdjustDockerFactory(DockWidgetFactoryBase):
+    """Factory for creating the Brush Adjustments Docker"""
+
     def __init__(self):
-        super().__init__("brush_setting_docker", DockWidgetFactory.DockRight)
-    
-    def createDockWidget(self):
-        """Create and return the brush settings dock widget"""
-        return BrushSettingDockerWidget()
+        super().__init__("brush_adjust_docker", DockWidgetFactory.DockRight)
 
-class BrushSettingDockerWidget(QDockWidget):
-    """Docker widget for brush settings adjustments"""
-    
+    def createDockWidget(self):
+        """Create and return the brush adjustments dock widget"""
+        return BrushAdjustDockerWidget()
+
+class BrushAdjustDockerWidget(QDockWidget):
+    """Docker widget for brush adjustments"""
+
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Quick Brush Settings")
-        self.setObjectName("QuickBrushSettingDocker")
+        self.setWindowTitle("Quick Brush Adjustments")
+        self.setObjectName("QuickBrushAdjustmentsDocker")
         
         # Create the brush adjustment widget
         self.brush_adjustment_section = BrushAdjustmentWidget(self)
