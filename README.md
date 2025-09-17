@@ -4,7 +4,7 @@ A plugin for Krita that provides quick access to brush presets and shortcut mana
 
 The purpose of creating this plugin was to have a function similar to the Quick Access Palette in Clip Studio Paint.
 
-![Sample](./quick_access_manager/image/000.jpg)
+![Sample](./quick_access_manager/image/000.png)
 ---
 
 ## How to Add a Brush Preset
