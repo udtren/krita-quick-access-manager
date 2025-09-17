@@ -69,10 +69,11 @@ class ColorHistoryWidget(QWidget):
                     # Get color components and convert to 0-255 range
                     components = fg_color.components()
                     if len(components) >= 3:
+                        # Fix the component order - Krita might return BGR instead of RGB
                         color_rgb = (
-                            int(components[0] * 255),
-                            int(components[1] * 255), 
-                            int(components[2] * 255)
+                            int(components[2] * 255),  # Blue -> Red
+                            int(components[1] * 255),  # Green -> Green  
+                            int(components[0] * 255)   # Red -> Blue
                         )
                         
                         # Add to history if it's different from the last color
@@ -83,11 +84,11 @@ class ColorHistoryWidget(QWidget):
                 try:
                     fg_color = view.foregroundColor()
                     if fg_color:
-                        # Try using colorProfile and colorSpace
+                        # Try using colorProfile and colorSpace - also fix component order
                         color_rgb = (
-                            int(fg_color.red() * 255),
-                            int(fg_color.green() * 255),
-                            int(fg_color.blue() * 255)
+                            int(fg_color.blue() * 255),   # Blue -> Red
+                            int(fg_color.green() * 255),  # Green -> Green
+                            int(fg_color.red() * 255)     # Red -> Blue
                         )
                         
                         # Add to history if it's different from the last color
@@ -137,55 +138,25 @@ class ColorHistoryWidget(QWidget):
             if app.activeWindow() and app.activeWindow().activeView():
                 view = app.activeWindow().activeView()
                 
-                success = False
-                
-                # Method 1: Try using ManagedColor with proper color space
                 try:
+                    # Simple approach: Create ManagedColor and set RGB components directly
                     color = ManagedColor("RGBA", "U8", "")
-                    
-                    # Try to get the document's color profile
-                    if view.document() and view.document().colorProfile():
-                        color.setColorProfile(view.document().colorProfile())
-                    elif view.canvas() and view.canvas().colorProfile():
-                        color.setColorProfile(view.canvas().colorProfile())
-                    
-                    # Set the color components directly
-                    color.setComponents([r/255.0, g/255.0, b/255.0, 1.0])
+                    # Set components in the correct order: Blue, Green, Red, Alpha (BGR order for Krita)
+                    color.setComponents([b/255.0, g/255.0, r/255.0, 1.0])
                     view.setForeGroundColor(color)
-                    success = True
-                    print(f"Successfully set color using ManagedColor")
+                    print(f"Successfully set foreground color to RGB({r}, {g}, {b})")
+                    
                 except Exception as e:
-                    print(f"Method 1 failed: {e}")
-                
-                # Method 2: Try using QColor conversion if Method 1 failed
-                if not success:
+                    print(f"Failed to set foreground color: {e}")
+                    # Fallback: try with QColor
                     try:
                         color = ManagedColor("RGBA", "U8", "")
-                        color.fromQColor(QColor(r, g, b))
+                        qcolor = QColor(r, g, b)
+                        color.fromQColor(qcolor)
                         view.setForeGroundColor(color)
-                        success = True
-                        print(f"Successfully set color using QColor conversion")
-                    except Exception as e:
-                        print(f"Method 2 failed: {e}")
-                
-                # Method 3: Try modifying existing foreground color if previous methods failed
-                if not success:
-                    try:
-                        current_color = view.foregroundColor()
-                        if current_color:
-                            current_color.setComponents([r/255.0, g/255.0, b/255.0, 1.0])
-                            view.setForeGroundColor(current_color)
-                            success = True
-                            print(f"Successfully set color by modifying existing color")
-                    except Exception as e:
-                        print(f"Method 3 failed: {e}")
-                
-                if success:
-                    # Move this color to front of history since it was used
-                    self.add_color_to_history((r, g, b))
-                    print(f"Color set successfully and moved to front of history")
-                else:
-                    print(f"All methods failed to set foreground color to RGB({r}, {g}, {b})")
+                        print(f"Successfully set color using QColor fallback")
+                    except Exception as e2:
+                        print(f"Fallback also failed: {e2}")
     
     def force_color_update(self):
         """Force an immediate color history update"""

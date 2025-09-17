@@ -6,8 +6,8 @@ BRUSH_ADJUSTMENT_FONT_SIZE = "12px"
 BRUSH_ADJUSTMENT_NUMBER_SIZE = "16px"
 COLOR_HISTORY_NUMBER = 20
 BRUSH_HISTORY_NUMBER = 20
-COLOR_HISTORY_ICON_SIZE = 32
-BRUSH_HISTORY_ICON_SIZE = 32
+COLOR_HISTORY_ICON_SIZE = 34
+BRUSH_HISTORY_ICON_SIZE = 40
 BLENDE_MODES = [
     "normal", "multiply", "screen", "overlay", "soft_light_svg", 
     "hard_light", "dodge", "burn", "darken", "lighten",
