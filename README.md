@@ -38,13 +38,6 @@ However, the shortcut settings will not be loaded automatically because it is di
 
 Therefore, you need to click the [RestoreActions] button manually to restore the shortcut settings.
 
-## Resize Docker
-<del>When resizing the docker, please do it slowly.</del>
-
-<del>If you resize too quickly, small Brush Preset popup windows may appear repeatedly, and you will need to close them manually.</del>
-
-Since the grid update process for Brush Presets has been disabled during docker resizing, this issue should no longer occur.
-
 ## Sort/Remove
 
 **Sort:**  
@@ -79,3 +72,16 @@ The configuration files for grids and shortcuts are stored in `./quick_access_ma
 **Note:**  
 There is no profile management function, but you can manually edit these files while Krita is closed.  
 If you want to reset or backup your settings, you can copy or edit these files directly.
+
+## Quick Brush Adjustments Docker
+![Setting](./quick_access_manager/image/004.png)
+A separate docker specifically for brush adjustments and settings.
+
+### Docker Toggle Buttons
+The buttons displayed at the bottom of the Docker can toggle the display On/Off for corresponding Dockers.
+Button management is handled through `quick_access_manager\config\docker_buttons.json`.
+If the configuration file does not exist, it will be created when Krita starts.
+
+### Customization
+To change the font size on the Docker or modify the selectable Blend Modes,
+edit the parameters in `quick_access_manager\quick_brush_adjust_widgets\__init__.py`.
