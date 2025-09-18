@@ -75,6 +75,7 @@ If you want to reset or backup your settings, you can copy or edit these files d
 
 ## Quick Brush Adjustments Docker
 ![Setting](./quick_access_manager/image/004.png)
+
 A separate docker specifically for brush adjustments and settings.
 
 ### Docker Toggle Buttons
