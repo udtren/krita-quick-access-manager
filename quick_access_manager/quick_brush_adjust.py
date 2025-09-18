@@ -127,7 +127,14 @@ class BrushAdjustmentWidget(QWidget):
         reset_btn.clicked.connect(self.reset_brush_settings)
         reset_btn.setFixedWidth(50)
         
+        # Tool Options button
+        tool_options_btn = QPushButton("Tool Options")
+        tool_options_btn.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;")
+        tool_options_btn.clicked.connect(self.open_tool_options)
+        tool_options_btn.setFixedWidth(80)
+        
         blend_layout.addWidget(reset_btn)
+        blend_layout.addWidget(tool_options_btn)
         
         left_layout.addLayout(blend_layout)
         
@@ -408,6 +415,36 @@ class BrushAdjustmentWidget(QWidget):
             print(f"Error triggering reload_preset_action: {e}")
             # Fallback - just refresh the UI
             self.update_from_current_brush()
+    
+    def open_tool_options(self):
+        """Toggle Krita's Tool Options docker - show if hidden, hide if visible"""
+        print("Toggling Tool Options docker")
+        
+        app = Krita.instance()
+        try:
+            # Find the tool options docker
+            window = app.activeWindow()
+            if window:
+                # Get all dockers
+                dockers = window.dockers()
+                for docker in dockers:
+                    if 'tool' in docker.windowTitle().lower() and 'option' in docker.windowTitle().lower():
+                        # Check if docker is currently visible
+                        if docker.isVisible():
+                            # Docker is visible, hide it
+                            docker.hide()
+                            print(f"Hid Tool Options docker: {docker.windowTitle()}")
+                        else:
+                            # Docker is hidden, show it
+                            docker.show()
+                            docker.raise_()
+                            print(f"Showed Tool Options docker: {docker.windowTitle()}")
+                        return
+            
+            print("Could not find Tool Options docker")
+            
+        except Exception as e:
+            print(f"Error toggling tool options: {e}")
     
     def force_update(self):
         """Force update from current brush - can be called externally"""
