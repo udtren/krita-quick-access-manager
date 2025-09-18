@@ -3,6 +3,8 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QPainter, QPen, QBrush, QColor, QPolygon
 from krita import Krita
 import math
+import json
+import os
 
 # Import widgets from the quick_brush_adjust_widgets package
 from .quick_brush_adjust_widgets import (
@@ -28,12 +30,129 @@ class BrushAdjustmentWidget(QWidget):
         self.current_brush_rotation = None
         self.current_blend_mode = None  # Add blend mode tracking
         self.updating_from_brush = False  # Flag to prevent recursive updates
+        
+        # Load docker buttons configuration
+        self.docker_buttons_config = self.load_docker_buttons_config()
+        
         self.init_ui()
         
         # Timer to periodically check for brush changes
         self.brush_check_timer = QTimer()
         self.brush_check_timer.timeout.connect(self.check_brush_change)
         self.brush_check_timer.start(200)  # Check every 200ms for more responsiveness
+        
+    def load_docker_buttons_config(self):
+        """Load docker buttons configuration from JSON file"""
+        try:
+            # Get the directory where this file is located
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            config_dir = os.path.join(current_dir, 'config')
+            config_file = os.path.join(config_dir, 'docker_buttons.json')
+            
+            if os.path.exists(config_file):
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+                    print(f"Loaded docker buttons config: {len(config.get('docker_buttons', []))} buttons")
+                    return config
+            else:
+                print(f"Docker buttons config file not found: {config_file}")
+                print("Creating default config file...")
+                
+                # Create the config directory if it doesn't exist
+                os.makedirs(config_dir, exist_ok=True)
+                
+                # Get default configuration
+                default_config = self.get_default_docker_config()
+                
+                # Write default config to file
+                with open(config_file, 'w') as f:
+                    json.dump(default_config, f, indent=4)
+                
+                print(f"Created default docker buttons config file: {config_file}")
+                return default_config
+                
+        except Exception as e:
+            print(f"Error loading docker buttons config: {e}")
+            return self.get_default_docker_config()
+
+    def get_default_docker_config(self):
+        """Return default docker configuration if JSON file is not available"""
+        return {
+            "docker_buttons": [
+                {
+                    "button_name": "Tool",
+                    "button_width": 40,
+                    "docker_keywords": ["tool", "option"],
+                    "description": "Tool Options Docker"
+                },
+                {
+                    "button_name": "Layers",
+                    "button_width": 50,
+                    "docker_keywords": ["layer"],
+                    "description": "Layers Docker"
+                },
+                {
+                    "button_name": "Brush",
+                    "button_width": 50,
+                    "docker_keywords": ["brush", "preset"],
+                    "description": "Brush Presets Docker"
+                }
+            ]
+        }
+        
+    def create_docker_buttons(self, layout):
+        """Dynamically create docker toggle buttons based on configuration"""
+        docker_buttons = self.docker_buttons_config.get("docker_buttons", [])
+        if not docker_buttons:
+            return
+            
+        print(f"Creating {len(docker_buttons)} docker buttons")
+        
+        for button_config in docker_buttons:
+            button = QPushButton(button_config["button_name"])
+            button.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;")
+            button.setFixedWidth(button_config["button_width"])
+            button.setToolTip(button_config["description"])
+            
+            # Create a closure to capture the button configuration
+            def make_docker_toggle_handler(config):
+                def toggle_docker():
+                    self.toggle_docker_by_keywords(
+                        config["docker_keywords"],
+                        config["description"]
+                    )
+                return toggle_docker
+            
+            button.clicked.connect(make_docker_toggle_handler(button_config))
+            layout.addWidget(button)
+
+    def toggle_docker_by_keywords(self, keywords, description):
+        """Generic function to toggle any docker based on keywords"""
+        print(f"Toggling {description}")
+        
+        app = Krita.instance()
+        try:
+            window = app.activeWindow()
+            if window:
+                dockers = window.dockers()
+                for docker in dockers:
+                    docker_title = docker.windowTitle().lower()
+                    
+                    # Check if all keywords are present in the docker title
+                    if all(keyword.lower() in docker_title for keyword in keywords):
+                        if docker.isVisible():
+                            docker.hide()
+                            print(f"Hid {description}: {docker.windowTitle()}")
+                        else:
+                            docker.show()
+                            docker.raise_()
+                            print(f"Showed {description}: {docker.windowTitle()}")
+                        return
+            
+            print(f"Could not find {description}")
+            
+        except Exception as e:
+            print(f"Error toggling {description}: {e}")
         
     def init_ui(self):
         layout = QVBoxLayout()
@@ -126,9 +245,8 @@ class BrushAdjustmentWidget(QWidget):
         reset_btn.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;")
         reset_btn.clicked.connect(self.reset_brush_settings)
         reset_btn.setFixedWidth(50)
-        
+
         blend_layout.addWidget(reset_btn)
-        
         left_layout.addLayout(blend_layout)
         
         # Right side: Rotation widget and value
@@ -162,6 +280,14 @@ class BrushAdjustmentWidget(QWidget):
         # Add brush history widget below the color history
         self.brush_history_widget = BrushHistoryWidget(self, BRUSH_HISTORY_NUMBER, BRUSH_HISTORY_ICON_SIZE)
         layout.addWidget(self.brush_history_widget)
+        
+        # Add dynamic docker buttons below the brush history widget
+        docker_buttons_layout = QHBoxLayout()
+        docker_buttons_layout.setSpacing(4)
+        docker_buttons_layout.setContentsMargins(0, 5, 0, 0)
+        docker_buttons_layout.setAlignment(Qt.AlignLeft)  # Align buttons to the left
+        self.create_docker_buttons(docker_buttons_layout)
+        layout.addLayout(docker_buttons_layout)
         
         self.setLayout(layout)
         
