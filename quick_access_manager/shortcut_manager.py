@@ -50,20 +50,24 @@ class ShortcutAccessSection(QWidget):
         
         # Actions button
         self.show_all_btn = QPushButton("Actions")
+        self.show_all_btn.setFixedWidth(70)
         self.show_all_btn.setStyleSheet(docker_btn_style())
         
         # Add Grid button
         self.add_grid_btn = QPushButton("AddGrid")
+        self.add_grid_btn.setFixedWidth(70)
         self.add_grid_btn.setStyleSheet(docker_btn_style())
         
         # Restore Actions button
         self.restore_grid_btn = QPushButton("RestoreActions")
+        self.restore_grid_btn.setFixedWidth(100)
         self.restore_grid_btn.setStyleSheet(docker_btn_style())
         
         button_layout.addWidget(self.show_all_btn)
         button_layout.addWidget(self.add_grid_btn)
         button_layout.addWidget(self.restore_grid_btn)
         
+        button_layout.addStretch()
         self.main_layout.addLayout(button_layout)
     
     def setup_connections(self):

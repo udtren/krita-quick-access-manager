@@ -56,18 +56,24 @@ class QuickAccessDockerWidget(QDockWidget):
         #####################################
         # First button row (horizontal)
         button_layout_1 = QHBoxLayout()
+        button_layout_1.setSpacing(1)  # Adjust this value to control spacing between buttons
         
         # Add Brush button
         add_brush_button = QPushButton("AddBrush")
         add_brush_button.setStyleSheet(docker_btn_style())
         add_brush_button.clicked.connect(self.add_current_brush)
+        add_brush_button.setFixedWidth(70)
         button_layout_1.addWidget(add_brush_button)
         
         # Add Grid button
         add_grid_button = QPushButton("AddGrid")
         add_grid_button.setStyleSheet(docker_btn_style())
         add_grid_button.clicked.connect(self.add_new_grid)
+        add_grid_button.setFixedWidth(70)
         button_layout_1.addWidget(add_grid_button)
+        
+        # Add stretch to push buttons to the left
+        button_layout_1.addStretch()
         
         main_layout.addLayout(button_layout_1)
         
@@ -93,10 +99,14 @@ class QuickAccessDockerWidget(QDockWidget):
         ####   Other
         #####################################
         # Settingボタンを一番下に追加
+        setting_layout = QHBoxLayout()
         setting_btn = QPushButton("Setting")
         setting_btn.setStyleSheet(docker_btn_style())
-        main_layout.addWidget(setting_btn)
+        setting_btn.setFixedWidth(70)
         setting_btn.clicked.connect(self.show_settings_dialog)
+        setting_layout.addWidget(setting_btn)
+        setting_layout.addStretch()
+        main_layout.addLayout(setting_layout)
 
         central_widget.setLayout(main_layout)
         self.setWidget(central_widget)
