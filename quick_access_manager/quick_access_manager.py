@@ -14,10 +14,8 @@ from PyQt5.QtWidgets import (
     QApplication,
 )
 from PyQt5.QtCore import Qt
-from .utils.data_manager import load_grids_data, save_grids_data
+from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
 from .shortcut_manager import ShortcutAccessSection
-from .utils.data_manager import check_common_config
-
 from .dialogs.settings_dialog import CommonConfigDialog
 from .utils.styles import docker_btn_style, shortcut_btn_style
 from .utils.config_utils import (
