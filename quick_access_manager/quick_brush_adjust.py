@@ -6,8 +6,8 @@ import math
 import json
 import os
 
-# Import widgets from the quick_brush_adjust_widgets package
-from .quick_brush_adjust_widgets import (
+# Import widgets from the widgets2 package
+from .widgets2 import (
     ColorHistoryWidget, 
     CircularRotationWidget, 
     BrushHistoryWidget,
