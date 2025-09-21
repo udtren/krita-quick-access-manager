@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QApplication,
 )
 from PyQt5.QtCore import Qt
-from .data_manager import load_grids_data, save_grids_data
+from .utils.data_manager import load_grids_data, save_grids_data
 from .shortcut_manager import ShortcutAccessSection
 from .preprocess import check_common_config
 
