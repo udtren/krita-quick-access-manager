@@ -96,6 +96,16 @@ class QuickAccessDockerWidget(QDockWidget):
         add_grid_button.setFixedWidth(70)
         button_layout_1.addWidget(add_grid_button)
 
+        # Add Setting button
+        setting_btn = QPushButton("Setting")
+        setting_btn.setStyleSheet(docker_btn_style())
+        setting_btn.setFixedWidth(70)
+        setting_btn.clicked.connect(self.show_settings_dialog)
+        button_layout_1.addWidget(setting_btn)
+
+        central_widget.setLayout(main_layout)
+        self.setWidget(central_widget)
+
         # Add stretch to push buttons to the left
         button_layout_1.addStretch()
 
@@ -124,18 +134,6 @@ class QuickAccessDockerWidget(QDockWidget):
         #####################################
         ####   Other
         #####################################
-        # Settingボタンを一番下に追加
-        setting_layout = QHBoxLayout()
-        setting_btn = QPushButton("Setting")
-        setting_btn.setStyleSheet(docker_btn_style())
-        setting_btn.setFixedWidth(70)
-        setting_btn.clicked.connect(self.show_settings_dialog)
-        setting_layout.addWidget(setting_btn)
-        setting_layout.addStretch()
-        main_layout.addLayout(setting_layout)
-
-        central_widget.setLayout(main_layout)
-        self.setWidget(central_widget)
 
         # Add initial grid(s) from loaded data
         if not self.grids:
