@@ -7,22 +7,9 @@ from PyQt5.QtGui import QFontMetrics
 from krita import Krita
 from .data_manager import load_shortcut_grids_data, save_shortcut_grids_data, log_save_grids_data
 from .preprocess import check_common_config
+from .utils.styles import docker_btn_style, shortcut_btn_style
 
 COMMON_CONFIG = check_common_config()
-
-def shortcut_btn_style():
-    # 最新のCOMMON_CONFIGを毎回参照
-    from .quick_access_manager import COMMON_CONFIG
-    color = COMMON_CONFIG["color"]["shortcut_button_background_color"]
-    font_color = COMMON_CONFIG["color"]["shortcut_button_font_color"]
-    font_size = COMMON_CONFIG["font"]["shortcut_button_font_size"]
-    return f"background-color: {color}; color: {font_color}; font-size: {font_size};"
-
-def docker_btn_style():
-    color = COMMON_CONFIG["color"]["docker_button_background_color"]
-    font_color = COMMON_CONFIG["color"]["docker_button_font_color"]
-    font_size = COMMON_CONFIG["font"]["docker_button_font_size"]
-    return f"background-color: {color}; color: {font_color}; font-size: {font_size};"
 
 def get_spacing_between_buttons():
     from .quick_access_manager import COMMON_CONFIG
