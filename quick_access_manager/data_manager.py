@@ -2,6 +2,7 @@ import os
 import json
 import datetime
 
+
 def log_save_grids_data(msg):
     log_dir = os.path.join(os.path.dirname(__file__), "logs")
     if not os.path.exists(log_dir):
@@ -9,6 +10,7 @@ def log_save_grids_data(msg):
     log_path = os.path.join(log_dir, "shortcut_grid.log")
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(f"{datetime.datetime.now().isoformat()} {msg}\n")
+
 
 def load_grids_data(data_file, preset_dict):
     grids = []
@@ -27,26 +29,27 @@ def load_grids_data(data_file, preset_dict):
                     if preset:
                         brush_presets.append(preset)
                 grid_info = {
-                    'container': None,
-                    'widget': None,
-                    'layout': None,
-                    'name_label': None,
-                    'rename_button': None,
-                    'name': grid_name,
-                    'brush_presets': brush_presets,
-                    'is_active': False
+                    "container": None,
+                    "widget": None,
+                    "layout": None,
+                    "name_label": None,
+                    "rename_button": None,
+                    "name": grid_name,
+                    "brush_presets": brush_presets,
+                    "is_active": False,
                 }
                 grids.append(grid_info)
         except Exception:
             pass
     return grids, grid_counter
 
+
 def save_grids_data(data_file, grids):
     data = {
         "grids": [
             {
-                "name": grid['name'],
-                "brush_presets": [p.name() for p in grid['brush_presets']]
+                "name": grid["name"],
+                "brush_presets": [p.name() for p in grid["brush_presets"]],
             }
             for grid in grids
         ]
@@ -56,6 +59,7 @@ def save_grids_data(data_file, grids):
             json.dump(data, f, indent=2)
     except Exception:
         pass
+
 
 def load_shortcut_grids_data(data_file, krita_instance):
     grids = []
@@ -82,25 +86,24 @@ def load_shortcut_grids_data(data_file, krita_instance):
                         action = krita_instance.action(shortcut) if shortcut else None
                         if action:
                             actions.append(action)
-                            shortcut_configs.append({
-                                "actionName": shortcut
-                            })
+                            shortcut_configs.append({"actionName": shortcut})
                 grid_info = {
-                    'name': grid_name,
-                    'actions': actions,
-                    'shortcut_configs': shortcut_configs
+                    "name": grid_name,
+                    "actions": actions,
+                    "shortcut_configs": shortcut_configs,
                 }
                 grids.append(grid_info)
         except Exception:
             pass
     return grids
 
+
 def save_shortcut_grids_data(data_file, grids):
     data = {
         "grids": [
             {
-                "name": grid['name'],
-                "shortcuts": grid['shortcuts'],
+                "name": grid["name"],
+                "shortcuts": grid["shortcuts"],
             }
             for grid in grids
         ]
