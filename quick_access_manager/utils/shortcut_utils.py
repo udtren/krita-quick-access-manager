@@ -1,4 +1,4 @@
-from ..preprocess import check_common_config
+from .data_manager import check_common_config
 
 
 def get_common_config():
