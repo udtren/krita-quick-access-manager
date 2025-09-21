@@ -1,6 +1,6 @@
 import os
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from krita import Krita
+from krita import Krita  # type: ignore
 from .utils.data_manager import load_shortcut_grids_data, save_shortcut_grids_data
 from .widgets.shortcut_popup import ShortcutPopup
 from .widgets.shortcut_grid_widget import SingleShortcutGridWidget

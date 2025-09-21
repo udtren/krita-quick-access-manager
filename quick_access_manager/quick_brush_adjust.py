@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QDockWidget,
 )
 from PyQt5.QtCore import Qt, QTimer
-from krita import Krita, DockWidgetFactory, DockWidgetFactoryBase
+from krita import Krita, DockWidgetFactory, DockWidgetFactoryBase  # type: ignore
 import json
 import os
 

@@ -1,5 +1,3 @@
-import os
-import json
 from ..preprocess import check_common_config
 
 _cached_config = None

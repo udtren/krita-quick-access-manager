@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor
-from krita import Krita, ManagedColor
+from krita import Krita, ManagedColor  # type: ignore
 
 
 class ColorHistoryWidget(QWidget):

@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
     QApplication,
 )
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent
 from .shortcut_button import ShortcutDraggableButton
 from ..utils.shortcut_utils import (
     get_spacing_between_buttons,

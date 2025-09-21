@@ -1,4 +1,4 @@
-from krita import Krita
+from krita import Krita  # type: ignore
 
 
 class ActionManager:

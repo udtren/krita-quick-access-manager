@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
     QHeaderView,
     QMessageBox,
 )
-from PyQt5.QtCore import Qt
 from ..utils.action_manager import ActionManager
 from ..utils.styles import docker_btn_style
 

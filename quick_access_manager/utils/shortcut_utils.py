@@ -1,4 +1,3 @@
-import os
 from ..preprocess import check_common_config
 
 

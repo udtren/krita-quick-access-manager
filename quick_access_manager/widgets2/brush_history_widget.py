@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton
 from PyQt5.QtCore import QTimer, QSize
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QColor
-from krita import Krita
+from krita import Krita  # type: ignore
 
 
 class BrushHistoryWidget(QWidget):

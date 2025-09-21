@@ -1,6 +1,6 @@
 import os
 import json
-from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita
+from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
