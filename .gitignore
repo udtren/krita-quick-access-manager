@@ -3,7 +3,3 @@ quick_access_manager/backup/
 quick_access_manager/doc/
 quick_access_manager/logs/
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
