@@ -1,7 +1,7 @@
 from krita import Krita, Extension
 from PyQt5.QtWidgets import QMessageBox
 from .quick_access_manager import QuickAccessDockerFactory
-from .quick_brush_adjust_docker import BrushAdjustDockerFactory
+from .quick_brush_adjust import BrushAdjustDockerFactory
 
 
 class QuickAccessManagerExtension(Extension):
