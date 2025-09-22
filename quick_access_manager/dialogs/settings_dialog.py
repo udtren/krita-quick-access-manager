@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QPushButton,
 )
+from PyQt5.QtCore import Qt
 
 
 class CommonConfigDialog(QDialog):
@@ -28,6 +29,9 @@ class CommonConfigDialog(QDialog):
         self.setLayout(layout)
 
         self.fields = {}
+
+        # Add info message above buttons (will be moved to correct position in load_config)
+        self.info_label = QLabel("Some changes require Krita restart to take effect")
 
         # Button layout
         btn_layout = QHBoxLayout()
@@ -52,11 +56,20 @@ class CommonConfigDialog(QDialog):
             for key, value in group.items():
                 hlayout = QHBoxLayout()
                 label = QLabel(key)
+                label.setAlignment(Qt.AlignLeft)  # Align label to the left
                 edit = QLineEdit(str(value))
+                edit.setFixedWidth(80)  # Set fixed width for value field
+                edit.setAlignment(
+                    Qt.AlignRight
+                )  # Align text in edit field to the right
                 hlayout.addWidget(label)
+                hlayout.addStretch()  # Add stretch to push edit field to the right
                 hlayout.addWidget(edit)
                 layout.insertLayout(layout.count() - 1, hlayout)
                 self.fields[(section, key)] = edit
+
+        # Add info message just before the button layout
+        layout.insertWidget(layout.count() - 1, self.info_label)
 
     def setup_connections(self):
         """Setup button connections"""

@@ -26,11 +26,6 @@ from .utils.config_utils import (
 from .widgets.draggable_button import DraggableBrushButton
 from .widgets.grid_container import ClickableGridWidget, DraggableGridContainer
 
-COMMON_CONFIG = check_common_config()
-spacingBetweenGridsValue = get_spacing_between_grids()
-spacingBetweenButtonsValue = get_spacing_between_buttons()
-iconSize = get_brush_icon_size()
-
 
 class QuickAccessDockerWidget(QDockWidget):
     def __init__(self):
@@ -76,9 +71,7 @@ class QuickAccessDockerWidget(QDockWidget):
         #####################################
         # First button row (horizontal)
         button_layout_1 = QHBoxLayout()
-        button_layout_1.setSpacing(
-            1
-        )  # Adjust this value to control spacing between buttons
+        button_layout_1.setSpacing(1)
 
         # Add Brush button
         add_brush_button = QPushButton("AddBrush")
@@ -114,7 +107,7 @@ class QuickAccessDockerWidget(QDockWidget):
         self.scroll_widget = QWidget()
         self.main_grid_layout = QVBoxLayout()
         self.main_grid_layout.setSpacing(
-            spacingBetweenGridsValue
+            get_spacing_between_grids()
         )  # Minimize spacing between grids
         self.main_grid_layout.setContentsMargins(0, 0, 0, 0)  # Minimize margins
         self.scroll_widget.setLayout(self.main_grid_layout)
@@ -150,24 +143,16 @@ class QuickAccessDockerWidget(QDockWidget):
             global COMMON_CONFIG
             with open(self.common_config_path, "r", encoding="utf-8") as f:
                 COMMON_CONFIG = json.load(f)
-            # ここで再取得
-            global iconSize
-            iconSize = get_brush_icon_size()
-            global spacingBetweenGridsValue
-            spacingBetweenGridsValue = get_spacing_between_grids()
-            global spacingBetweenButtonsValue
-            spacingBetweenButtonsValue = get_spacing_between_buttons()
 
             self.refresh_styles()
             # ボタンサイズやレイアウトも再構築
             for grid_info in self.grids:
-                # spacingBetweenGridsValueを再適用
                 if grid_info.get("container"):
                     container_layout = grid_info["container"].layout()
                     if container_layout:
                         container_layout.setSpacing(1)
                 if grid_info.get("layout"):
-                    grid_info["layout"].setSpacing(spacingBetweenButtonsValue)
+                    grid_info["layout"].setSpacing(get_spacing_between_buttons())
                 self.update_grid(grid_info)
             # ショートカットグリッドも再構築
             if hasattr(self, "shortcut_section"):
@@ -192,6 +177,7 @@ class QuickAccessDockerWidget(QDockWidget):
                     btn = layout.itemAt(i).widget()
                     if btn:
                         btn.setStyleSheet(docker_btn_style())
+
         # ショートカットグリッド
         shortcut_section = self.findChild(ShortcutAccessSection)
         if shortcut_section:
@@ -261,11 +247,11 @@ class QuickAccessDockerWidget(QDockWidget):
         name_label.mousePressEvent = name_label_mousePressEvent
 
         grid_widget = ClickableGridWidget(grid_info, self)
-        grid_widget.setFixedHeight(iconSize + 4)
-        grid_widget.setMinimumHeight(iconSize + 4)
+        grid_widget.setFixedHeight(get_brush_icon_size() + 4)
+        grid_widget.setMinimumHeight(get_brush_icon_size() + 4)
         grid_layout = QGridLayout()
         grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        grid_layout.setSpacing(spacingBetweenButtonsValue)
+        grid_layout.setSpacing(get_spacing_between_buttons())
         grid_layout.setContentsMargins(0, 0, 0, 0)
         grid_widget.setLayout(grid_layout)
         container_layout.addWidget(grid_widget)
@@ -333,7 +319,7 @@ class QuickAccessDockerWidget(QDockWidget):
 
     def get_dynamic_columns(self):
         # max_brush_per_rowを優先して返す
-        max_brush = COMMON_CONFIG.get("layout", {}).get("max_brush_per_row", 8)
+        max_brush = check_common_config().get("layout", {}).get("max_brush_per_row", 8)
         return int(max_brush)
 
     def add_current_brush(self):
@@ -366,7 +352,7 @@ class QuickAccessDockerWidget(QDockWidget):
         required_rows = (
             (preset_count + columns - 1) // columns if preset_count > 0 else 1
         )
-        new_height = required_rows * iconSize + (required_rows - 1) * 2 + 4
+        new_height = required_rows * get_brush_icon_size() + (required_rows - 1) * 2 + 4
         grid_info["widget"].setFixedHeight(new_height)
         for index, preset in enumerate(grid_info["brush_presets"]):
             row = index // columns
