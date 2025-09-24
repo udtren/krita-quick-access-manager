@@ -1,7 +1,8 @@
-from krita import Krita, Extension
+from krita import Krita, Extension  # type: ignore
 from PyQt5.QtWidgets import QMessageBox
 from .quick_access_manager import QuickAccessDockerFactory
-from .quick_brush_adjust_docker import BrushAdjustDockerFactory
+from .quick_brush_adjust import BrushAdjustDockerFactory
+
 
 class QuickAccessManagerExtension(Extension):
     def __init__(self, parent):
@@ -29,7 +30,8 @@ class QuickAccessManagerExtension(Extension):
                 QMessageBox.warning(
                     None,
                     "QuickAccessManagerExtension Error",
-                    "Something wrong is happening on QuickAccessManagerExtension.createActions.\n\nYou can try disable other plugin and start Krita again."
+                    "Something wrong is happening on QuickAccessManagerExtension.createActions.\n\nYou can try disable other plugin and start Krita again.",
                 )
+
 
 Krita.instance().addExtension(QuickAccessManagerExtension(Krita.instance()))

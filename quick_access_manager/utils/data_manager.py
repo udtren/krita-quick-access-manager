@@ -2,6 +2,70 @@ import os
 import json
 import datetime
 
+current_dir = os.path.dirname(__file__)  # utils directory
+config_dir = os.path.join(current_dir, "..", "config")
+config_path = os.path.join(current_dir, "..", "config", "common.json")
+
+
+def load_common_config():
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Return default config if file doesn't exist
+        return get_default_common_config()
+    except json.JSONDecodeError:
+        # Return default config if JSON is invalid
+        return get_default_common_config()
+
+
+def get_default_common_config():
+    """Get the default common configuration"""
+    return {
+        "color": {
+            "docker_button_font_color": "#ffffff",
+            "docker_button_background_color": "#63666a",
+            "shortcut_button_font_color": "#ffffff",
+            "shortcut_button_background_color": "#6c408c",
+        },
+        "font": {
+            "docker_button_font_size": "10px",
+            "shortcut_button_font_size": "10px",
+        },
+        "layout": {
+            "max_shortcut_per_row": 2,
+            "max_brush_per_row": 8,
+            "spacing_between_buttons": 1,
+            "spacing_between_grids": 1,
+            "brush_icon_size": 40,
+        },
+    }
+
+
+def save_common_config(config):
+    # Create config directory if it doesn't exist
+    os.makedirs(config_dir, exist_ok=True)
+
+    try:
+        with open(config_path, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"Error saving common config: {e}")
+        return False
+
+
+def check_common_config():
+    default_config = get_default_common_config()
+    if not os.path.exists(config_path):
+        os.makedirs(os.path.dirname(config_path), exist_ok=True)
+        with open(config_path, "w", encoding="utf-8") as f:
+            json.dump(default_config, f, indent=4)
+        return default_config
+    with open(config_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def log_save_grids_data(msg):
     log_dir = os.path.join(os.path.dirname(__file__), "logs")
     if not os.path.exists(log_dir):
@@ -9,6 +73,7 @@ def log_save_grids_data(msg):
     log_path = os.path.join(log_dir, "shortcut_grid.log")
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(f"{datetime.datetime.now().isoformat()} {msg}\n")
+
 
 def load_grids_data(data_file, preset_dict):
     grids = []
@@ -27,26 +92,27 @@ def load_grids_data(data_file, preset_dict):
                     if preset:
                         brush_presets.append(preset)
                 grid_info = {
-                    'container': None,
-                    'widget': None,
-                    'layout': None,
-                    'name_label': None,
-                    'rename_button': None,
-                    'name': grid_name,
-                    'brush_presets': brush_presets,
-                    'is_active': False
+                    "container": None,
+                    "widget": None,
+                    "layout": None,
+                    "name_label": None,
+                    "rename_button": None,
+                    "name": grid_name,
+                    "brush_presets": brush_presets,
+                    "is_active": False,
                 }
                 grids.append(grid_info)
         except Exception:
             pass
     return grids, grid_counter
 
+
 def save_grids_data(data_file, grids):
     data = {
         "grids": [
             {
-                "name": grid['name'],
-                "brush_presets": [p.name() for p in grid['brush_presets']]
+                "name": grid["name"],
+                "brush_presets": [p.name() for p in grid["brush_presets"]],
             }
             for grid in grids
         ]
@@ -56,6 +122,7 @@ def save_grids_data(data_file, grids):
             json.dump(data, f, indent=2)
     except Exception:
         pass
+
 
 def load_shortcut_grids_data(data_file, krita_instance):
     grids = []
@@ -82,25 +149,24 @@ def load_shortcut_grids_data(data_file, krita_instance):
                         action = krita_instance.action(shortcut) if shortcut else None
                         if action:
                             actions.append(action)
-                            shortcut_configs.append({
-                                "actionName": shortcut
-                            })
+                            shortcut_configs.append({"actionName": shortcut})
                 grid_info = {
-                    'name': grid_name,
-                    'actions': actions,
-                    'shortcut_configs': shortcut_configs
+                    "name": grid_name,
+                    "actions": actions,
+                    "shortcut_configs": shortcut_configs,
                 }
                 grids.append(grid_info)
         except Exception:
             pass
     return grids
 
+
 def save_shortcut_grids_data(data_file, grids):
     data = {
         "grids": [
             {
-                "name": grid['name'],
-                "shortcuts": grid['shortcuts'],
+                "name": grid["name"],
+                "shortcuts": grid["shortcuts"],
             }
             for grid in grids
         ]
