@@ -43,7 +43,7 @@ class CircularRotationWidget(QWidget):
         )
 
         # Draw rotation indicator line
-        angle_rad = math.radians(self.value - 90)  # -90 to start from top
+        angle_rad = math.radians(-self.value)  # Reverse direction for Krita
         end_x = center_x + (radius - 10) * math.cos(angle_rad)
         end_y = center_y + (radius - 10) * math.sin(angle_rad)
 
@@ -81,7 +81,7 @@ class CircularRotationWidget(QWidget):
         dy = pos.y() - center_y
 
         angle_rad = math.atan2(dy, dx)
-        angle_deg = math.degrees(angle_rad) + 90  # +90 to start from top
+        angle_deg = -math.degrees(angle_rad) + 90  # Reverse direction for Krita
 
         # Normalize to 0-360
         if angle_deg < 0:
