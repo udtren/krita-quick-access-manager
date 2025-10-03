@@ -72,6 +72,9 @@ class QuickAccessDockerWidget(QDockWidget):
         button_layout_1 = QHBoxLayout()
         button_layout_1.setSpacing(1)
 
+        # Add stretch to push buttons to the right
+        button_layout_1.addStretch()
+
         # Add Brush button
         add_brush_button = QPushButton("AddBrush")
         add_brush_button.setStyleSheet(docker_btn_style())
@@ -95,9 +98,6 @@ class QuickAccessDockerWidget(QDockWidget):
 
         central_widget.setLayout(main_layout)
         self.setWidget(central_widget)
-
-        # Add stretch to push buttons to the left
-        button_layout_1.addStretch()
 
         main_layout.addLayout(button_layout_1)
 
