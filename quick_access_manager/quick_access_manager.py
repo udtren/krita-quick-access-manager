@@ -15,7 +15,6 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
-from .shortcut_manager import ShortcutAccessSection
 from .dialogs.settings_dialog import CommonConfigDialog
 from .utils.styles import docker_btn_style, shortcut_btn_style
 from .utils.config_utils import (
@@ -30,7 +29,7 @@ from .widgets.grid_container import ClickableGridWidget, DraggableGridContainer
 class QuickAccessDockerWidget(QDockWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Quick Access Manager")
+        self.setWindowTitle("Quick Brush Sets")
         self.grids = []  # Store multiple grids
         self.active_grid = None  # Currently active grid
         self.scroll_widget = None
@@ -117,12 +116,6 @@ class QuickAccessDockerWidget(QDockWidget):
         main_layout.addWidget(scroll_area)
 
         #####################################
-        ####   Quick Shortcut Access Section
-        #####################################
-        self.shortcut_section = ShortcutAccessSection(self)
-        main_layout.addWidget(self.shortcut_section)
-
-        #####################################
         ####   Other
         #####################################
 
@@ -154,9 +147,6 @@ class QuickAccessDockerWidget(QDockWidget):
                 if grid_info.get("layout"):
                     grid_info["layout"].setSpacing(get_spacing_between_buttons())
                 self.update_grid(grid_info)
-            # ショートカットグリッドも再構築
-            if hasattr(self, "shortcut_section"):
-                self.shortcut_section.refresh_layout()
 
     def refresh_styles(self):
         # ボタンやグリッドのスタイルを再適用
@@ -178,32 +168,12 @@ class QuickAccessDockerWidget(QDockWidget):
                     if btn:
                         btn.setStyleSheet(docker_btn_style())
 
-        # ショートカットグリッド
-        shortcut_section = self.findChild(ShortcutAccessSection)
-        if shortcut_section:
-            for grid_widget in shortcut_section.grids:
-                # グリッド名ラベル
-                if hasattr(grid_widget, "grid_name_label"):
-                    grid_widget.grid_name_label.setStyleSheet(
-                        "font-weight: bold; font-size: 13px; color: #4FC3F7; background: none;"
-                        if grid_widget.is_active
-                        else "font-weight: bold; font-size: 13px; color: #ffffff; background: none;"
-                    )
-                # ショートカットボタン
-                layout = getattr(grid_widget, "shortcut_grid_layout", None)
-                if layout:
-                    for i in range(layout.count()):
-                        btn = layout.itemAt(i).widget()
-                        if btn:
-                            btn.setStyleSheet(shortcut_btn_style())
         # AddBrush/AddGrid/Settingボタンなども再適用
         for btn in self.findChildren(QPushButton):
             if btn.text() in [
                 "AddBrush",
                 "AddGrid",
                 "Setting",
-                "Actions",
-                "RestoreActions",
             ]:
                 btn.setStyleSheet(docker_btn_style())
 

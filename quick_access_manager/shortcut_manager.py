@@ -1,6 +1,6 @@
 import os
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from krita import Krita  # type: ignore
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QDockWidget
+from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
 from .utils.data_manager import load_shortcut_grids_data, save_shortcut_grids_data
 from .widgets.shortcut_popup import ShortcutPopup
 from .widgets.shortcut_grid_widget import SingleShortcutGridWidget
@@ -9,12 +9,12 @@ from .utils.action_manager import ActionManager
 from .utils.styles import docker_btn_style
 
 
-class ShortcutAccessSection(QWidget):
-    """Main widget for shortcut access management"""
+class ShortcutAccessDockerWidget(QDockWidget):
+    """Main docker widget for shortcut access management"""
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.parent_docker = parent
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Quick Actions")
         self.grids = []
         self.active_grid_idx = 0
 
@@ -33,6 +33,8 @@ class ShortcutAccessSection(QWidget):
 
     def init_ui(self):
         """Initialize the user interface"""
+        # Create a central widget for the dock
+        central_widget = QWidget()
         self.main_layout = QVBoxLayout()
         self.main_layout.setSpacing(get_spacing_between_grids())
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -40,7 +42,8 @@ class ShortcutAccessSection(QWidget):
         # Create button row
         self.create_button_row()
 
-        self.setLayout(self.main_layout)
+        central_widget.setLayout(self.main_layout)
+        self.setWidget(central_widget)
 
         # Setup connections
         self.setup_connections()
@@ -48,6 +51,8 @@ class ShortcutAccessSection(QWidget):
     def create_button_row(self):
         """Create the top button row"""
         button_layout = QHBoxLayout()
+
+        button_layout.addStretch()
 
         # Actions button
         self.show_all_btn = QPushButton("Actions")
@@ -68,7 +73,6 @@ class ShortcutAccessSection(QWidget):
         button_layout.addWidget(self.add_grid_btn)
         button_layout.addWidget(self.restore_grid_btn)
 
-        button_layout.addStretch()
         self.main_layout.addLayout(button_layout)
 
     def setup_connections(self):
@@ -234,3 +238,11 @@ class ShortcutAccessSection(QWidget):
         self.main_layout.setSpacing(get_spacing_between_grids())
         for grid_widget in self.grids:
             grid_widget.refresh_spacing_and_update()
+
+
+class ShortcutAccessDockerFactory(DockWidgetFactoryBase):
+    def __init__(self):
+        super().__init__("shortcut_access_docker", DockWidgetFactory.DockRight)
+
+    def createDockWidget(self):
+        return ShortcutAccessDockerWidget()

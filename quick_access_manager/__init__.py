@@ -2,6 +2,7 @@ from krita import Krita, Extension  # type: ignore
 from PyQt5.QtWidgets import QMessageBox
 from .quick_access_manager import QuickAccessDockerFactory
 from .quick_brush_adjust import BrushAdjustDockerFactory
+from .shortcut_manager import ShortcutAccessDockerFactory
 
 
 class QuickAccessManagerExtension(Extension):
@@ -9,12 +10,15 @@ class QuickAccessManagerExtension(Extension):
         super().__init__(parent)
         self.docker_factory = None
         self.brush_adjust_factory = None
+        self.shortcut_docker_factory = None
 
     def setup(self):
         self.docker_factory = QuickAccessDockerFactory()
         self.brush_adjust_factory = BrushAdjustDockerFactory()
+        self.shortcut_docker_factory = ShortcutAccessDockerFactory()
         Krita.instance().addDockWidgetFactory(self.docker_factory)
         Krita.instance().addDockWidgetFactory(self.brush_adjust_factory)
+        Krita.instance().addDockWidgetFactory(self.shortcut_docker_factory)
 
     def createActions(self, window):
         # Kritaのウィンドウが初期化された後に呼ばれる
@@ -24,8 +28,9 @@ class QuickAccessManagerExtension(Extension):
                 if hasattr(d, "widget"):
                     w = d.widget
                     widget = w() if callable(w) else w
-                if widget and hasattr(widget, "shortcut_section"):
-                    widget.shortcut_section.restore_grids_from_file()
+                # For the new ShortcutAccessDockerWidget, restore grids data
+                if widget and hasattr(widget, "restore_grids_from_file"):
+                    widget.restore_grids_from_file()
             except Exception:
                 QMessageBox.warning(
                     None,
