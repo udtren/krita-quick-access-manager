@@ -15,7 +15,7 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 ![How to Add a Brush Preset](./quick_access_manager/image/image1.jpg)
 
 ## How to Add a Shortcut. 
-1. In the "Quick Shortcut Access" section, activate the grid you want to add to.
+1. In the "Quick Actions" section, activate the grid you want to add to.
 2. Click the "Actions" button to open the shortcut selection popup.
 3. Select the action you want to add from the table.
 4. Click the "AddAction" button.
