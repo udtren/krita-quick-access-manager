@@ -54,6 +54,8 @@ However, the shortcut settings will not be loaded automatically because it is di
 
 Therefore, you need to click the [RestoreActions] button manually to restore the shortcut settings.
 
+**The Actions Popup Window is not affected by this.**
+
 ## Sort/Remove
 
 **Sort:**  

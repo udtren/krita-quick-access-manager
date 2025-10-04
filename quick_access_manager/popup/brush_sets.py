@@ -102,29 +102,29 @@ class BrushSetsPopup:
         popup_layout.setContentsMargins(5, 5, 5, 5)
         popup_layout.setSpacing(2)
 
-        # Add close button
-        header_layout = QHBoxLayout()
-        close_btn = QPushButton("✕")
-        close_btn.setFixedSize(20, 20)
-        close_btn.clicked.connect(self.popup_window.hide)
-        close_btn.setStyleSheet(
-            """
-            QPushButton {
-                border: none;
-                color: white;
-                font-weight: bold;
-                background-color: #ff4444;
-                border-radius: 10px;
-            }
-            QPushButton:hover {
-                background-color: #ff6666;
-            }
-        """
-        )
+        # # Add close button
+        # header_layout = QHBoxLayout()
+        # close_btn = QPushButton("✕")
+        # close_btn.setFixedSize(20, 20)
+        # close_btn.clicked.connect(self.popup_window.hide)
+        # close_btn.setStyleSheet(
+        #     """
+        #     QPushButton {
+        #         border: none;
+        #         color: white;
+        #         font-weight: bold;
+        #         background-color: #ff4444;
+        #         border-radius: 10px;
+        #     }
+        #     QPushButton:hover {
+        #         background-color: #ff6666;
+        #     }
+        # """
+        # )
 
-        header_layout.addStretch()
-        header_layout.addWidget(close_btn)
-        popup_layout.addLayout(header_layout)
+        # header_layout.addStretch()
+        # header_layout.addWidget(close_btn)
+        # popup_layout.addLayout(header_layout)
 
         # Add popup content - simplified brush grids
         self.create_popup_content(popup_layout)

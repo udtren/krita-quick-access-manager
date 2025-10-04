@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from krita import Krita  # type: ignore
+from ..utils.action_manager import ActionManager
 import json
 import os
 
@@ -231,29 +232,29 @@ class ActionsPopup:
         popup_layout.setContentsMargins(5, 5, 5, 5)
         popup_layout.setSpacing(2)
 
-        # Add close button
-        header_layout = QHBoxLayout()
-        close_btn = QPushButton("✕")
-        close_btn.setFixedSize(20, 20)
-        close_btn.clicked.connect(self.popup_window.hide)
-        close_btn.setStyleSheet(
-            """
-            QPushButton {
-                border: none;
-                color: white;
-                font-weight: bold;
-                background-color: #ff4444;
-                border-radius: 10px;
-            }
-            QPushButton:hover {
-                background-color: #ff6666;
-            }
-        """
-        )
+        # # Add close button
+        # header_layout = QHBoxLayout()
+        # close_btn = QPushButton("✕")
+        # close_btn.setFixedSize(20, 20)
+        # close_btn.clicked.connect(self.popup_window.hide)
+        # close_btn.setStyleSheet(
+        #     """
+        #     QPushButton {
+        #         border: none;
+        #         color: white;
+        #         font-weight: bold;
+        #         background-color: #ff4444;
+        #         border-radius: 10px;
+        #     }
+        #     QPushButton:hover {
+        #         background-color: #ff6666;
+        #     }
+        # """
+        # )
 
-        header_layout.addStretch()
-        header_layout.addWidget(close_btn)
-        popup_layout.addLayout(header_layout)
+        # header_layout.addStretch()
+        # header_layout.addWidget(close_btn)
+        # popup_layout.addLayout(header_layout)
 
         # Add popup content - action shortcuts
         self.create_popup_content(popup_layout)
@@ -267,8 +268,9 @@ class ActionsPopup:
 
     def create_popup_content(self, popup_layout):
         """Create action shortcuts content for popup"""
-        if not self.parent_docker.grids:
-            no_grids_label = QLabel("No action grids available")
+        # Check if we have grid data from JSON file
+        if not self.shortcut_grid_data or "grids" not in self.shortcut_grid_data:
+            no_grids_label = QLabel("No action grids found in configuration")
             no_grids_label.setStyleSheet("color: #999; font-style: italic;")
             popup_layout.addWidget(no_grids_label)
             return
@@ -303,10 +305,10 @@ class ActionsPopup:
         scroll_layout.setSpacing(8)
         scroll_layout.setContentsMargins(1, 1, 1, 1)
 
-        # Display all action grids
-        for grid_widget in self.parent_docker.grids:
+        # Display all action grids from shortcut_grid_data.json ONLY
+        for grid_data in self.shortcut_grid_data["grids"]:
             # Create grid for actions (no grid name label as requested)
-            if grid_widget.grid_info.get("actions"):
+            if grid_data.get("shortcuts"):
                 grid_widget_container = QWidget()
                 grid_layout = QGridLayout()
                 grid_layout.setSpacing(1)
@@ -316,7 +318,7 @@ class ActionsPopup:
                     self.load_common_config()
                 )  # Use max_shortcut_per_row from common.json
 
-                for index, action in enumerate(grid_widget.grid_info["actions"]):
+                for index, shortcut_data in enumerate(grid_data["shortcuts"]):
                     row = index // columns
                     col = index % columns
 
@@ -325,31 +327,29 @@ class ActionsPopup:
                     action_btn.setFixedSize(
                         ActionButtonSizeX, ActionButtonSizeY
                     )  # Wider for action text
+
+                    # Store action name for execution
+                    action_name = shortcut_data.get("actionName", "")
                     action_btn.clicked.connect(
-                        lambda checked, a=action: self.execute_action_and_close(a)
+                        lambda checked, name=action_name: self.execute_action_by_name_and_close(
+                            name
+                        )
                     )
 
-                    # Set action text (check for custom name first)
+                    # Set action text and styling from JSON data
                     try:
-                        # Get custom styling info (name, colors, font size)
-                        style_info = self.get_action_style_info(action)
-                        action_text = style_info["customName"]
-
-                        # # Truncate long action names for popup display
-                        # if len(action_text) > 10:
-                        #     display_text = action_text[:8] + "..."
-                        # else:
-                        #     display_text = action_text
+                        # Get custom name and styling from JSON
+                        action_text = shortcut_data.get("customName", action_name)
                         display_text = action_text
                         action_btn.setText(display_text)
 
                         # Set full name as tooltip
                         action_btn.setToolTip(action_text)
 
-                        # Apply custom styling if available
-                        font_color = style_info["fontColor"] or "#fff"
-                        bg_color = style_info["backgroundColor"] or "#3d3d3d"
-                        font_size = style_info["fontSize"] or "16"
+                        # Apply custom styling from JSON
+                        font_color = shortcut_data.get("fontColor", "#fff")
+                        bg_color = shortcut_data.get("backgroundColor", "#3d3d3d")
+                        font_size = shortcut_data.get("fontSize", "16")
 
                         custom_style = f"""
                         QPushButton {{
@@ -373,7 +373,7 @@ class ActionsPopup:
                         action_btn.setStyleSheet(custom_style)
 
                     except Exception as e:
-                        print(f"Error getting action text: {e}")
+                        print(f"Error setting up action button: {e}")
                         action_btn.setText("Action")
                         # Apply default styling on error
                         action_btn.setStyleSheet(
@@ -403,7 +403,7 @@ class ActionsPopup:
                 scroll_layout.addWidget(grid_widget_container)
             else:
                 # Empty grid message
-                empty_label = QLabel("  (empty)")
+                empty_label = QLabel(f"  {grid_data.get('name', 'Grid')} (empty)")
                 empty_label.setStyleSheet(
                     "color: #666; font-style: italic; font-size: 10px; margin-left: 10px;"
                 )
@@ -429,6 +429,52 @@ class ActionsPopup:
                 print(f"Executed action via parent: {action_id}")
         except Exception as e:
             print(f"Error executing action: {e}")
+
+        if self.popup_window:
+            self.popup_window.hide()
+
+    def execute_action_by_name_and_close(self, action_name):
+        """Execute action by name and close popup"""
+        try:
+            print(f"Attempting to execute action: '{action_name}'")  # Debug
+
+            # Use the same ActionManager that works in shortcut_manager.py
+            if ActionManager.run_action(action_name):
+                print(
+                    f"✅ Successfully executed action via ActionManager: {action_name}"
+                )
+            else:
+                print(f"❌ ActionManager could not execute action: '{action_name}'")
+
+                # Fallback: Try the old method
+                app = Krita.instance()
+                if app.activeWindow():
+                    window = app.activeWindow()
+                    action = window.action(action_name)
+                    if action:
+                        action.trigger()
+                        print(
+                            f"✅ Successfully executed action via window.action: {action_name}"
+                        )
+                    else:
+                        print(
+                            f"❌ Action '{action_name}' not found in Krita's action collection"
+                        )
+
+                        # Final fallback: try parent docker
+                        if hasattr(self.parent_docker, "run_krita_action"):
+                            self.parent_docker.run_krita_action(action_name)
+                            print(f"✅ Executed via parent docker: {action_name}")
+                        else:
+                            print(f"❌ All methods failed for action: '{action_name}'")
+                else:
+                    print("❌ No active window found")
+
+        except Exception as e:
+            print(f"❌ Error executing action {action_name}: {e}")
+            import traceback
+
+            traceback.print_exc()
 
         if self.popup_window:
             self.popup_window.hide()
