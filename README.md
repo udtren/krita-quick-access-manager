@@ -22,6 +22,22 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 5. The selected shortcut will be added to the active grid.
 ![How to Add a Shortcut](./quick_access_manager/image/image2.jpg)
  
+## Popup Window
+![Popup](./quick_access_manager/image/popup.png)
+### How to Use
+1. **Brush Sets Popup**: Press `W` to show/hide the brush sets popup
+2. **Actions Popup**: Press `Z` to show/hide the actions popup
+
+### Change Shortcut and icon/button size
+Edit the following value to change shortcut key and icon/button size:
+- `quick_access_manager\popup\brush_sets.py`
+    - `BrushSetsPopupShortcut`
+    - `BrushIconSize`
+- `quick_access_manager\popup\actions.py`
+    - `ActionsPopupShortcut`
+    - `ActionButtonSizeX`
+    - `ActionButtonSizeY`
+
 ## Global Config
 Use the "Setting" button to customize the UI and layout, including the default font color, background color, and font size for shortcut buttons.
 ![Setting](./quick_access_manager/image/image3.jpg)

@@ -12,11 +12,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from krita import Krita  # type: ignore
-from ..utils.action_manager import ActionManager
 import json
 import os
 
 ActionsPopupShortcut = QKeySequence(Qt.Key_Z)
+ActionButtonSizeX = 100
+ActionButtonSizeY = 35
 
 
 class ActionsPopup:
@@ -321,7 +322,9 @@ class ActionsPopup:
 
                     # Create action button
                     action_btn = QPushButton()
-                    # action_btn.setFixedSize(90, 32)  # Wider for action text
+                    action_btn.setFixedSize(
+                        ActionButtonSizeX, ActionButtonSizeY
+                    )  # Wider for action text
                     action_btn.clicked.connect(
                         lambda checked, a=action: self.execute_action_and_close(a)
                     )

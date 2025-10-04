@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QFrame,
 )
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QCursor, QPixmap, QIcon, QKeySequence
+from PyQt5.QtGui import QCursor, QKeySequence
 from krita import Krita  # type: ignore
 from ..utils.config_utils import get_brush_icon_size
 
