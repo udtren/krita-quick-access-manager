@@ -1,0 +1,431 @@
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QGridLayout,
+    QPushButton,
+    QLabel,
+    QScrollArea,
+    QHBoxLayout,
+    QShortcut,
+    QFrame,
+)
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QCursor, QKeySequence
+from krita import Krita  # type: ignore
+from ..utils.action_manager import ActionManager
+import json
+import os
+
+ActionsPopupShortcut = QKeySequence(Qt.Key_Z)
+
+
+class ActionsPopup:
+    """Handles the popup functionality for action shortcuts"""
+
+    def __init__(self, parent_docker):
+        self.parent_docker = parent_docker
+        self.popup_window = None
+        self.popup_shortcut = None
+        self.shortcut_grid_data = self.load_shortcut_grid_data()
+
+    def load_shortcut_grid_data(self):
+        """Load shortcut grid data to check for custom names"""
+        try:
+            # Get the path to the config file
+            plugin_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            config_path = os.path.join(plugin_dir, "config", "shortcut_grid_data.json")
+
+            if os.path.exists(config_path):
+                with open(config_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            else:
+                print(f"Shortcut grid data file not found: {config_path}")
+                return {}
+        except Exception as e:
+            print(f"Error loading shortcut grid data: {e}")
+            return {}
+
+    def load_common_config(self):
+        """Load common configuration to get max_shortcut_per_row"""
+        try:
+            # Get the path to the common config file
+            plugin_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            config_path = os.path.join(plugin_dir, "config", "common.json")
+
+            if os.path.exists(config_path):
+                with open(config_path, "r", encoding="utf-8") as f:
+                    config_data = json.load(f)
+                    # Access the nested layout.max_shortcut_per_row value
+                    layout_config = config_data.get("layout", {})
+                    return layout_config.get(
+                        "max_shortcut_per_row", 4
+                    )  # Default to 4 if not found
+            else:
+                print(f"Common config file not found: {config_path}")
+                return 4  # Default value
+        except Exception as e:
+            print(f"Error loading common config: {e}")
+            return 4  # Default value
+
+    def get_custom_name_for_action(self, action):
+        """Get custom name for action if available"""
+        try:
+            # Get action ID
+            action_id = None
+            if hasattr(action, "objectName"):
+                action_id = action.objectName()
+            elif hasattr(action, "text"):
+                action_id = action.text()
+            else:
+                action_id = str(action)
+
+            # Search through shortcut grid data for custom name
+            if "grids" in self.shortcut_grid_data:
+                for grid in self.shortcut_grid_data["grids"]:
+                    if "shortcuts" in grid:
+                        for shortcut_data in grid["shortcuts"]:
+                            # Check if this action matches and has a custom name
+                            if (
+                                shortcut_data.get("actionName") == action_id
+                                and "customName" in shortcut_data
+                            ):
+                                return shortcut_data["customName"]
+
+            # Return original name if no custom name found
+            if hasattr(action, "text"):
+                return action.text()
+            else:
+                return str(action)
+
+        except Exception as e:
+            print(f"Error getting custom name for action: {e}")
+            # Fallback to original name
+            if hasattr(action, "text"):
+                return action.text()
+            else:
+                return str(action)
+
+    def get_action_style_info(self, action):
+        """Get custom styling information for action if available"""
+        try:
+            # Get action ID
+            action_id = None
+            if hasattr(action, "objectName"):
+                action_id = action.objectName()
+            elif hasattr(action, "text"):
+                action_id = action.text()
+            else:
+                action_id = str(action)
+
+            # Search through shortcut grid data for styling info
+            if "grids" in self.shortcut_grid_data:
+                for grid in self.shortcut_grid_data["grids"]:
+                    if "shortcuts" in grid:
+                        for shortcut_data in grid["shortcuts"]:
+                            # Check if this action matches
+                            if shortcut_data.get("actionName") == action_id:
+                                return {
+                                    "customName": shortcut_data.get("customName"),
+                                    "fontColor": shortcut_data.get("fontColor"),
+                                    "backgroundColor": shortcut_data.get(
+                                        "backgroundColor"
+                                    ),
+                                    "fontSize": shortcut_data.get("fontSize"),
+                                }
+
+            # Return default values if no custom styling found
+            return {
+                "customName": action.text() if hasattr(action, "text") else str(action),
+                "fontColor": None,
+                "backgroundColor": None,
+                "fontSize": None,
+            }
+
+        except Exception as e:
+            print(f"Error getting action style info: {e}")
+            # Fallback to defaults
+            return {
+                "customName": action.text() if hasattr(action, "text") else str(action),
+                "fontColor": None,
+                "backgroundColor": None,
+                "fontSize": None,
+            }
+
+    def setup_popup_shortcut(self):
+        """Setup shortcut for popup functionality"""
+        try:
+            # Try to register shortcut with the main window for global access
+            main_window = None
+            app = Krita.instance()
+            if app.activeWindow():
+                main_window = app.activeWindow().qwindow()
+
+            # If we can't get the main window, use parent docker as parent
+            parent = main_window if main_window else self.parent_docker
+
+            self.popup_shortcut = QShortcut(ActionsPopupShortcut, parent)
+            self.popup_shortcut.activated.connect(self.show_popup_at_cursor)
+
+            # Enable the shortcut for application-wide use
+            self.popup_shortcut.setContext(Qt.ApplicationShortcut)
+
+            print(
+                f"Actions popup shortcut registered successfully with parent: {type(parent).__name__}"
+            )
+            print(f"Shortcut key sequence: {self.popup_shortcut.key().toString()}")
+
+        except Exception as e:
+            print(f"Error setting up actions popup shortcut: {e}")
+
+    def show_popup_at_cursor(self):
+        """Show popup window at cursor position"""
+        print("Actions popup shortcut activated!")  # Debug message
+        try:
+            if self.popup_window and self.popup_window.isVisible():
+                print("Hiding existing actions popup")
+                self.popup_window.hide()
+                return
+
+            print("Creating/showing actions popup window")
+            # Reload configuration data to get latest changes
+            self.shortcut_grid_data = self.load_shortcut_grid_data()
+
+            # Always recreate popup window to reflect current parent content
+            self.create_popup_window()
+
+            # Position at cursor
+            cursor_pos = QCursor.pos()
+            print(f"Cursor position: {cursor_pos.x()}, {cursor_pos.y()}")
+            self.popup_window.move(cursor_pos.x() + 10, cursor_pos.y() + 10)
+            self.popup_window.show()
+            self.popup_window.raise_()
+
+            # Auto-hide after 10 seconds (optional)
+            QTimer.singleShot(10000, self.popup_window.hide)
+            print("Actions popup window shown successfully")
+
+        except Exception as e:
+            print(f"Error showing actions popup: {e}")
+            import traceback
+
+            traceback.print_exc()
+
+    def create_popup_window(self):
+        """Create the popup window with action shortcuts content"""
+        self.popup_window = QFrame()
+        self.popup_window.setWindowFlags(
+            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+        )
+        self.popup_window.setStyleSheet(
+            """
+            QFrame {
+                border: 2px solid #0078d4;
+                background-color: #2d2d2d;
+                border-radius: 5px;
+            }
+        """
+        )
+
+        popup_layout = QVBoxLayout()
+        popup_layout.setContentsMargins(5, 5, 5, 5)
+        popup_layout.setSpacing(2)
+
+        # Add close button
+        header_layout = QHBoxLayout()
+        close_btn = QPushButton("✕")
+        close_btn.setFixedSize(20, 20)
+        close_btn.clicked.connect(self.popup_window.hide)
+        close_btn.setStyleSheet(
+            """
+            QPushButton {
+                border: none;
+                color: white;
+                font-weight: bold;
+                background-color: #ff4444;
+                border-radius: 10px;
+            }
+            QPushButton:hover {
+                background-color: #ff6666;
+            }
+        """
+        )
+
+        header_layout.addStretch()
+        header_layout.addWidget(close_btn)
+        popup_layout.addLayout(header_layout)
+
+        # Add popup content - action shortcuts
+        self.create_popup_content(popup_layout)
+
+        self.popup_window.setLayout(popup_layout)
+        # Auto-fit content size
+        self.popup_window.adjustSize()
+        # Set reasonable minimum and maximum sizes
+        # self.popup_window.setMinimumSize(200, 150)
+        # self.popup_window.setMaximumSize(600, 500)
+
+    def create_popup_content(self, popup_layout):
+        """Create action shortcuts content for popup"""
+        if not self.parent_docker.grids:
+            no_grids_label = QLabel("No action grids available")
+            no_grids_label.setStyleSheet("color: #999; font-style: italic;")
+            popup_layout.addWidget(no_grids_label)
+            return
+
+        # Create a scroll area for all action grids
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet(
+            """
+            QScrollArea {
+                border: none;
+                background-color: transparent;
+            }
+            QScrollBar:vertical {
+                background-color: #555;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #888;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #aaa;
+            }
+        """
+        )
+
+        scroll_widget = QWidget()
+        scroll_layout = QVBoxLayout()
+        scroll_layout.setSpacing(8)
+        scroll_layout.setContentsMargins(1, 1, 1, 1)
+
+        # Display all action grids
+        for grid_widget in self.parent_docker.grids:
+            # Create grid for actions (no grid name label as requested)
+            if grid_widget.grid_info.get("actions"):
+                grid_widget_container = QWidget()
+                grid_layout = QGridLayout()
+                grid_layout.setSpacing(1)
+                grid_layout.setContentsMargins(0, 0, 0, 0)
+
+                columns = (
+                    self.load_common_config()
+                )  # Use max_shortcut_per_row from common.json
+
+                for index, action in enumerate(grid_widget.grid_info["actions"]):
+                    row = index // columns
+                    col = index % columns
+
+                    # Create action button
+                    action_btn = QPushButton()
+                    # action_btn.setFixedSize(90, 32)  # Wider for action text
+                    action_btn.clicked.connect(
+                        lambda checked, a=action: self.execute_action_and_close(a)
+                    )
+
+                    # Set action text (check for custom name first)
+                    try:
+                        # Get custom styling info (name, colors, font size)
+                        style_info = self.get_action_style_info(action)
+                        action_text = style_info["customName"]
+
+                        # # Truncate long action names for popup display
+                        # if len(action_text) > 10:
+                        #     display_text = action_text[:8] + "..."
+                        # else:
+                        #     display_text = action_text
+                        display_text = action_text
+                        action_btn.setText(display_text)
+
+                        # Set full name as tooltip
+                        action_btn.setToolTip(action_text)
+
+                        # Apply custom styling if available
+                        font_color = style_info["fontColor"] or "#fff"
+                        bg_color = style_info["backgroundColor"] or "#3d3d3d"
+                        font_size = style_info["fontSize"] or "16"
+
+                        custom_style = f"""
+                        QPushButton {{
+                            border: 1px solid #555;
+                            background-color: {bg_color};
+                            border-radius: 3px;
+                            padding: 2px;
+                            color: {font_color};
+                            font-size: {font_size}px;
+                            text-align: center;
+                        }}
+                        QPushButton:hover {{
+                            border: 2px solid #0078d4;
+                            background-color: {bg_color};
+                            filter: brightness(1.2);
+                        }}
+                        QPushButton:pressed {{
+                            background-color: #0078d4;
+                        }}
+                        """
+                        action_btn.setStyleSheet(custom_style)
+
+                    except Exception as e:
+                        print(f"Error getting action text: {e}")
+                        action_btn.setText("Action")
+                        # Apply default styling on error
+                        action_btn.setStyleSheet(
+                            """
+                            QPushButton {
+                                border: 1px solid #555;
+                                background-color: #3d3d3d;
+                                border-radius: 3px;
+                                padding: 2px;
+                                color: #fff;
+                                font-size: 16px;
+                                text-align: center;
+                            }
+                            QPushButton:hover {
+                                border: 2px solid #0078d4;
+                                background-color: #4d4d4d;
+                            }
+                            QPushButton:pressed {
+                                background-color: #0078d4;
+                            }
+                        """
+                        )
+
+                    grid_layout.addWidget(action_btn, row, col)
+
+                grid_widget_container.setLayout(grid_layout)
+                scroll_layout.addWidget(grid_widget_container)
+            else:
+                # Empty grid message
+                empty_label = QLabel("  (empty)")
+                empty_label.setStyleSheet(
+                    "color: #666; font-style: italic; font-size: 10px; margin-left: 10px;"
+                )
+                scroll_layout.addWidget(empty_label)
+
+        scroll_layout.addStretch()
+        scroll_widget.setLayout(scroll_layout)
+        scroll_area.setWidget(scroll_widget)
+        popup_layout.addWidget(scroll_area)
+
+    def execute_action_and_close(self, action):
+        """Execute action and close popup"""
+        try:
+            if hasattr(action, "trigger"):
+                action.trigger()
+                print(
+                    f"Executed action: {action.text() if hasattr(action, 'text') else str(action)}"
+                )
+            else:
+                # Fallback to parent docker's run_krita_action method
+                action_id = getattr(action, "objectName", lambda: str(action))()
+                self.parent_docker.run_krita_action(action_id)
+                print(f"Executed action via parent: {action_id}")
+        except Exception as e:
+            print(f"Error executing action: {e}")
+
+        if self.popup_window:
+            self.popup_window.hide()
