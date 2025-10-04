@@ -24,6 +24,7 @@ from .utils.config_utils import (
 )
 from .widgets.draggable_button import DraggableBrushButton
 from .widgets.grid_container import ClickableGridWidget, DraggableGridContainer
+from .popup import BrushSetsPopup
 
 
 class QuickAccessDockerWidget(QDockWidget):
@@ -47,6 +48,11 @@ class QuickAccessDockerWidget(QDockWidget):
         self.grids, self.grid_counter = load_grids_data(
             self.data_file, self.preset_dict
         )
+
+        # Initialize popup functionality
+        self.brush_popup = BrushSetsPopup(self)
+        self.brush_popup.setup_popup_shortcut()
+
         self.init_ui()
 
     def save_grids_data(self):

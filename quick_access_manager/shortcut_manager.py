@@ -7,6 +7,7 @@ from .widgets.shortcut_grid_widget import SingleShortcutGridWidget
 from .utils.shortcut_utils import get_spacing_between_grids
 from .utils.action_manager import ActionManager
 from .utils.styles import docker_btn_style
+from .popup import ActionsPopup
 
 
 class ShortcutAccessDockerWidget(QDockWidget):
@@ -20,6 +21,10 @@ class ShortcutAccessDockerWidget(QDockWidget):
 
         # Setup paths
         self.setup_paths()
+
+        # Initialize popup functionality
+        self.actions_popup = ActionsPopup(self)
+        self.actions_popup.setup_popup_shortcut()
 
         # Initialize UI
         self.init_ui()
