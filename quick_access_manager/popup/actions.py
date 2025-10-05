@@ -314,6 +314,9 @@ class ActionsPopup:
                 grid_layout.setSpacing(1)
                 grid_layout.setContentsMargins(0, 0, 0, 0)
 
+                # Set alignment to left
+                grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+
                 columns = (
                     self.load_common_config()
                 )  # Use max_shortcut_per_row from common.json
@@ -359,6 +362,7 @@ class ActionsPopup:
                             padding: 2px;
                             color: {font_color};
                             font-size: {font_size}px;
+                            font-weight: bold;
                             text-align: center;
                         }}
                         QPushButton:hover {{
@@ -385,6 +389,7 @@ class ActionsPopup:
                                 padding: 2px;
                                 color: #fff;
                                 font-size: 16px;
+                                font-weight: bold;
                                 text-align: center;
                             }
                             QPushButton:hover {
