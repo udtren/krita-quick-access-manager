@@ -15,7 +15,7 @@ from krita import Krita  # type: ignore
 from ..utils.config_utils import get_brush_icon_size
 
 BrushSetsPopupShortcut = QKeySequence(Qt.Key_W)
-BrushIconSize = 32
+BrushIconSize = 40
 
 
 class BrushSetsPopup:
@@ -182,6 +182,9 @@ class BrushSetsPopup:
                 grid_layout = QGridLayout()
                 grid_layout.setSpacing(1)
                 grid_layout.setContentsMargins(0, 0, 0, 0)
+
+                # Set alignment to left
+                grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
                 columns = self.parent_docker.get_dynamic_columns()
 
