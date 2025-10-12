@@ -36,6 +36,7 @@ class SingleShortcutGridWidget(QWidget):
 
         # Main layout
         main_layout = QVBoxLayout()
+        main_layout.setAlignment(Qt.AlignTop)  # Align main layout to top
         main_layout.setSpacing(get_spacing_between_buttons())
         main_layout.setContentsMargins(1, 1, 1, 1)
 
@@ -51,6 +52,7 @@ class SingleShortcutGridWidget(QWidget):
 
         # Grid area for shortcut buttons
         self.shortcut_grid_layout = QGridLayout()
+        self.shortcut_grid_layout.setAlignment(Qt.AlignTop)  # Align grid to top-left
         self.shortcut_grid_layout.setSpacing(get_spacing_between_buttons())
         self.shortcut_grid_layout.setContentsMargins(1, 1, 1, 1)
 
@@ -121,8 +123,9 @@ class SingleShortcutGridWidget(QWidget):
         # Clear existing buttons
         self.clear_grid()
 
-        # Update spacing
+        # Update spacing and alignment
         self.shortcut_grid_layout.setSpacing(get_spacing_between_buttons())
+        self.shortcut_grid_layout.setAlignment(Qt.AlignTop)  # Ensure alignment
 
         # Get layout parameters
         max_columns = get_max_shortcut_per_row()
@@ -217,6 +220,7 @@ class SingleShortcutGridWidget(QWidget):
         layout = self.layout()
         if layout:
             layout.setSpacing(get_spacing_between_buttons())
+            layout.setAlignment(Qt.AlignTop)  # Maintain top alignment
 
         # Update header layout spacing
         if layout and layout.count() > 0:
@@ -224,9 +228,10 @@ class SingleShortcutGridWidget(QWidget):
             if header_layout:
                 header_layout.setSpacing(1)
 
-        # Update grid layout spacing
+        # Update grid layout spacing and alignment
         if hasattr(self, "shortcut_grid_layout"):
             self.shortcut_grid_layout.setSpacing(get_spacing_between_buttons())
+            self.shortcut_grid_layout.setAlignment(Qt.AlignTop)
 
         self.update_grid()
 

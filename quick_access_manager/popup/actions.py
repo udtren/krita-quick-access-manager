@@ -4,8 +4,6 @@ from PyQt5.QtWidgets import (
     QGridLayout,
     QPushButton,
     QLabel,
-    QScrollArea,
-    QHBoxLayout,
     QShortcut,
     QFrame,
 )
@@ -16,7 +14,7 @@ from ..utils.action_manager import ActionManager
 import json
 import os
 
-ActionsPopupShortcut = QKeySequence(Qt.Key_Z)
+ActionsPopupShortcut = QKeySequence(Qt.Key_Tab)
 ActionButtonSizeX = 100
 ActionButtonSizeY = 35
 
@@ -198,7 +196,7 @@ class ActionsPopup:
             # Position at cursor
             cursor_pos = QCursor.pos()
             print(f"Cursor position: {cursor_pos.x()}, {cursor_pos.y()}")
-            self.popup_window.move(cursor_pos.x() + 10, cursor_pos.y() + 10)
+            self.popup_window.move(cursor_pos.x() - 10, cursor_pos.y() - 10)
             self.popup_window.show()
             self.popup_window.raise_()
 
@@ -227,44 +225,15 @@ class ActionsPopup:
             }
         """
         )
-
         popup_layout = QVBoxLayout()
         popup_layout.setContentsMargins(5, 5, 5, 5)
         popup_layout.setSpacing(2)
 
-        # # Add close button
-        # header_layout = QHBoxLayout()
-        # close_btn = QPushButton("✕")
-        # close_btn.setFixedSize(20, 20)
-        # close_btn.clicked.connect(self.popup_window.hide)
-        # close_btn.setStyleSheet(
-        #     """
-        #     QPushButton {
-        #         border: none;
-        #         color: white;
-        #         font-weight: bold;
-        #         background-color: #ff4444;
-        #         border-radius: 10px;
-        #     }
-        #     QPushButton:hover {
-        #         background-color: #ff6666;
-        #     }
-        # """
-        # )
-
-        # header_layout.addStretch()
-        # header_layout.addWidget(close_btn)
-        # popup_layout.addLayout(header_layout)
-
         # Add popup content - action shortcuts
         self.create_popup_content(popup_layout)
-
         self.popup_window.setLayout(popup_layout)
         # Auto-fit content size
         self.popup_window.adjustSize()
-        # Set reasonable minimum and maximum sizes
-        # self.popup_window.setMinimumSize(200, 150)
-        # self.popup_window.setMaximumSize(600, 500)
 
     def create_popup_content(self, popup_layout):
         """Create action shortcuts content for popup"""
@@ -275,35 +244,12 @@ class ActionsPopup:
             popup_layout.addWidget(no_grids_label)
             return
 
-        # Create a scroll area for all action grids
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet(
-            """
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
-            QScrollBar:vertical {
-                background-color: #555;
-                width: 12px;
-                border-radius: 6px;
-            }
-            QScrollBar::handle:vertical {
-                background-color: #888;
-                border-radius: 6px;
-                min-height: 20px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background-color: #aaa;
-            }
-        """
-        )
-
-        scroll_widget = QWidget()
-        scroll_layout = QVBoxLayout()
-        scroll_layout.setSpacing(8)
-        scroll_layout.setContentsMargins(1, 1, 1, 1)
+        # Create a main widget to hold all grids directly (no scroll area)
+        main_widget = QWidget()
+        main_layout = QVBoxLayout()
+        main_layout.setSpacing(8)
+        main_layout.setContentsMargins(1, 1, 1, 1)
+        main_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
         # Display all action grids from shortcut_grid_data.json ONLY
         for grid_data in self.shortcut_grid_data["grids"]:
@@ -405,19 +351,17 @@ class ActionsPopup:
                     grid_layout.addWidget(action_btn, row, col)
 
                 grid_widget_container.setLayout(grid_layout)
-                scroll_layout.addWidget(grid_widget_container)
+                main_layout.addWidget(grid_widget_container)
             else:
                 # Empty grid message
                 empty_label = QLabel(f"  {grid_data.get('name', 'Grid')} (empty)")
                 empty_label.setStyleSheet(
                     "color: #666; font-style: italic; font-size: 10px; margin-left: 10px;"
                 )
-                scroll_layout.addWidget(empty_label)
+                main_layout.addWidget(empty_label)
 
-        scroll_layout.addStretch()
-        scroll_widget.setLayout(scroll_layout)
-        scroll_area.setWidget(scroll_widget)
-        popup_layout.addWidget(scroll_area)
+        main_widget.setLayout(main_layout)
+        popup_layout.addWidget(main_widget)
 
     def execute_action_and_close(self, action):
         """Execute action and close popup"""
