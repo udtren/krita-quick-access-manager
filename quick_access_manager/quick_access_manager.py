@@ -12,12 +12,11 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QApplication,
-    QSizePolicy,
 )
 from PyQt5.QtCore import Qt
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
 from .dialogs.settings_dialog import CommonConfigDialog
-from .utils.styles import docker_btn_style, shortcut_btn_style
+from .utils.styles import docker_btn_style
 from .utils.config_utils import (
     get_spacing_between_grids,
     get_spacing_between_buttons,

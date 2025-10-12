@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QDockWidget,
-    QSizePolicy,
 )
 from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
 from .utils.data_manager import load_shortcut_grids_data, save_shortcut_grids_data

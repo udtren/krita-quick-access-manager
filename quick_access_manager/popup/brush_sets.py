@@ -4,15 +4,12 @@ from PyQt5.QtWidgets import (
     QGridLayout,
     QPushButton,
     QLabel,
-    QScrollArea,
-    QHBoxLayout,
     QShortcut,
     QFrame,
 )
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from krita import Krita  # type: ignore
-from ..utils.config_utils import get_brush_icon_size
 
 BrushSetsPopupShortcut = QKeySequence(Qt.Key_W)
 BrushIconSize = 46
@@ -68,7 +65,7 @@ class BrushSetsPopup:
             # Position at cursor
             cursor_pos = QCursor.pos()
             print(f"Cursor position: {cursor_pos.x()}, {cursor_pos.y()}")
-            self.popup_window.move(cursor_pos.x() + 10, cursor_pos.y() + 10)
+            self.popup_window.move(cursor_pos.x() - 10, cursor_pos.y() - 10)
             self.popup_window.show()
             self.popup_window.raise_()
 

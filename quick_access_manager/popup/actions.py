@@ -4,8 +4,6 @@ from PyQt5.QtWidgets import (
     QGridLayout,
     QPushButton,
     QLabel,
-    QScrollArea,
-    QHBoxLayout,
     QShortcut,
     QFrame,
 )
@@ -16,7 +14,7 @@ from ..utils.action_manager import ActionManager
 import json
 import os
 
-ActionsPopupShortcut = QKeySequence(Qt.Key_Z)
+ActionsPopupShortcut = QKeySequence(Qt.Key_Tab)
 ActionButtonSizeX = 100
 ActionButtonSizeY = 35
 
@@ -198,7 +196,7 @@ class ActionsPopup:
             # Position at cursor
             cursor_pos = QCursor.pos()
             print(f"Cursor position: {cursor_pos.x()}, {cursor_pos.y()}")
-            self.popup_window.move(cursor_pos.x() + 10, cursor_pos.y() + 10)
+            self.popup_window.move(cursor_pos.x() - 10, cursor_pos.y() - 10)
             self.popup_window.show()
             self.popup_window.raise_()
 
