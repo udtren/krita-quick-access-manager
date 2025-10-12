@@ -1,5 +1,13 @@
 import os
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QDockWidget
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QDockWidget,
+    QSizePolicy,
+)
 from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
 from .utils.data_manager import load_shortcut_grids_data, save_shortcut_grids_data
 from .widgets.shortcut_popup import ShortcutPopup
@@ -40,8 +48,10 @@ class ShortcutAccessDockerWidget(QDockWidget):
         """Initialize the user interface"""
         # Create a central widget for the dock
         central_widget = QWidget()
+
         self.main_layout = QVBoxLayout()
         self.main_layout.setSpacing(get_spacing_between_grids())
+        self.main_layout.setAlignment(Qt.AlignTop)  # Align main layout to top
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         # Create button row

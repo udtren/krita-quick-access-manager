@@ -15,7 +15,7 @@ from krita import Krita  # type: ignore
 from ..utils.config_utils import get_brush_icon_size
 
 BrushSetsPopupShortcut = QKeySequence(Qt.Key_W)
-BrushIconSize = 40
+BrushIconSize = 46
 
 
 class BrushSetsPopup:
@@ -102,39 +102,12 @@ class BrushSetsPopup:
         popup_layout.setContentsMargins(5, 5, 5, 5)
         popup_layout.setSpacing(2)
 
-        # # Add close button
-        # header_layout = QHBoxLayout()
-        # close_btn = QPushButton("✕")
-        # close_btn.setFixedSize(20, 20)
-        # close_btn.clicked.connect(self.popup_window.hide)
-        # close_btn.setStyleSheet(
-        #     """
-        #     QPushButton {
-        #         border: none;
-        #         color: white;
-        #         font-weight: bold;
-        #         background-color: #ff4444;
-        #         border-radius: 10px;
-        #     }
-        #     QPushButton:hover {
-        #         background-color: #ff6666;
-        #     }
-        # """
-        # )
-
-        # header_layout.addStretch()
-        # header_layout.addWidget(close_btn)
-        # popup_layout.addLayout(header_layout)
-
         # Add popup content - simplified brush grids
         self.create_popup_content(popup_layout)
 
         self.popup_window.setLayout(popup_layout)
         # Auto-fit content size
         self.popup_window.adjustSize()
-        # Set reasonable minimum and maximum sizes
-        # self.popup_window.setMinimumSize(200, 150)
-        # self.popup_window.setMaximumSize(600, 700)
 
     def create_popup_content(self, popup_layout):
         """Create simplified brush grid content for popup"""
@@ -144,35 +117,11 @@ class BrushSetsPopup:
             popup_layout.addWidget(no_grids_label)
             return
 
-        # Create a scroll area for all grids
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet(
-            """
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
-            QScrollBar:vertical {
-                background-color: #555;
-                width: 12px;
-                border-radius: 6px;
-            }
-            QScrollBar::handle:vertical {
-                background-color: #888;
-                border-radius: 6px;
-                min-height: 20px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background-color: #aaa;
-            }
-        """
-        )
-
-        scroll_widget = QWidget()
-        scroll_layout = QVBoxLayout()
-        scroll_layout.setSpacing(8)
-        scroll_layout.setContentsMargins(2, 2, 2, 2)
+        main_widget = QWidget()
+        main_layout = QVBoxLayout()
+        main_layout.setSpacing(8)
+        main_layout.setContentsMargins(2, 2, 2, 2)
+        main_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
         # Display all grids
         for grid_info in self.parent_docker.grids:
@@ -194,9 +143,7 @@ class BrushSetsPopup:
 
                     # Create brush button with icon
                     brush_btn = QPushButton()
-                    icon_size = max(
-                        BrushIconSize, get_brush_icon_size() - 1
-                    )  # Slightly smaller for popup
+                    icon_size = BrushIconSize
                     brush_btn.setFixedSize(icon_size, icon_size)
                     brush_btn.setToolTip(preset.name())
                     brush_btn.clicked.connect(
@@ -273,19 +220,17 @@ class BrushSetsPopup:
                     grid_layout.addWidget(brush_btn, row, col)
 
                 grid_widget.setLayout(grid_layout)
-                scroll_layout.addWidget(grid_widget)
+                main_layout.addWidget(grid_widget)
             else:
                 # Empty grid message
                 empty_label = QLabel("  (empty)")
                 empty_label.setStyleSheet(
                     "color: #666; font-style: italic; font-size: 10px; margin-left: 10px;"
                 )
-                scroll_layout.addWidget(empty_label)
+                main_layout.addWidget(empty_label)
 
-        scroll_layout.addStretch()
-        scroll_widget.setLayout(scroll_layout)
-        scroll_area.setWidget(scroll_widget)
-        popup_layout.addWidget(scroll_area)
+        main_widget.setLayout(main_layout)
+        popup_layout.addWidget(main_widget)
 
     def select_brush_preset_and_close(self, preset):
         """Select brush preset and close popup"""

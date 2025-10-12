@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QApplication,
+    QSizePolicy,
 )
 from PyQt5.QtCore import Qt
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
@@ -70,6 +71,8 @@ class QuickAccessDockerWidget(QDockWidget):
         # Create a central widget for the dock
         central_widget = QWidget()
         main_layout = QVBoxLayout()
+        main_layout.setAlignment(Qt.AlignTop)  # Align main layout to top
+        main_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
 
         #####################################
         ####   BrushSets Section
@@ -110,7 +113,9 @@ class QuickAccessDockerWidget(QDockWidget):
         # Scroll area for brush presets grids
         scroll_area = QScrollArea()
         self.scroll_widget = QWidget()
+
         self.main_grid_layout = QVBoxLayout()
+        self.main_grid_layout.setAlignment(Qt.AlignTop)  # Align grid layout to top
         self.main_grid_layout.setSpacing(
             get_spacing_between_grids()
         )  # Minimize spacing between grids
@@ -186,6 +191,7 @@ class QuickAccessDockerWidget(QDockWidget):
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
         container_layout = QVBoxLayout()
+        container_layout.setAlignment(Qt.AlignTop)  # Align container to top
         container_layout.setSpacing(1)
         container_layout.setContentsMargins(0, 0, 0, 0)
         header_layout = QHBoxLayout()
