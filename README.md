@@ -26,7 +26,7 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 ![Popup](./quick_access_manager/image/popup.png)
 ### How to Use
 1. **Brush Sets Popup**: Press `W` to show/hide the brush sets popup
-2. **Actions Popup**: Press `Z` to show/hide the actions popup
+2. **Actions Popup**: Press `Tab` to show/hide the actions popup
 
 ### Change Shortcut and icon/button size
 Edit the following value to change shortcut key and icon/button size:
