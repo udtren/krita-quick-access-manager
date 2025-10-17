@@ -33,7 +33,7 @@ class QuickAccessDockerWidget(QDockWidget):
         self.setWindowTitle("Quick Brush Sets")
         self.grids = []  # Store multiple grids
         self.active_grid = None  # Currently active grid
-        self.scroll_widget = None
+        self.main_widget = None
         self.main_grid_layout = None
         self.grid_counter = 0
         config_dir = os.path.join(os.path.dirname(__file__), "config")
@@ -42,9 +42,6 @@ class QuickAccessDockerWidget(QDockWidget):
         self.data_file = os.path.join(config_dir, "grids_data.json")
         self.common_config_path = os.path.join(config_dir, "common.json")
         self.preset_dict = Krita.instance().resources("preset")
-        self.grids, self.grid_counter = load_grids_data(
-            self.data_file, self.preset_dict
-        )
         self.grids, self.grid_counter = load_grids_data(
             self.data_file, self.preset_dict
         )
@@ -57,14 +54,6 @@ class QuickAccessDockerWidget(QDockWidget):
 
     def save_grids_data(self):
         save_grids_data(self.data_file, self.grids)
-
-    def load_grids_data(self):
-        self.grids, self.grid_counter = load_grids_data(
-            self.data_file, self.preset_dict
-        )
-        self.grids, self.grid_counter = load_grids_data(
-            self.data_file, self.preset_dict
-        )
 
     def init_ui(self):
         # Create a central widget for the dock
@@ -109,21 +98,16 @@ class QuickAccessDockerWidget(QDockWidget):
 
         main_layout.addLayout(button_layout_1)
 
-        # Scroll area for brush presets grids
-        scroll_area = QScrollArea()
-        self.scroll_widget = QWidget()
-
+        self.main_widget = QWidget()
         self.main_grid_layout = QVBoxLayout()
         self.main_grid_layout.setAlignment(Qt.AlignTop)  # Align grid layout to top
         self.main_grid_layout.setSpacing(
             get_spacing_between_grids()
         )  # Minimize spacing between grids
         self.main_grid_layout.setContentsMargins(0, 0, 0, 0)  # Minimize margins
-        self.scroll_widget.setLayout(self.main_grid_layout)
-        scroll_area.setWidget(self.scroll_widget)
-        scroll_area.setWidgetResizable(True)
+        self.main_widget.setLayout(self.main_grid_layout)
 
-        main_layout.addWidget(scroll_area)
+        main_layout.addWidget(self.main_widget)
 
         #####################################
         ####   Other
@@ -193,6 +177,8 @@ class QuickAccessDockerWidget(QDockWidget):
         container_layout.setAlignment(Qt.AlignTop)  # Align container to top
         container_layout.setSpacing(1)
         container_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Grid name label
         header_layout = QHBoxLayout()
         header_layout.setSpacing(1)
         header_layout.setContentsMargins(0, 0, 0, 0)
@@ -200,7 +186,6 @@ class QuickAccessDockerWidget(QDockWidget):
         name_label.setStyleSheet("font-weight: bold; font-size: 12px;")
         header_layout.addWidget(name_label, alignment=Qt.AlignLeft)
         header_layout.addStretch()
-
         container_layout.addLayout(header_layout)
         grid_info["container"] = grid_container
         grid_info["name_label"] = name_label
@@ -230,12 +215,14 @@ class QuickAccessDockerWidget(QDockWidget):
         grid_widget = ClickableGridWidget(grid_info, self)
         grid_widget.setFixedHeight(get_brush_icon_size() + 4)
         grid_widget.setMinimumHeight(get_brush_icon_size() + 4)
+
         grid_layout = QGridLayout()
         grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         grid_layout.setSpacing(get_spacing_between_buttons())
         grid_layout.setContentsMargins(0, 0, 0, 0)
         grid_widget.setLayout(grid_layout)
         container_layout.addWidget(grid_widget)
+
         grid_container.setLayout(container_layout)
         grid_info["widget"] = grid_widget
         grid_info["layout"] = grid_layout
