@@ -15,13 +15,9 @@ BLENDE_MODES = [
     "overlay",
     "soft_light_svg",
     "hard_light",
-    "dodge",
-    "burn",
     "darken",
     "lighten",
-    "hue",
-    "saturation",
-    "color",
+    "greater",
 ]
 
 __all__ = [

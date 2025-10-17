@@ -25,15 +25,15 @@ def get_default_common_config():
         "color": {
             "docker_button_font_color": "#ffffff",
             "docker_button_background_color": "#63666a",
-            "shortcut_button_font_color": "#ffffff",
-            "shortcut_button_background_color": "#6c408c",
+            "shortcut_button_font_color": "#eaeaea",
+            "shortcut_button_background_color": "#2a1c2a",
         },
         "font": {
             "docker_button_font_size": "10px",
-            "shortcut_button_font_size": "10px",
+            "shortcut_button_font_size": "14px",
         },
         "layout": {
-            "max_shortcut_per_row": 2,
+            "max_shortcut_per_row": 4,
             "max_brush_per_row": 8,
             "spacing_between_buttons": 1,
             "spacing_between_grids": 1,

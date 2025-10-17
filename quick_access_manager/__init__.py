@@ -21,22 +21,7 @@ class QuickAccessManagerExtension(Extension):
         Krita.instance().addDockWidgetFactory(self.shortcut_docker_factory)
 
     def createActions(self, window):
-        # Kritaのウィンドウが初期化された後に呼ばれる
-        for d in window.dockers():
-            try:
-                widget = None
-                if hasattr(d, "widget"):
-                    w = d.widget
-                    widget = w() if callable(w) else w
-                # For the new ShortcutAccessDockerWidget, restore grids data
-                if widget and hasattr(widget, "restore_grids_from_file"):
-                    widget.restore_grids_from_file()
-            except Exception:
-                QMessageBox.warning(
-                    None,
-                    "QuickAccessManagerExtension Error",
-                    "Something wrong is happening on QuickAccessManagerExtension.createActions.\n\nYou can try disable other plugin and start Krita again.",
-                )
+        pass
 
 
 Krita.instance().addExtension(QuickAccessManagerExtension(Krita.instance()))

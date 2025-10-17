@@ -8,11 +8,11 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 ---
 
 ## How to Add a Brush Preset
-1. In the "Quick Brush Access" section, activate the grid you want to add to.
+1. In the "Quick Brush Sets" section, activate the grid you want to add to.
 2. Select the brush preset you want to add from Krita's brush preset.
 3. Click the "AddBrush" button in the docker.
 4. The selected preset will be added to the active grid.
-![How to Add a Brush Preset](./quick_access_manager/image/image1.jpg)
+![How to Add a Brush Preset](./quick_access_manager/image/image1.png)
 
 ## How to Add a Shortcut. 
 1. In the "Quick Actions" section, activate the grid you want to add to.
@@ -20,13 +20,13 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 3. Select the action you want to add from the table.
 4. Click the "AddAction" button.
 5. The selected shortcut will be added to the active grid.
-![How to Add a Shortcut](./quick_access_manager/image/image2.jpg)
+![How to Add a Shortcut](./quick_access_manager/image/image2.png)
  
 ## Popup Window
 ![Popup](./quick_access_manager/image/popup.png)
 ### How to Use
 1. **Brush Sets Popup**: Press `W` to show/hide the brush sets popup
-2. **Actions Popup**: Press `Z` to show/hide the actions popup
+2. **Actions Popup**: Press `Tab` to show/hide the actions popup
 
 ### Change Shortcut and icon/button size
 Edit the following value to change shortcut key and icon/button size:
@@ -40,12 +40,12 @@ Edit the following value to change shortcut key and icon/button size:
 
 ## Global Config
 Use the "Setting" button to customize the UI and layout, including the default font color, background color, and font size for shortcut buttons.
-![Setting](./quick_access_manager/image/image3.jpg)
+![Setting](./quick_access_manager/image/image3.png)
 
 ## Shortcut Button Config
 To customize an individual shortcut button, hold <kbd>Alt</kbd> and right-click the button.
 If you set the font size or color to a value different from the global config, that button will keep its individual settings and will not be affected by future changes to the global config.
-![Shortcut Button Config](./quick_access_manager/image/image4.jpg)
+![Shortcut Button Config](./quick_access_manager/image/image4.png)
 
 ## How the config restore works
 When Krita starts, the brush preset settings will be loaded automatically.
