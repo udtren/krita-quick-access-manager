@@ -3,6 +3,8 @@ from PyQt5.QtCore import QTimer, QSize
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QColor
 from krita import Krita  # type: ignore
 
+BRUSH_HISTORY_BACKGROUND_COLOR = "#b0b0b0"
+
 
 class BrushHistoryWidget(QWidget):
     """Widget to display brush history in 2 rows"""
@@ -54,7 +56,7 @@ class BrushHistoryWidget(QWidget):
                 QSize(button_size - 4, button_size - 4)
             )  # Icon slightly smaller than button
             brush_btn.setStyleSheet(
-                "border: 1px solid #888; background-color: #f0f0f0;"
+                f"border: 1px solid #888; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
             )
             brush_btn.clicked.connect(lambda checked, idx=i: self.on_brush_clicked(idx))
             self.brush_buttons.append(brush_btn)
@@ -185,13 +187,17 @@ class BrushHistoryWidget(QWidget):
                 icon = self.generate_brush_thumbnail(brush_preset)
                 btn.setIcon(icon)
                 btn.setText("")  # Clear any text
-                btn.setStyleSheet("border: 1px solid #888; background-color: #e0e0e0;")
+                btn.setStyleSheet(
+                    f"border: 1px solid #888; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
+                )
                 btn.setToolTip(f"Brush: {brush_name}")
                 print(f"Button {i}: {brush_name} (with thumbnail)")  # Debug output
             else:
                 btn.setIcon(QIcon())  # Clear icon
                 btn.setText("")
-                btn.setStyleSheet("border: 1px solid #888; background-color: #f0f0f0;")
+                btn.setStyleSheet(
+                    f"border: 1px solid #888; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
+                )
                 btn.setToolTip("")
                 print(f"Button {i}: empty")  # Debug output
 

@@ -20,6 +20,8 @@ DEFAULT_CONFIG = get_shortcut_button_config()
 DEFAULT_FONT_COLOR = DEFAULT_CONFIG["font_color"]
 DEFAULT_BG_COLOR = DEFAULT_CONFIG["background_color"]
 
+GRID_NAME_COLOR = "#979797"
+
 
 class SingleShortcutGridWidget(QWidget):
     """Widget representing a single shortcut grid"""
@@ -264,7 +266,7 @@ class SingleShortcutGridWidget(QWidget):
             self.grid_name_label.setStyleSheet(
                 """
                 font-weight: bold;
-                font-size: 13px;
+                font-size: 12px;
                 color: #4FC3F7;
                 background: none;
             """
@@ -274,8 +276,8 @@ class SingleShortcutGridWidget(QWidget):
             self.grid_name_label.setStyleSheet(
                 """
                 font-weight: bold;
-                font-size: 13px;
-                color: #ffffff;
+                font-size: 12px;
+                color: {GRID_NAME_COLOR};
                 background: none;
             """
             )

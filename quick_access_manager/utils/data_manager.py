@@ -23,7 +23,7 @@ def get_default_common_config():
     """Get the default common configuration"""
     return {
         "color": {
-            "docker_button_font_color": "#ffffff",
+            "docker_button_font_color": "#000000",
             "docker_button_background_color": "#63666a",
             "shortcut_button_font_color": "#eaeaea",
             "shortcut_button_background_color": "#2a1c2a",
