@@ -3,6 +3,8 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor
 from krita import Krita, ManagedColor  # type: ignore
 
+COLOR_HISTORY_BACKGROUND_COLOR = "#b0b0b0"
+
 
 class ColorHistoryWidget(QWidget):
     """Widget to display color history in a grid"""
@@ -44,7 +46,7 @@ class ColorHistoryWidget(QWidget):
             color_btn = QPushButton()
             color_btn.setFixedSize(button_size, button_size)
             color_btn.setStyleSheet(
-                "border: 1px solid #888; background-color: #f0f0f0;"
+                f"border: 1px solid #888; background-color: {COLOR_HISTORY_BACKGROUND_COLOR};"
             )
             color_btn.clicked.connect(lambda checked, idx=i: self.on_color_clicked(idx))
             self.color_buttons.append(color_btn)
@@ -129,7 +131,9 @@ class ColorHistoryWidget(QWidget):
                 )
                 btn.setToolTip(f"RGB({r}, {g}, {b})")
             else:
-                btn.setStyleSheet("border: 1px solid #888; background-color: #f0f0f0;")
+                btn.setStyleSheet(
+                    f"border: 1px solid #888; background-color: {COLOR_HISTORY_BACKGROUND_COLOR};"
+                )
                 btn.setToolTip("")
 
     def on_color_clicked(self, index):

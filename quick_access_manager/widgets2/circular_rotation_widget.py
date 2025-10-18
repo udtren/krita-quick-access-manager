@@ -37,7 +37,7 @@ class CircularRotationWidget(QWidget):
 
         # Draw outer circle (track)
         painter.setPen(QPen(QColor(128, 128, 128), 2))
-        painter.setBrush(QBrush(QColor(240, 240, 240)))
+        painter.setBrush(QBrush(QColor(167, 167, 167)))
         painter.drawEllipse(
             center_x - radius, center_y - radius, radius * 2, radius * 2
         )
@@ -47,12 +47,12 @@ class CircularRotationWidget(QWidget):
         end_x = center_x + (radius - 10) * math.cos(angle_rad)
         end_y = center_y + (radius - 10) * math.sin(angle_rad)
 
-        painter.setPen(QPen(QColor(50, 150, 250), 3))
+        painter.setPen(QPen(QColor(10, 45, 80), 3))
         painter.drawLine(center_x, center_y, int(end_x), int(end_y))
 
         # Draw center dot
-        painter.setBrush(QBrush(QColor(50, 150, 250)))
-        painter.setPen(QPen(QColor(50, 150, 250)))
+        painter.setBrush(QBrush(QColor(10, 45, 80)))
+        painter.setPen(QPen(QColor(10, 45, 80)))
         painter.drawEllipse(center_x - 3, center_y - 3, 6, 6)
 
     def mousePressEvent(self, event):

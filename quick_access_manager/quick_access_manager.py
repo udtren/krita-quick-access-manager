@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QLabel,
     QDockWidget,
-    QScrollArea,
     QHBoxLayout,
     QInputDialog,
     QApplication,
@@ -25,6 +24,8 @@ from .utils.config_utils import (
 from .widgets.draggable_button import DraggableBrushButton
 from .widgets.grid_container import ClickableGridWidget, DraggableGridContainer
 from .popup import BrushSetsPopup
+
+GRID_NAME_COLOR = "#979797"
 
 
 class QuickAccessDockerWidget(QDockWidget):
@@ -366,10 +367,10 @@ class QuickAccessDockerWidget(QDockWidget):
             """
             )
             grid_info["name_label"].setStyleSheet(
-                """
+                f"""
                 font-weight: bold; 
                 font-size: 12px; 
-                color: #ffffff;
+                color: {GRID_NAME_COLOR};
             """
             )
 
