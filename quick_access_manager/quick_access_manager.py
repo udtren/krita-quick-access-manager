@@ -367,7 +367,7 @@ class QuickAccessDockerWidget(QDockWidget):
             """
             )
             grid_info["name_label"].setStyleSheet(
-                """
+                f"""
                 font-weight: bold; 
                 font-size: 12px; 
                 color: {GRID_NAME_COLOR};

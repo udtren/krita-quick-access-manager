@@ -274,7 +274,7 @@ class SingleShortcutGridWidget(QWidget):
         else:
             self.setStyleSheet("QWidget { border: none; background: none; }")
             self.grid_name_label.setStyleSheet(
-                """
+                f"""
                 font-weight: bold;
                 font-size: 12px;
                 color: {GRID_NAME_COLOR};
