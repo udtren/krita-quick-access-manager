@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QCheckBox,
 )
 
 
@@ -45,6 +46,11 @@ class ShortcutButtonConfigDialog(QDialog):
         self.font_color_edit = QLineEdit()
         layout.addWidget(self.font_color_edit)
 
+        # Use global settings
+        layout.addWidget(QLabel("Use Global Settings:"))
+        self.use_global_settings_flag = QCheckBox()
+        layout.addWidget(self.use_global_settings_flag)
+
         # Buttons
         button_layout = QHBoxLayout()
         self.ok_btn = QPushButton("OK")
@@ -83,3 +89,7 @@ class ShortcutButtonConfigDialog(QDialog):
         self.font_color_edit.setText(
             self.button.palette().color(self.button.foregroundRole()).name()
         )
+
+        # global settings flag
+        if config.get("useGlobalSettings") is True:
+            self.use_global_settings_flag.setChecked(True)

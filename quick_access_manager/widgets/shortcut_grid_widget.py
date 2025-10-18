@@ -16,6 +16,10 @@ from ..utils.shortcut_utils import (
 )
 from ..utils.styles import shortcut_btn_style
 
+DEFAULT_CONFIG = get_shortcut_button_config()
+DEFAULT_FONT_COLOR = DEFAULT_CONFIG["font_color"]
+DEFAULT_BG_COLOR = DEFAULT_CONFIG["background_color"]
+
 
 class SingleShortcutGridWidget(QWidget):
     """Widget representing a single shortcut grid"""
@@ -109,6 +113,7 @@ class SingleShortcutGridWidget(QWidget):
                 "fontSize": str(default_config["font_size"]).replace("px", ""),
                 "fontColor": default_config["font_color"],
                 "backgroundColor": default_config["background_color"],
+                "useGlobalSettings": True,
             }
         )
 
@@ -156,6 +161,9 @@ class SingleShortcutGridWidget(QWidget):
         configs = self.grid_info.get("shortcut_configs", [])
 
         if idx < len(configs):
+            if configs[idx].get("useGlobalSettings") == True:
+                configs[idx]["fontColor"] = DEFAULT_FONT_COLOR
+                configs[idx]["backgroundColor"] = DEFAULT_BG_COLOR
             return configs[idx]
         else:
             # Create default config
@@ -165,6 +173,7 @@ class SingleShortcutGridWidget(QWidget):
                 "fontSize": str(default_config["font_size"]).replace("px", ""),
                 "fontColor": default_config["font_color"],
                 "backgroundColor": default_config["background_color"],
+                "useGlobalSettings": True,
             }
 
     def apply_button_styling(self, button, config, default_config):

@@ -41,11 +41,6 @@ class BrushSetsPopup:
             # Enable the shortcut for application-wide use
             self.popup_shortcut.setContext(Qt.ApplicationShortcut)
 
-            print(
-                f"Popup shortcut registered successfully with parent: {type(parent).__name__}"
-            )
-            print(f"Shortcut key sequence: {self.popup_shortcut.key().toString()}")
-
         except Exception as e:
             print(f"Error setting up popup shortcut: {e}")
 
@@ -58,20 +53,16 @@ class BrushSetsPopup:
                 self.popup_window.hide()
                 return
 
-            print("Creating/showing popup window")
-            # Always recreate popup window to reflect current parent content
             self.create_popup_window()
 
             # Position at cursor
             cursor_pos = QCursor.pos()
-            print(f"Cursor position: {cursor_pos.x()}, {cursor_pos.y()}")
             self.popup_window.move(cursor_pos.x() - 10, cursor_pos.y() - 10)
             self.popup_window.show()
             self.popup_window.raise_()
 
             # Auto-hide after 10 seconds (optional)
             QTimer.singleShot(10000, self.popup_window.hide)
-            print("Popup window shown successfully")
 
         except Exception as e:
             print(f"Error showing popup: {e}")

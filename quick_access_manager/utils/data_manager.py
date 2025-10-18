@@ -177,3 +177,12 @@ def save_shortcut_grids_data(data_file, grids):
             json.dump(data, f, indent=2, ensure_ascii=False)
     except Exception as e:
         log_save_grids_data(f"save_shortcut_grids_data ERROR: {str(e)}")
+
+
+def write_log(log_msg):
+    with open(
+        "..\\logs\\log.txt",
+        "a",
+        encoding="utf-8",
+    ) as f:
+        f.write(log_msg + "\n")
