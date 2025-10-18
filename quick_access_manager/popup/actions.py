@@ -169,11 +169,6 @@ class ActionsPopup:
             # Enable the shortcut for application-wide use
             self.popup_shortcut.setContext(Qt.ApplicationShortcut)
 
-            print(
-                f"Actions popup shortcut registered successfully with parent: {type(parent).__name__}"
-            )
-            print(f"Shortcut key sequence: {self.popup_shortcut.key().toString()}")
-
         except Exception as e:
             print(f"Error setting up actions popup shortcut: {e}")
 
@@ -186,23 +181,17 @@ class ActionsPopup:
                 self.popup_window.hide()
                 return
 
-            print("Creating/showing actions popup window")
-            # Reload configuration data to get latest changes
             self.shortcut_grid_data = self.load_shortcut_grid_data()
-
-            # Always recreate popup window to reflect current parent content
             self.create_popup_window()
 
             # Position at cursor
             cursor_pos = QCursor.pos()
-            print(f"Cursor position: {cursor_pos.x()}, {cursor_pos.y()}")
             self.popup_window.move(cursor_pos.x() - 10, cursor_pos.y() - 10)
             self.popup_window.show()
             self.popup_window.raise_()
 
             # Auto-hide after 10 seconds (optional)
             QTimer.singleShot(10000, self.popup_window.hide)
-            print("Actions popup window shown successfully")
 
         except Exception as e:
             print(f"Error showing actions popup: {e}")
@@ -362,25 +351,6 @@ class ActionsPopup:
 
         main_widget.setLayout(main_layout)
         popup_layout.addWidget(main_widget)
-
-    def execute_action_and_close(self, action):
-        """Execute action and close popup"""
-        try:
-            if hasattr(action, "trigger"):
-                action.trigger()
-                print(
-                    f"Executed action: {action.text() if hasattr(action, 'text') else str(action)}"
-                )
-            else:
-                # Fallback to parent docker's run_krita_action method
-                action_id = getattr(action, "objectName", lambda: str(action))()
-                self.parent_docker.run_krita_action(action_id)
-                print(f"Executed action via parent: {action_id}")
-        except Exception as e:
-            print(f"Error executing action: {e}")
-
-        if self.popup_window:
-            self.popup_window.hide()
 
     def execute_action_by_name_and_close(self, action_name):
         """Execute action by name and close popup"""

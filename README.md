@@ -44,7 +44,7 @@ Use the "Setting" button to customize the UI and layout, including the default f
 
 ## Shortcut Button Config
 To customize an individual shortcut button, hold <kbd>Alt</kbd> and right-click the button.
-If you set the font size or color to a value different from the global config, that button will keep its individual settings and will not be affected by future changes to the global config.
+If the "Use Global Settings" is checked, the color of font and background will use the value in the global config file.
 ![Shortcut Button Config](./quick_access_manager/image/image4.png)
 
 ## How the config restore works

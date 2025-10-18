@@ -4,6 +4,12 @@ from PyQt5.QtGui import QDrag
 from ..utils.shortcut_utils import get_font_px, get_shortcut_button_config
 from ..dialogs.button_config_dialog import ShortcutButtonConfigDialog
 
+# from ..utils.data_manager import write_log
+
+DEFAULT_CONFIG = get_shortcut_button_config()
+DEFAULT_FONT_COLOR = DEFAULT_CONFIG["font_color"]
+DEFAULT_BG_COLOR = DEFAULT_CONFIG["background_color"]
+
 
 class ShortcutDraggableButton(QPushButton):
     """A draggable button for shortcut actions"""
@@ -66,10 +72,7 @@ class ShortcutDraggableButton(QPushButton):
         )
 
         # Check if using custom colors
-        is_custom = (
-            font_color != default_config["font_color"]
-            or bg_color != default_config["background_color"]
-        )
+        is_custom = not self.config.get("useGlobalSettings")
 
         if is_custom:
             self.setStyleSheet(
@@ -273,8 +276,17 @@ class ShortcutDraggableButton(QPushButton):
                 "actionName": self.action.objectName(),
                 "customName": dialog.name_edit.text(),
                 "fontSize": str(font_size),
-                "fontColor": dialog.font_color_edit.text(),
-                "backgroundColor": dialog.bg_color_edit.text(),
+                "fontColor": (
+                    DEFAULT_FONT_COLOR
+                    if dialog.use_global_settings_flag.isChecked()
+                    else dialog.font_color_edit.text()
+                ),
+                "backgroundColor": (
+                    DEFAULT_BG_COLOR
+                    if dialog.use_global_settings_flag.isChecked()
+                    else dialog.bg_color_edit.text()
+                ),
+                "useGlobalSettings": dialog.use_global_settings_flag.isChecked(),
             }
 
             self.update_grid_and_save()
