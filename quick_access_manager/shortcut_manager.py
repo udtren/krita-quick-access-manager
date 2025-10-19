@@ -78,14 +78,8 @@ class ShortcutAccessDockerWidget(QDockWidget):
         self.add_grid_btn.setFixedWidth(70)
         self.add_grid_btn.setStyleSheet(docker_btn_style())
 
-        # Restore Actions button
-        self.restore_grid_btn = QPushButton("RestoreActions")
-        self.restore_grid_btn.setFixedWidth(100)
-        self.restore_grid_btn.setStyleSheet(docker_btn_style())
-
         button_layout.addWidget(self.show_all_btn)
         button_layout.addWidget(self.add_grid_btn)
-        button_layout.addWidget(self.restore_grid_btn)
 
         self.main_layout.addLayout(button_layout)
 
@@ -93,7 +87,11 @@ class ShortcutAccessDockerWidget(QDockWidget):
         """Setup button connections"""
         self.show_all_btn.clicked.connect(self.show_all_shortcut_popup)
         self.add_grid_btn.clicked.connect(self.add_grid)
-        self.restore_grid_btn.clicked.connect(self.restore_grids_from_file)
+
+        # restore shortcut grids when Krita starts
+        application = Krita.instance()
+        appNotifier = application.notifier()
+        appNotifier.windowCreated.connect(self.restore_grids_from_file)
 
     def show_all_shortcut_popup(self):
         """Show the action selection popup"""
