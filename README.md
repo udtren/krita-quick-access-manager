@@ -47,15 +47,6 @@ To customize an individual shortcut button, hold <kbd>Alt</kbd> and right-click 
 If the "Use Global Settings" is checked, the color of font and background will use the value in the global config file.
 ![Shortcut Button Config](./quick_access_manager/image/image4.png)
 
-## How the config restore works
-When Krita starts, the brush preset settings will be loaded automatically.
-
-However, the shortcut settings will not be loaded automatically because it is difficult to track the timing when Krita loads all shortcut actions.
-
-Therefore, you need to click the [RestoreActions] button manually to restore the shortcut settings.
-
-**The Actions Popup Window is not affected by this.**
-
 ## Sort/Remove
 
 **Sort:**  
