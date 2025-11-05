@@ -55,9 +55,15 @@ class BrushSetsPopup:
 
             self.create_popup_window()
 
-            # Position at cursor
+            # Get size after adjustSize()
+            popup_width = self.popup_window.width()
+            popup_height = self.popup_window.height()
+
+            # Position at cursor (centered)
             cursor_pos = QCursor.pos()
-            self.popup_window.move(cursor_pos.x() - 10, cursor_pos.y() - 10)
+            self.popup_window.move(
+                cursor_pos.x() - popup_width // 2, cursor_pos.y() - popup_height // 3
+            )
             self.popup_window.show()
             self.popup_window.raise_()
 
