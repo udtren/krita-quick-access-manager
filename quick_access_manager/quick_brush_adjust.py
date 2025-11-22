@@ -39,6 +39,7 @@ class BrushAdjustmentWidget(QWidget):
         self.current_brush_rotation = None
         self.current_layer_opacity = None  # Add layer opacity tracking
         self.current_blend_mode = None  # Add blend mode tracking
+        self.current_layer_blend_mode = None  # Add layer blend mode tracking
         self.updating_from_brush = False  # Flag to prevent recursive updates
         self.updating_from_layer = False
 
@@ -300,21 +301,33 @@ class BrushAdjustmentWidget(QWidget):
         for mode in blend_modes:
             self.layer_blend_combo.addItem(mode.replace("_", " ").title(), mode)
 
+        self.layer_blend_combo.currentTextChanged.connect(
+            self.on_layer_blend_mode_changed
+        )
+
         blend_layout.addWidget(self.blend_combo)
         blend_layout.addWidget(self.layer_blend_combo)
-        blend_layout.addStretch()
 
         # ============================================
         # Reset Button
         # ============================================
-        reset_btn = QPushButton("Reset")
-        reset_btn.setStyleSheet(
-            f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;"
-        )
+        reset_btn = QPushButton()
+        icon_path = os.path.join(os.path.dirname(__file__), "image", "refresh.png")
+        if os.path.exists(icon_path):
+            icon = QIcon(icon_path)
+            reset_btn.setIcon(icon)
+            reset_btn.setIconSize(QPixmap(16, 16).size())
+        else:
+            reset_btn.setText("Reset")
+            reset_btn.setStyleSheet(
+                f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;"
+            )
+        reset_btn.setFixedSize(24, 24)
+        reset_btn.setToolTip("Reset brush settings")
         reset_btn.clicked.connect(self.reset_brush_settings)
-        reset_btn.setFixedWidth(50)
 
         blend_layout.addWidget(reset_btn)
+        blend_layout.addStretch()
         left_layout.addLayout(blend_layout)
 
         # ============================================
@@ -374,21 +387,21 @@ class BrushAdjustmentWidget(QWidget):
 
     def brush_size_to_slider(self, size):
         """Convert brush size (1-1000) to slider value (0-100) with non-linear scaling"""
-        if size <= 50:
-            # Linear mapping for 1-50: maps to slider 0-70 (70% of slider range)
-            return int((size - 1) * 70 / 49)
+        if size <= 100:
+            # Linear mapping for 1-100: maps to slider 0-70 (70% of slider range)
+            return int((size - 1) * 70 / 100)
         else:
-            # Linear mapping for 51-1000: maps to slider 71-100 (30% of slider range)
-            return int(70 + (size - 50) * 30 / 950)
+            # Linear mapping for 101-1000: maps to slider 71-100 (30% of slider range)
+            return int(70 + (size - 100) * 30 / 900)
 
     def slider_to_brush_size(self, slider_value):
         """Convert slider value (0-100) to brush size (1-1000) with non-linear scaling"""
         if slider_value <= 70:
-            # Map slider 0-70 to brush size 1-50
-            return int(1 + slider_value * 99 / 70)
+            # Map slider 0-70 to brush size 1-100
+            return int(1 + slider_value * 100 / 70)
         else:
-            # Map slider 71-100 to brush size 51-1000
-            return int(100 + (slider_value - 70) * 950 / 30)
+            # Map slider 71-100 to brush size 100-1000
+            return int(100 + (slider_value - 70) * 900 / 30)
 
     def on_size_slider_changed(self, slider_value):
         """Handle size slider change with non-linear conversion"""
@@ -411,6 +424,7 @@ class BrushAdjustmentWidget(QWidget):
                     current_rotation = None
                     current_blend_mode = None
                     current_layer_opacity = None
+                    current_layer_blend_mode = None
 
                     try:
                         current_size = view.brushSize()
@@ -441,6 +455,15 @@ class BrushAdjustmentWidget(QWidget):
                     except:
                         pass
 
+                    # Get current layer blend mode
+                    try:
+                        if app.activeDocument() and app.activeDocument().activeNode():
+                            current_layer_blend_mode = (
+                                app.activeDocument().activeNode().blendingMode()
+                            )
+                    except:
+                        pass
+
                     # Check if brush name changed OR if properties changed (for reload preset action)
                     brush_changed = brush_name != self.current_brush_name
                     size_changed = current_size != self.current_brush_size
@@ -450,6 +473,9 @@ class BrushAdjustmentWidget(QWidget):
                     layer_opacity_changed = (
                         current_layer_opacity != self.current_layer_opacity
                     )
+                    layer_blend_changed = (
+                        current_layer_blend_mode != self.current_layer_blend_mode
+                    )
 
                     if (
                         brush_changed
@@ -458,6 +484,7 @@ class BrushAdjustmentWidget(QWidget):
                         or rotation_changed
                         or blend_changed
                         or layer_opacity_changed
+                        or layer_blend_changed
                     ):
                         self.current_brush_name = brush_name
                         self.current_brush_size = current_size
@@ -465,6 +492,7 @@ class BrushAdjustmentWidget(QWidget):
                         self.current_brush_rotation = current_rotation
                         self.current_blend_mode = current_blend_mode
                         self.current_layer_opacity = current_layer_opacity
+                        self.current_layer_blend_mode = current_layer_blend_mode
                         self.update_from_current_brush()
             except:
                 pass
@@ -556,6 +584,33 @@ class BrushAdjustmentWidget(QWidget):
                 self.layer_opacity_slider.setValue(100)
                 self.layer_opacity_value_label.setText("100%")
                 self.current_layer_opacity = 255
+
+            # Get current layer blend mode
+            try:
+                activeNode = (
+                    app.activeDocument().activeNode() if app.activeDocument() else None
+                )
+                if activeNode:
+                    layer_blend_mode = activeNode.blendingMode()
+                    if layer_blend_mode:
+                        # Find the blend mode in the combo box
+                        index = self.layer_blend_combo.findData(layer_blend_mode)
+                        if index >= 0:
+                            self.layer_blend_combo.setCurrentIndex(index)
+                        else:
+                            # If not found, add it to the combo
+                            self.layer_blend_combo.addItem(
+                                layer_blend_mode.replace("_", " ").title(),
+                                layer_blend_mode,
+                            )
+                            self.layer_blend_combo.setCurrentIndex(
+                                self.layer_blend_combo.count() - 1
+                            )
+                        self.current_layer_blend_mode = layer_blend_mode
+            except:
+                # Fallback if layer blend mode method doesn't exist
+                self.layer_blend_combo.setCurrentIndex(0)  # Set to "Normal"
+                self.current_layer_blend_mode = "normal"
             self.updating_from_layer = False
 
         self.updating_from_brush = False
@@ -652,6 +707,29 @@ class BrushAdjustmentWidget(QWidget):
                     print(f"Set blend mode to: {blend_mode}")
                 except Exception as e:
                     print(f"Error setting blend mode: {e}")
+
+    def on_layer_blend_mode_changed(self, text):
+        """Handle layer blend mode change"""
+        if self.updating_from_layer:
+            return
+
+        # Get the blend mode data from the combo box
+        layer_blend_mode = self.layer_blend_combo.currentData()
+        if layer_blend_mode:
+            self.current_layer_blend_mode = layer_blend_mode  # Update tracked value
+
+            app = Krita.instance()
+            activeDoc = app.activeDocument()
+            activeNode = activeDoc.activeNode() if activeDoc else None
+            if activeNode:
+                try:
+                    # Set blend mode on the active node
+                    activeNode.setBlendingMode(layer_blend_mode)
+                    # Refresh the projection to update the canvas display
+                    activeDoc.refreshProjection()
+                    print(f"Set layer blend mode to: {layer_blend_mode}")
+                except Exception as e:
+                    print(f"Error setting layer blend mode: {e}")
 
     def reset_brush_settings(self):
         """Reset brush settings by triggering Krita's reload preset action"""

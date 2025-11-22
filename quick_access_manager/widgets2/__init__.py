@@ -3,7 +3,7 @@ from .circular_rotation_widget import CircularRotationWidget
 from .brush_history_widget import BrushHistoryWidget
 
 BRUSH_ADJUSTMENT_FONT_SIZE = "12px"
-BRUSH_ADJUSTMENT_NUMBER_SIZE = "16px"
+BRUSH_ADJUSTMENT_NUMBER_SIZE = "12px"
 COLOR_HISTORY_NUMBER = 20
 BRUSH_HISTORY_NUMBER = 20
 COLOR_HISTORY_ICON_SIZE = 34

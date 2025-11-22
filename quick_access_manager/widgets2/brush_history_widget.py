@@ -56,7 +56,7 @@ class BrushHistoryWidget(QWidget):
                 QSize(button_size - 4, button_size - 4)
             )  # Icon slightly smaller than button
             brush_btn.setStyleSheet(
-                f"border: 1px solid #888; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
+                f"border: 1px solid #888; border-radius: 4px; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
             )
             brush_btn.clicked.connect(lambda checked, idx=i: self.on_brush_clicked(idx))
             self.brush_buttons.append(brush_btn)
@@ -188,7 +188,7 @@ class BrushHistoryWidget(QWidget):
                 btn.setIcon(icon)
                 btn.setText("")  # Clear any text
                 btn.setStyleSheet(
-                    f"border: 1px solid #888; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
+                    f"border: 1px solid #888; border-radius: 4px; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
                 )
                 btn.setToolTip(f"Brush: {brush_name}")
                 print(f"Button {i}: {brush_name} (with thumbnail)")  # Debug output
@@ -196,7 +196,7 @@ class BrushHistoryWidget(QWidget):
                 btn.setIcon(QIcon())  # Clear icon
                 btn.setText("")
                 btn.setStyleSheet(
-                    f"border: 1px solid #888; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
+                    f"border: 1px solid #888; border-radius: 4px; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
                 )
                 btn.setToolTip("")
                 print(f"Button {i}: empty")  # Debug output
