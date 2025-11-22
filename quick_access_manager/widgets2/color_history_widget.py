@@ -46,7 +46,7 @@ class ColorHistoryWidget(QWidget):
             color_btn = QPushButton()
             color_btn.setFixedSize(button_size, button_size)
             color_btn.setStyleSheet(
-                f"border: 1px solid #888; background-color: {COLOR_HISTORY_BACKGROUND_COLOR};"
+                f"border: 1px solid #888; border-radius: 4px; background-color: {COLOR_HISTORY_BACKGROUND_COLOR};"
             )
             color_btn.clicked.connect(lambda checked, idx=i: self.on_color_clicked(idx))
             self.color_buttons.append(color_btn)
@@ -127,12 +127,12 @@ class ColorHistoryWidget(QWidget):
             if i < len(self.color_history):
                 r, g, b = self.color_history[i]
                 btn.setStyleSheet(
-                    f"border: 1px solid #888; background-color: rgb({r}, {g}, {b});"
+                    f"border: 1px solid #888; border-radius: 4px; background-color: rgb({r}, {g}, {b});"
                 )
                 btn.setToolTip(f"RGB({r}, {g}, {b})")
             else:
                 btn.setStyleSheet(
-                    f"border: 1px solid #888; background-color: {COLOR_HISTORY_BACKGROUND_COLOR};"
+                    f"border: 1px solid #888; border-radius: 4px; background-color: {COLOR_HISTORY_BACKGROUND_COLOR};"
                 )
                 btn.setToolTip("")
 
