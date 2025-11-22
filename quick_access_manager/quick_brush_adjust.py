@@ -53,6 +53,33 @@ class BrushAdjustmentWidget(QWidget):
         self.brush_check_timer.timeout.connect(self.check_brush_change)
         self.brush_check_timer.start(200)  # Check every 200ms for more responsiveness
 
+        self.layer_check_timer = QTimer()
+        self.layer_check_timer.timeout.connect(self.check_layer_change)
+        self.layer_check_timer.start(200)
+
+        # ==========================================
+        # Add debounce timers for sliders
+        # ==========================================
+        self.opacity_debounce_timer = QTimer()
+        self.opacity_debounce_timer.setSingleShot(True)
+        self.opacity_debounce_timer.timeout.connect(self.apply_opacity_change)
+
+        self.size_debounce_timer = QTimer()
+        self.size_debounce_timer.setSingleShot(True)
+        self.size_debounce_timer.timeout.connect(self.apply_size_change)
+
+        self.layer_opacity_debounce_timer = QTimer()
+        self.layer_opacity_debounce_timer.setSingleShot(True)
+        self.layer_opacity_debounce_timer.timeout.connect(
+            self.apply_layer_opacity_change
+        )
+
+        # Store pending values
+        self.pending_opacity_value = None
+        self.pending_size_value = None
+        self.pending_layer_opacity_value = None
+        # ==========================================
+
     def load_docker_buttons_config(self):
         """Load docker buttons configuration from JSON file"""
         try:
@@ -221,7 +248,7 @@ class BrushAdjustmentWidget(QWidget):
         self.size_slider.setMinimum(0)
         self.size_slider.setMaximum(100)  # Use 0-100 range for internal scaling
         self.size_slider.setValue(self.brush_size_to_slider(10))
-        self.size_slider.valueChanged.connect(self.on_size_slider_changed)
+        self.size_slider.valueChanged.connect(self.on_size_slider_changed_debounced)
 
         self.size_value_label = QLabel("10")
         self.size_value_label.setStyleSheet(
@@ -246,7 +273,7 @@ class BrushAdjustmentWidget(QWidget):
         self.opacity_slider.setMinimum(0)
         self.opacity_slider.setMaximum(100)
         self.opacity_slider.setValue(100)
-        self.opacity_slider.valueChanged.connect(self.on_opacity_changed)
+        self.opacity_slider.valueChanged.connect(self.on_opacity_changed_debounced)
 
         self.opacity_value_label = QLabel("100%")
         self.opacity_value_label.setStyleSheet(
@@ -294,7 +321,9 @@ class BrushAdjustmentWidget(QWidget):
         self.layer_opacity_slider.setMinimum(0)
         self.layer_opacity_slider.setMaximum(100)
         self.layer_opacity_slider.setValue(100)
-        self.layer_opacity_slider.valueChanged.connect(self.on_layer_opacity_changed)
+        self.layer_opacity_slider.valueChanged.connect(
+            self.on_layer_opacity_changed_debounced
+        )
         self.layer_opacity_value_label = QLabel("100%")
         self.layer_opacity_value_label.setStyleSheet(
             f"font-size: {BRUSH_ADJUSTMENT_NUMBER_SIZE};"
@@ -435,8 +464,6 @@ class BrushAdjustmentWidget(QWidget):
                     current_opacity = None
                     current_rotation = None
                     current_blend_mode = None
-                    current_layer_opacity = None
-                    current_layer_blend_mode = None
 
                     try:
                         current_size = view.brushSize()
@@ -458,36 +485,12 @@ class BrushAdjustmentWidget(QWidget):
                     except:
                         pass
 
-                    # Get current layer opacity
-                    try:
-                        if app.activeDocument() and app.activeDocument().activeNode():
-                            current_layer_opacity = (
-                                app.activeDocument().activeNode().opacity()
-                            )
-                    except:
-                        pass
-
-                    # Get current layer blend mode
-                    try:
-                        if app.activeDocument() and app.activeDocument().activeNode():
-                            current_layer_blend_mode = (
-                                app.activeDocument().activeNode().blendingMode()
-                            )
-                    except:
-                        pass
-
                     # Check if brush name changed OR if properties changed (for reload preset action)
                     brush_changed = brush_name != self.current_brush_name
                     size_changed = current_size != self.current_brush_size
                     opacity_changed = current_opacity != self.current_brush_opacity
                     rotation_changed = current_rotation != self.current_brush_rotation
                     blend_changed = current_blend_mode != self.current_blend_mode
-                    layer_opacity_changed = (
-                        current_layer_opacity != self.current_layer_opacity
-                    )
-                    layer_blend_changed = (
-                        current_layer_blend_mode != self.current_layer_blend_mode
-                    )
 
                     if (
                         brush_changed
@@ -495,16 +498,12 @@ class BrushAdjustmentWidget(QWidget):
                         or opacity_changed
                         or rotation_changed
                         or blend_changed
-                        or layer_opacity_changed
-                        or layer_blend_changed
                     ):
                         self.current_brush_name = brush_name
                         self.current_brush_size = current_size
                         self.current_brush_opacity = current_opacity
                         self.current_brush_rotation = current_rotation
                         self.current_blend_mode = current_blend_mode
-                        self.current_layer_opacity = current_layer_opacity
-                        self.current_layer_blend_mode = current_layer_blend_mode
                         self.update_from_current_brush()
             except:
                 pass
@@ -577,111 +576,193 @@ class BrushAdjustmentWidget(QWidget):
                 self.blend_combo.setCurrentIndex(0)  # Set to "Normal"
                 self.current_blend_mode = "normal"
 
-            # Get current layer opacity
-            self.updating_from_layer = True
-            try:
-                activeNode = (
-                    app.activeDocument().activeNode() if app.activeDocument() else None
-                )
-                if activeNode:
-                    layer_opacity = activeNode.opacity()
-                    layer_opacity_percent = int(
-                        layer_opacity * 100 / 255
-                    )  # Convert from 0-255 to 0-100
-                    self.layer_opacity_slider.setValue(layer_opacity_percent)
-                    self.layer_opacity_value_label.setText(f"{layer_opacity_percent}%")
-                    self.current_layer_opacity = layer_opacity
-            except:
-                # Fallback if layer opacity method doesn't work
-                self.layer_opacity_slider.setValue(100)
-                self.layer_opacity_value_label.setText("100%")
-                self.current_layer_opacity = 255
-
-            # Get current layer blend mode
-            try:
-                activeNode = (
-                    app.activeDocument().activeNode() if app.activeDocument() else None
-                )
-                if activeNode:
-                    layer_blend_mode = activeNode.blendingMode()
-                    if layer_blend_mode:
-                        # Find the blend mode in the combo box
-                        index = self.layer_blend_combo.findData(layer_blend_mode)
-                        if index >= 0:
-                            self.layer_blend_combo.setCurrentIndex(index)
-                        else:
-                            # If not found, add it to the combo
-                            self.layer_blend_combo.addItem(
-                                layer_blend_mode.replace("_", " ").title(),
-                                layer_blend_mode,
-                            )
-                            self.layer_blend_combo.setCurrentIndex(
-                                self.layer_blend_combo.count() - 1
-                            )
-                        self.current_layer_blend_mode = layer_blend_mode
-            except:
-                # Fallback if layer blend mode method doesn't exist
-                self.layer_blend_combo.setCurrentIndex(0)  # Set to "Normal"
-                self.current_layer_blend_mode = "normal"
-            self.updating_from_layer = False
-
         self.updating_from_brush = False
 
-    def on_size_changed(self, value):
-        """Handle brush size change"""
+    def check_layer_change(self):
+        """Check if the current brush has changed and update sliders if needed"""
+        app = Krita.instance()
+
+        current_layer_opacity = None
+        current_layer_blend_mode = None
+
+        # Get current layer opacity
+        try:
+            if app.activeDocument() and app.activeDocument().activeNode():
+                current_layer_opacity = app.activeDocument().activeNode().opacity()
+        except:
+            pass
+
+        # Get current layer blend mode
+        try:
+            if app.activeDocument() and app.activeDocument().activeNode():
+                current_layer_blend_mode = (
+                    app.activeDocument().activeNode().blendingMode()
+                )
+        except:
+            pass
+
+        # Check if brush name changed OR if properties changed (for reload preset action)
+        layer_opacity_changed = current_layer_opacity != self.current_layer_opacity
+        layer_blend_changed = current_layer_blend_mode != self.current_layer_blend_mode
+
+        if layer_opacity_changed or layer_blend_changed:
+            self.current_layer_opacity = current_layer_opacity
+            self.current_layer_blend_mode = current_layer_blend_mode
+            self.update_from_current_layer()
+
+    def update_from_current_layer(self):
+        """Update sliders to match current brush settings"""
+        if self.updating_from_layer:
+            return
+
+        app = Krita.instance()
+        self.updating_from_layer = True
+        try:
+            activeNode = (
+                app.activeDocument().activeNode() if app.activeDocument() else None
+            )
+            if activeNode:
+                layer_opacity = activeNode.opacity()
+                layer_opacity_percent = int(
+                    layer_opacity * 100 / 255
+                )  # Convert from 0-255 to 0-100
+                self.layer_opacity_slider.setValue(layer_opacity_percent)
+                self.layer_opacity_value_label.setText(f"{layer_opacity_percent}%")
+                self.current_layer_opacity = layer_opacity
+        except:
+            # Fallback if layer opacity method doesn't work
+            self.layer_opacity_slider.setValue(100)
+            self.layer_opacity_value_label.setText("100%")
+            self.current_layer_opacity = 255
+
+        # Get current layer blend mode
+        try:
+            activeNode = (
+                app.activeDocument().activeNode() if app.activeDocument() else None
+            )
+            if activeNode:
+                layer_blend_mode = activeNode.blendingMode()
+                if layer_blend_mode:
+                    # Find the blend mode in the combo box
+                    index = self.layer_blend_combo.findData(layer_blend_mode)
+                    if index >= 0:
+                        self.layer_blend_combo.setCurrentIndex(index)
+                    else:
+                        # If not found, add it to the combo
+                        self.layer_blend_combo.addItem(
+                            layer_blend_mode.replace("_", " ").title(),
+                            layer_blend_mode,
+                        )
+                        self.layer_blend_combo.setCurrentIndex(
+                            self.layer_blend_combo.count() - 1
+                        )
+                    self.current_layer_blend_mode = layer_blend_mode
+        except:
+            # Fallback if layer blend mode method doesn't exist
+            self.layer_blend_combo.setCurrentIndex(0)
+            self.current_layer_blend_mode = "normal"
+        self.updating_from_layer = False
+
+    def on_opacity_changed_debounced(self, value):
+        """Handle opacity slider with debouncing"""
         if self.updating_from_brush:
             return
 
-        self.size_value_label.setText(str(value))
-        self.current_brush_size = value  # Update tracked value
+        # Update UI immediately for responsive feel
+        self.opacity_value_label.setText(f"{value}%")
+
+        # Store the pending value
+        self.pending_opacity_value = value
+
+        # Restart timer (300ms delay)
+        self.opacity_debounce_timer.start(300)
+
+    def on_size_slider_changed_debounced(self, slider_value):
+        """Handle size slider with debouncing"""
+        if self.updating_from_brush:
+            return
+
+        brush_size = self.slider_to_brush_size(slider_value)
+
+        # Update UI immediately
+        self.size_value_label.setText(str(brush_size))
+
+        # Store pending value
+        self.pending_size_value = brush_size
+
+        # Restart timer (300ms delay)
+        self.size_debounce_timer.start(300)
+
+    def on_layer_opacity_changed_debounced(self, value):
+        """Handle layer opacity slider with debouncing"""
+        if self.updating_from_layer:
+            return
+
+        # Update UI immediately
+        self.layer_opacity_value_label.setText(f"{value}%")
+
+        # Store pending value
+        self.pending_layer_opacity_value = value
+
+        # Restart timer (300ms delay)
+        self.layer_opacity_debounce_timer.start(300)
+
+    # ==========================================
+    # Actual API calls - triggered after delay
+    # ==========================================
+    def apply_size_change(self):
+        """Apply the pending size change to Krita"""
+        if self.pending_size_value is None:
+            return
+
+        value = self.pending_size_value
+        self.current_brush_size = value
 
         app = Krita.instance()
         if app.activeWindow() and app.activeWindow().activeView():
             view = app.activeWindow().activeView()
             try:
-                # Set brush size directly on the view
                 view.setBrushSize(float(value))
             except Exception as e:
                 print(f"Error setting brush size: {e}")
 
-    def on_opacity_changed(self, value):
-        """Handle brush opacity change"""
-        if self.updating_from_brush:
+    def apply_opacity_change(self):
+        """Apply the pending opacity change to Krita"""
+        if self.pending_opacity_value is None:
             return
 
-        self.opacity_value_label.setText(f"{value}%")
-        opacity_float = value / 100.0  # Convert from 0-100 to 0-1
-        self.current_brush_opacity = opacity_float  # Update tracked value
+        value = self.pending_opacity_value
+        opacity_float = value / 100.0
+        self.current_brush_opacity = opacity_float
 
         app = Krita.instance()
         if app.activeWindow() and app.activeWindow().activeView():
             view = app.activeWindow().activeView()
             try:
-                # Set opacity directly on the view
                 view.setPaintingOpacity(opacity_float)
             except Exception as e:
                 print(f"Error setting brush opacity: {e}")
 
-    def on_layer_opacity_changed(self, value):
-        """Handle layer opacity change"""
-        if self.updating_from_layer:
+    def apply_layer_opacity_change(self):
+        """Apply the pending layer opacity change to Krita"""
+        if self.pending_layer_opacity_value is None:
             return
 
-        self.layer_opacity_value_label.setText(f"{value}%")
-        opacity_int = int(value * 255 / 100)  # Convert from 0-100 to 0-255
-        self.current_layer_opacity = opacity_int  # Update tracked value
+        value = self.pending_layer_opacity_value
+        opacity_int = int(value * 255 / 100)
+        self.current_layer_opacity = opacity_int
 
         app = Krita.instance()
         activeDoc = app.activeDocument()
         activeNode = activeDoc.activeNode() if activeDoc else None
         if activeNode:
             try:
-                # Set opacity directly on the active node
                 activeNode.setOpacity(opacity_int)
-                # Refresh the projection to update the canvas display
                 activeDoc.refreshProjection()
             except Exception as e:
                 print(f"Error setting layer opacity: {e}")
+
+    # ==========================================
 
     def on_rotation_changed(self, value):
         """Handle brush rotation change"""
