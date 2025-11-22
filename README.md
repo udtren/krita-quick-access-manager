@@ -83,15 +83,52 @@ There is no profile management function, but you can manually edit these files w
 If you want to reset or backup your settings, you can copy or edit these files directly.
 
 ## Quick Brush Adjustments Docker
-![Setting](./quick_access_manager/image/004.png)
+![Quick Brush Adjustments](./quick_access_manager/image/004.png)
 
-A separate docker specifically for brush adjustments and settings.
+A dedicated docker for quick brush and layer adjustments, providing instant access to commonly used painting settings.
+
+### Features
+
+**Brush Controls:**
+- **Size Slider**: Adjusts brush size from 1 to 1000 pixels with non-linear scaling for precise control of small brushes
+- **Opacity Slider**: Controls brush opacity (0-100%)
+- **Rotation Widget**: Circular dial for intuitive brush rotation adjustment (0-360°)
+- **Blend Mode Dropdown**: Quick access to change the current brush's blending mode
+- **Reset Button**: Instantly reloads the current brush preset to its default settings
+
+**Layer Controls:**
+- **Layer Opacity Slider**: Adjusts the active layer's opacity (0-100%)
+- **Layer Blend Mode Dropdown**: Change the active layer's blending mode
+
+**Color & Brush History:**
+- **Color History**: Quick access to recently used colors
+- **Brush History**: Switch between recently used brush presets
 
 ### Docker Toggle Buttons
-The buttons displayed at the bottom of the Docker can toggle the display On/Off for corresponding Dockers.
-Button management is handled through `quick_access_manager\config\docker_buttons.json`.
-If the configuration file does not exist, it will be created when Krita starts.
+The buttons at the bottom of the docker provide quick show/hide toggles for other Krita dockers (e.g., Tool Options, Layers, Brush Presets).
+
+**Configuration:**
+- Settings are stored in `quick_access_manager\config\docker_buttons.json`
+- The file is auto-created with default buttons on first launch if it doesn't exist
+- To use custom icons, place PNG files in `quick_access_manager\config\icon` (24×24px recommended)
+
+**Button Configuration Format:**
+```json
+{
+  "button_name": "Display Name",
+  "button_width": 50,
+  "button_icon": "filename.png",
+  "docker_keywords": ["keyword1", "keyword2"],
+  "description": "Tooltip text"
+}
+```
 
 ### Customization
-To change the font size on the Docker or modify the selectable Blend Modes,
-edit the parameters in `quick_access_manager\quick_brush_adjust_widgets\__init__.py`.
+To modify the docker's appearance and behavior, edit the parameters in:
+- `quick_access_manager\quick_brush_adjust_widgets\__init__.py`
+
+Available customization options:
+- Font sizes for labels and values
+- Number of color/brush history items
+- Icon sizes for history widgets
+- Available blend modes in dropdowns
