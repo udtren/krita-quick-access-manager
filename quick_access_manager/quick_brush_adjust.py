@@ -37,8 +37,10 @@ class BrushAdjustmentWidget(QWidget):
         self.current_brush_size = None
         self.current_brush_opacity = None  # Add opacity tracking
         self.current_brush_rotation = None
+        self.current_layer_opacity = None  # Add layer opacity tracking
         self.current_blend_mode = None  # Add blend mode tracking
         self.updating_from_brush = False  # Flag to prevent recursive updates
+        self.updating_from_layer = False
 
         # Load docker buttons configuration
         self.docker_buttons_config = self.load_docker_buttons_config()
@@ -208,14 +210,11 @@ class BrushAdjustmentWidget(QWidget):
         left_layout = QVBoxLayout()
         left_layout.setSpacing(6)
 
-        # Size row: Label | Slider | Value
+        # ============================================
+        # Size row: Slider | Value
+        # ============================================
         size_layout = QHBoxLayout()
         size_layout.setSpacing(6)
-
-        size_label = QLabel("Size:")
-        size_label.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};")
-        size_label.setFixedWidth(50)
-        size_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
         self.size_slider = QSlider(Qt.Horizontal)
         self.size_slider.setMinimum(0)
@@ -230,18 +229,15 @@ class BrushAdjustmentWidget(QWidget):
         self.size_value_label.setAlignment(Qt.AlignCenter)
         self.size_value_label.setFixedWidth(35)
 
-        size_layout.addWidget(size_label)
+        # size_layout.addWidget(size_label)
         size_layout.addWidget(self.size_slider, 1)
         size_layout.addWidget(self.size_value_label)
 
-        # Opacity row: Label | Slider | Value
+        # ============================================
+        # Opacity row: Brush Slider | Value, Node Slider | Value
+        # ============================================
         opacity_layout = QHBoxLayout()
         opacity_layout.setSpacing(6)
-
-        opacity_label = QLabel("Opacity:")
-        opacity_label.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};")
-        opacity_label.setFixedWidth(50)
-        opacity_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
         self.opacity_slider = QSlider(Qt.Horizontal)
         self.opacity_slider.setMinimum(0)
@@ -256,25 +252,36 @@ class BrushAdjustmentWidget(QWidget):
         self.opacity_value_label.setAlignment(Qt.AlignCenter)
         self.opacity_value_label.setFixedWidth(35)
 
-        opacity_layout.addWidget(opacity_label)
+        self.layer_opacity_slider = QSlider(Qt.Horizontal)
+        self.layer_opacity_slider.setMinimum(0)
+        self.layer_opacity_slider.setMaximum(100)
+        self.layer_opacity_slider.setValue(100)
+        self.layer_opacity_slider.valueChanged.connect(self.on_layer_opacity_changed)
+        self.layer_opacity_value_label = QLabel("100%")
+        self.layer_opacity_value_label.setStyleSheet(
+            f"font-size: {BRUSH_ADJUSTMENT_NUMBER_SIZE};"
+        )
+        self.layer_opacity_value_label.setAlignment(Qt.AlignCenter)
+        self.layer_opacity_value_label.setFixedWidth(35)
+
         opacity_layout.addWidget(self.opacity_slider, 1)
         opacity_layout.addWidget(self.opacity_value_label)
+        opacity_layout.addWidget(self.layer_opacity_slider, 1)
+        opacity_layout.addWidget(self.layer_opacity_value_label)
 
         # Add size and opacity to left layout
         left_layout.addLayout(size_layout)
         left_layout.addLayout(opacity_layout)
 
+        # ============================================
         # Blending Mode row: Label | Dropdown
+        # ============================================
         blend_layout = QHBoxLayout()
-        blend_layout.setSpacing(6)
-
-        blend_label = QLabel("Blend:")
-        blend_label.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};")
-        blend_label.setFixedWidth(50)
-        blend_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
         self.blend_combo = QComboBox()
         self.blend_combo.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};")
+        self.blend_combo.setEditable(True)
+        self.blend_combo.setMaximumWidth(150)
         # Add common blending modes
         blend_modes = BLENDE_MODES
         for mode in blend_modes:
@@ -282,10 +289,24 @@ class BrushAdjustmentWidget(QWidget):
 
         self.blend_combo.currentTextChanged.connect(self.on_blend_mode_changed)
 
-        blend_layout.addWidget(blend_label)
-        blend_layout.addWidget(self.blend_combo, 1)
+        self.layer_blend_combo = QComboBox()
+        self.layer_blend_combo.setStyleSheet(
+            f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};"
+        )
+        self.layer_blend_combo.setEditable(True)
+        self.layer_blend_combo.setMaximumWidth(150)
+        # Add common blending modes
+        blend_modes = BLENDE_MODES
+        for mode in blend_modes:
+            self.layer_blend_combo.addItem(mode.replace("_", " ").title(), mode)
 
-        # Reset button
+        blend_layout.addWidget(self.blend_combo)
+        blend_layout.addWidget(self.layer_blend_combo)
+        blend_layout.addStretch()
+
+        # ============================================
+        # Reset Button
+        # ============================================
         reset_btn = QPushButton("Reset")
         reset_btn.setStyleSheet(
             f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;"
@@ -296,7 +317,9 @@ class BrushAdjustmentWidget(QWidget):
         blend_layout.addWidget(reset_btn)
         left_layout.addLayout(blend_layout)
 
-        # Right side: Rotation widget and value
+        # ============================================
+        # Rotation widget on the right side
+        # ============================================
         right_layout = QHBoxLayout()
         right_layout.setSpacing(6)
         right_layout.setAlignment(Qt.AlignCenter)
@@ -315,8 +338,10 @@ class BrushAdjustmentWidget(QWidget):
         right_layout.addWidget(self.rotation_widget)
         right_layout.addWidget(self.rotation_value_label)
 
+        # ============================================
         # Add left and right layouts to main layout
-        main_layout.addLayout(left_layout, 1)  # Give left side more space
+        # ============================================
+        main_layout.addLayout(left_layout, 1)
         main_layout.addLayout(right_layout)
 
         # Add main layout to the widget
@@ -360,10 +385,10 @@ class BrushAdjustmentWidget(QWidget):
         """Convert slider value (0-100) to brush size (1-1000) with non-linear scaling"""
         if slider_value <= 70:
             # Map slider 0-70 to brush size 1-50
-            return int(1 + slider_value * 49 / 70)
+            return int(1 + slider_value * 99 / 70)
         else:
             # Map slider 71-100 to brush size 51-1000
-            return int(50 + (slider_value - 70) * 950 / 30)
+            return int(100 + (slider_value - 70) * 950 / 30)
 
     def on_size_slider_changed(self, slider_value):
         """Handle size slider change with non-linear conversion"""
@@ -385,6 +410,7 @@ class BrushAdjustmentWidget(QWidget):
                     current_opacity = None
                     current_rotation = None
                     current_blend_mode = None
+                    current_layer_opacity = None
 
                     try:
                         current_size = view.brushSize()
@@ -406,12 +432,24 @@ class BrushAdjustmentWidget(QWidget):
                     except:
                         pass
 
+                    # Get current layer opacity
+                    try:
+                        if app.activeDocument() and app.activeDocument().activeNode():
+                            current_layer_opacity = (
+                                app.activeDocument().activeNode().opacity()
+                            )
+                    except:
+                        pass
+
                     # Check if brush name changed OR if properties changed (for reload preset action)
                     brush_changed = brush_name != self.current_brush_name
                     size_changed = current_size != self.current_brush_size
                     opacity_changed = current_opacity != self.current_brush_opacity
                     rotation_changed = current_rotation != self.current_brush_rotation
                     blend_changed = current_blend_mode != self.current_blend_mode
+                    layer_opacity_changed = (
+                        current_layer_opacity != self.current_layer_opacity
+                    )
 
                     if (
                         brush_changed
@@ -419,12 +457,14 @@ class BrushAdjustmentWidget(QWidget):
                         or opacity_changed
                         or rotation_changed
                         or blend_changed
+                        or layer_opacity_changed
                     ):
                         self.current_brush_name = brush_name
                         self.current_brush_size = current_size
                         self.current_brush_opacity = current_opacity
                         self.current_brush_rotation = current_rotation
                         self.current_blend_mode = current_blend_mode
+                        self.current_layer_opacity = current_layer_opacity
                         self.update_from_current_brush()
             except:
                 pass
@@ -497,6 +537,27 @@ class BrushAdjustmentWidget(QWidget):
                 self.blend_combo.setCurrentIndex(0)  # Set to "Normal"
                 self.current_blend_mode = "normal"
 
+            # Get current layer opacity
+            self.updating_from_layer = True
+            try:
+                activeNode = (
+                    app.activeDocument().activeNode() if app.activeDocument() else None
+                )
+                if activeNode:
+                    layer_opacity = activeNode.opacity()
+                    layer_opacity_percent = int(
+                        layer_opacity * 100 / 255
+                    )  # Convert from 0-255 to 0-100
+                    self.layer_opacity_slider.setValue(layer_opacity_percent)
+                    self.layer_opacity_value_label.setText(f"{layer_opacity_percent}%")
+                    self.current_layer_opacity = layer_opacity
+            except:
+                # Fallback if layer opacity method doesn't work
+                self.layer_opacity_slider.setValue(100)
+                self.layer_opacity_value_label.setText("100%")
+                self.current_layer_opacity = 255
+            self.updating_from_layer = False
+
         self.updating_from_brush = False
 
     def on_size_changed(self, value):
@@ -533,6 +594,27 @@ class BrushAdjustmentWidget(QWidget):
                 view.setPaintingOpacity(opacity_float)
             except Exception as e:
                 print(f"Error setting brush opacity: {e}")
+
+    def on_layer_opacity_changed(self, value):
+        """Handle layer opacity change"""
+        if self.updating_from_layer:
+            return
+
+        self.layer_opacity_value_label.setText(f"{value}%")
+        opacity_int = int(value * 255 / 100)  # Convert from 0-100 to 0-255
+        self.current_layer_opacity = opacity_int  # Update tracked value
+
+        app = Krita.instance()
+        activeDoc = app.activeDocument()
+        activeNode = activeDoc.activeNode() if activeDoc else None
+        if activeNode:
+            try:
+                # Set opacity directly on the active node
+                activeNode.setOpacity(opacity_int)
+                # Refresh the projection to update the canvas display
+                activeDoc.refreshProjection()
+            except Exception as e:
+                print(f"Error setting layer opacity: {e}")
 
     def on_rotation_changed(self, value):
         """Handle brush rotation change"""
