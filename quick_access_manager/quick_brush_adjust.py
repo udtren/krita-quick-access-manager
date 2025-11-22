@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
     QDockWidget,
 )
 from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QIcon, QPixmap
 from krita import Krita, DockWidgetFactory, DockWidgetFactoryBase  # type: ignore
 import json
 import os
@@ -92,18 +93,21 @@ class BrushAdjustmentWidget(QWidget):
                 {
                     "button_name": "Tool",
                     "button_width": 40,
+                    "button_icon": "",
                     "docker_keywords": ["tool", "option"],
                     "description": "Tool Options Docker",
                 },
                 {
                     "button_name": "Layers",
                     "button_width": 50,
+                    "button_icon": "",
                     "docker_keywords": ["layer"],
                     "description": "Layers Docker",
                 },
                 {
                     "button_name": "Brush",
                     "button_width": 50,
+                    "button_icon": "",
                     "docker_keywords": ["brush", "preset"],
                     "description": "Brush Presets Docker",
                 },
@@ -119,11 +123,36 @@ class BrushAdjustmentWidget(QWidget):
         print(f"Creating {len(docker_buttons)} docker buttons")
 
         for button_config in docker_buttons:
-            button = QPushButton(button_config["button_name"])
-            button.setStyleSheet(
-                f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;"
-            )
-            button.setFixedWidth(button_config["button_width"])
+            button_icon = button_config.get("button_icon", "")
+
+            # Check if button_icon is empty
+            if not button_icon:
+                # Create button with text
+                button = QPushButton(button_config["button_name"])
+                button.setStyleSheet(
+                    f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;"
+                )
+                button.setFixedWidth(button_config["button_width"])
+            else:
+                # Create button with icon
+                button = QPushButton()
+                icon_path = os.path.join(
+                    os.path.dirname(__file__), "config", "icon", button_icon
+                )
+
+                if os.path.exists(icon_path):
+                    icon = QIcon(icon_path)
+                    button.setIcon(icon)
+                    button.setFixedSize(24, 24)
+                else:
+                    # Fallback to text if icon not found
+                    print(f"Icon not found: {icon_path}, using text instead")
+                    button.setText(button_config["button_name"])
+                    button.setStyleSheet(
+                        f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE}; padding: 2px 8px;"
+                    )
+                    button.setFixedWidth(button_config["button_width"])
+
             button.setToolTip(button_config["description"])
 
             # Create a closure to capture the button configuration
