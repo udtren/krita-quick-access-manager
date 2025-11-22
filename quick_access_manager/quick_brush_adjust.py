@@ -235,10 +235,12 @@ class BrushAdjustmentWidget(QWidget):
         size_layout.addWidget(self.size_value_label)
 
         # ============================================
-        # Opacity row: Brush Slider | Value, Node Slider | Value
+        # Bursh Section: Opacity Slider, Blend Mode
         # ============================================
-        opacity_layout = QHBoxLayout()
-        opacity_layout.setSpacing(6)
+        brush_and_layer_layout = QHBoxLayout()
+        brush_section_layout = QVBoxLayout()
+        brush_opacity_layout = QHBoxLayout()
+        brush_blend_reset_layout = QHBoxLayout()
 
         self.opacity_slider = QSlider(Qt.Horizontal)
         self.opacity_slider.setMinimum(0)
@@ -253,32 +255,6 @@ class BrushAdjustmentWidget(QWidget):
         self.opacity_value_label.setAlignment(Qt.AlignCenter)
         self.opacity_value_label.setFixedWidth(35)
 
-        self.layer_opacity_slider = QSlider(Qt.Horizontal)
-        self.layer_opacity_slider.setMinimum(0)
-        self.layer_opacity_slider.setMaximum(100)
-        self.layer_opacity_slider.setValue(100)
-        self.layer_opacity_slider.valueChanged.connect(self.on_layer_opacity_changed)
-        self.layer_opacity_value_label = QLabel("100%")
-        self.layer_opacity_value_label.setStyleSheet(
-            f"font-size: {BRUSH_ADJUSTMENT_NUMBER_SIZE};"
-        )
-        self.layer_opacity_value_label.setAlignment(Qt.AlignCenter)
-        self.layer_opacity_value_label.setFixedWidth(35)
-
-        opacity_layout.addWidget(self.opacity_slider, 1)
-        opacity_layout.addWidget(self.opacity_value_label)
-        opacity_layout.addWidget(self.layer_opacity_slider, 1)
-        opacity_layout.addWidget(self.layer_opacity_value_label)
-
-        # Add size and opacity to left layout
-        left_layout.addLayout(size_layout)
-        left_layout.addLayout(opacity_layout)
-
-        # ============================================
-        # Blending Mode row: Label | Dropdown
-        # ============================================
-        blend_layout = QHBoxLayout()
-
         self.blend_combo = QComboBox()
         self.blend_combo.setStyleSheet(f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};")
         self.blend_combo.setEditable(True)
@@ -289,24 +265,6 @@ class BrushAdjustmentWidget(QWidget):
             self.blend_combo.addItem(mode.replace("_", " ").title(), mode)
 
         self.blend_combo.currentTextChanged.connect(self.on_blend_mode_changed)
-
-        self.layer_blend_combo = QComboBox()
-        self.layer_blend_combo.setStyleSheet(
-            f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};"
-        )
-        self.layer_blend_combo.setEditable(True)
-        self.layer_blend_combo.setMaximumWidth(150)
-        # Add common blending modes
-        blend_modes = BLENDE_MODES
-        for mode in blend_modes:
-            self.layer_blend_combo.addItem(mode.replace("_", " ").title(), mode)
-
-        self.layer_blend_combo.currentTextChanged.connect(
-            self.on_layer_blend_mode_changed
-        )
-
-        blend_layout.addWidget(self.blend_combo)
-        blend_layout.addWidget(self.layer_blend_combo)
 
         # ============================================
         # Reset Button
@@ -326,9 +284,63 @@ class BrushAdjustmentWidget(QWidget):
         reset_btn.setToolTip("Reset brush settings")
         reset_btn.clicked.connect(self.reset_brush_settings)
 
-        blend_layout.addWidget(reset_btn)
-        blend_layout.addStretch()
-        left_layout.addLayout(blend_layout)
+        # ============================================
+        # Layer Section: Opacity Slider, Blend Mode
+        # ============================================
+        layer_section_layout = QVBoxLayout()
+        layer_opacity_layout = QHBoxLayout()
+
+        self.layer_opacity_slider = QSlider(Qt.Horizontal)
+        self.layer_opacity_slider.setMinimum(0)
+        self.layer_opacity_slider.setMaximum(100)
+        self.layer_opacity_slider.setValue(100)
+        self.layer_opacity_slider.valueChanged.connect(self.on_layer_opacity_changed)
+        self.layer_opacity_value_label = QLabel("100%")
+        self.layer_opacity_value_label.setStyleSheet(
+            f"font-size: {BRUSH_ADJUSTMENT_NUMBER_SIZE};"
+        )
+        self.layer_opacity_value_label.setAlignment(Qt.AlignCenter)
+        self.layer_opacity_value_label.setFixedWidth(35)
+
+        self.layer_blend_combo = QComboBox()
+        self.layer_blend_combo.setStyleSheet(
+            f"font-size: {BRUSH_ADJUSTMENT_FONT_SIZE};"
+        )
+        self.layer_blend_combo.setEditable(True)
+        self.layer_blend_combo.setMaximumWidth(150)
+        # Add common blending modes
+        blend_modes = BLENDE_MODES
+        for mode in blend_modes:
+            self.layer_blend_combo.addItem(mode.replace("_", " ").title(), mode)
+
+        self.layer_blend_combo.currentTextChanged.connect(
+            self.on_layer_blend_mode_changed
+        )
+
+        # ============================================
+        # Assemble each section
+        # ============================================
+
+        brush_opacity_layout.addWidget(self.opacity_slider, 1)
+        brush_opacity_layout.addWidget(self.opacity_value_label)
+        brush_blend_reset_layout.addWidget(self.blend_combo)
+        brush_blend_reset_layout.addWidget(reset_btn)
+        brush_section_layout.addLayout(brush_opacity_layout)
+        brush_section_layout.addLayout(brush_blend_reset_layout)
+        brush_section_layout.addStretch()
+
+        layer_opacity_layout.addWidget(self.layer_opacity_slider, 1)
+        layer_opacity_layout.addWidget(self.layer_opacity_value_label)
+        layer_section_layout.addLayout(layer_opacity_layout)
+        layer_section_layout.addWidget(self.layer_blend_combo)
+        layer_section_layout.addStretch()
+
+        brush_and_layer_layout.addLayout(brush_section_layout)
+        brush_and_layer_layout.addLayout(layer_section_layout)
+
+        left_layout.addLayout(size_layout)
+        left_layout.addLayout(brush_and_layer_layout)
+        left_layout.addStretch()
 
         # ============================================
         # Rotation widget on the right side
