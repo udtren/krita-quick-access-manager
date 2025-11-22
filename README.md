@@ -7,6 +7,12 @@ The purpose of creating this plugin was to have a function similar to the Quick 
 ![Sample](./quick_access_manager/image/000.png)
 ---
 
+## Support
+
+If you find this tool helpful, you can support its development:
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/toma_omito)
+
 ## How to Add a Brush Preset
 1. In the "Quick Brush Sets" section, activate the grid you want to add to.
 2. Select the brush preset you want to add from Krita's brush preset.
