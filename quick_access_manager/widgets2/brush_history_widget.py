@@ -67,8 +67,11 @@ class BrushHistoryWidget(QWidget):
             else:
                 row2_layout.addWidget(brush_btn)
 
+        row1_layout.addStretch()
+        row2_layout.addStretch()
         layout.addLayout(row1_layout)
         layout.addLayout(row2_layout)
+        layout.addStretch()
         self.setLayout(layout)
 
     def generate_brush_thumbnail(self, brush_preset, size=None):
