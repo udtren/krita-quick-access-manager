@@ -57,8 +57,11 @@ class ColorHistoryWidget(QWidget):
             else:
                 row2_layout.addWidget(color_btn)
 
+        row1_layout.addStretch()
+        row2_layout.addStretch()
         layout.addLayout(row1_layout)
         layout.addLayout(row2_layout)
+        layout.addStretch()
         self.setLayout(layout)
 
     def check_color_change(self):
