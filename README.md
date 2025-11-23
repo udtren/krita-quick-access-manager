@@ -57,6 +57,8 @@ A gesture-based control system that allows you to trigger actions using keyboard
 
 ### How to Use
 
+> **First-time setup**: When opening the gesture configuration dialog for the first time, you may see an empty "1" tab. Ignore it and simply click the "+" button to create your first gesture page.
+
 1. **Open Configuration**: Click the "Gesture" button in the Quick Access Manager docker to open the gesture configuration dialog
 
 2. **Configure Trigger Key**: 

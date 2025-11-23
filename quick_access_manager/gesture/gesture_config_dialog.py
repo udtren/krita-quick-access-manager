@@ -726,20 +726,4 @@ class GestureConfigDialog(QDialog):
         """Handle dialog rejection (Cancel button)"""
         # Notify gesture system that config dialog is no longer active
         set_config_dialog_active(False)
-        super().reject()
-
-    def closeEvent(self, event):
-        """Handle dialog close event"""
-        # Notify gesture system that config dialog is no longer active
-        set_config_dialog_active(False)
-        super().closeEvent(event)
-
-
-# if __name__ == "__main__":
-#     import sys
-#     from PyQt5.QtWidgets import QApplication
-
-#     app = QApplication(sys.argv)
-#     dialog = GestureConfigDialog()
-#     dialog.show()
-#     sys.exit(app.exec_())
+        self.reject()

@@ -29,11 +29,9 @@ class GestureDetector(QObject):
         self.event_filter_installed = False
         self.window_created_connected = False
         self.config_dialog_active = False  # Track if config dialog is open
+        self.event_filter_call_count = 0  # Track eventFilter calls to detect recursion
+        self.max_event_filter_depth = 0  # Track max recursion depth
         self.load_threshold_from_settings()
-
-        # Gesture uses pen hover mode - tracks pen movement without touching tablet
-        # When gesture key is pressed, starts tracking immediately
-        # When gesture key is released, executes the gesture based on direction
 
     def load_gesture_configs(self):
         """Load all gesture configurations from config directory"""
@@ -119,16 +117,20 @@ class GestureDetector(QObject):
     def install_event_filter(self):
         """Install event filter to capture key and mouse events"""
         if self.event_filter_installed:
+            write_log("⚠️ Event filter already installed, skipping")
             return
 
         try:
             app = Krita.instance()
+            write_log(f"Installing event filter... App: {app}")
             if app.activeWindow():
                 main_window = app.activeWindow().qwindow()
+                write_log(f"Main window: {main_window}")
                 if main_window:
                     QApplication.instance().installEventFilter(self)
                     self.event_filter_installed = True
-                    write_log("✅ Gesture event filter installed")
+                    write_log("✅ Gesture event filter installed successfully")
+                    write_log(f"Event filter object: {self}")
                 else:
                     write_log("⚠️ Could not get main window for event filter")
             else:
@@ -173,19 +175,43 @@ class GestureDetector(QObject):
 
     def uninstall_event_filter(self):
         """Uninstall event filter"""
+        write_log(
+            f"Attempting to uninstall event filter. Installed: {self.event_filter_installed}"
+        )
         if self.event_filter_installed:
             try:
                 QApplication.instance().removeEventFilter(self)
                 self.event_filter_installed = False
-                write_log("Gesture event filter uninstalled")
+                write_log("✅ Gesture event filter uninstalled successfully")
+                write_log(
+                    f"Max recursion depth reached during session: {self.max_event_filter_depth}"
+                )
             except Exception as e:
                 write_log(f"Error uninstalling event filter: {e}")
 
     def eventFilter(self, _obj, event):
         """Filter events to detect key+mouse gestures"""
+        # Track recursion depth
+        self.event_filter_call_count += 1
+        current_depth = self.event_filter_call_count
+
+        # Detect potential stack overflow
+        if current_depth > self.max_event_filter_depth:
+            self.max_event_filter_depth = current_depth
+            if current_depth > 10:
+                write_log(f"⚠️ WARNING: eventFilter recursion depth: {current_depth}")
+
+        if current_depth > 100:
+            write_log(
+                f"🔴 CRITICAL: eventFilter recursion depth exceeded 100! Depth: {current_depth}"
+            )
+            self.event_filter_call_count -= 1
+            return False
+
         try:
             # Ignore events when config dialog is active
             if self.config_dialog_active:
+                self.event_filter_call_count -= 1
                 return False
 
             event_type = event.type()
@@ -236,6 +262,9 @@ class GestureDetector(QObject):
             import traceback
 
             traceback.print_exc()
+        finally:
+            # Always decrement counter when exiting
+            self.event_filter_call_count -= 1
 
         # Always pass events through
         return False

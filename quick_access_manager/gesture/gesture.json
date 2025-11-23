@@ -1,4 +1,4 @@
 {
-    "enabled": true,
+    "enabled": false,
     "minimum_pixels_to_move": 20
 }
