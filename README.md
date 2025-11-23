@@ -44,7 +44,7 @@ Edit the following value to change shortcut key and icon/button size:
     - `ActionButtonSizeY`
 
 ## Gesture System
-![Gesture Configuration](./quick_access_manager\image\gesture.png)
+![Gesture Configuration](./quick_access_manager/image/gesture.png)
 
 A gesture-based control system that allows you to trigger actions using keyboard + mouse movements.
 
