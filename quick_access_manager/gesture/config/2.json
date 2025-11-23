@@ -1,0 +1,9 @@
+{
+    "gesture_key": "Z",
+    "up": {
+        "gesture_type": "docker_toggle",
+        "parameters": {
+            "docker_name": "Palette"
+        }
+    }
+}

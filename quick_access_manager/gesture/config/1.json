@@ -1,5 +1,10 @@
 {
-    "left_up": {},
+    "left_up": {
+        "gesture_type": "action",
+        "parameters": {
+            "action_id": "fill_selection_foreground_color"
+        }
+    },
     "left": {},
     "left_down": {
         "gesture_type": "action",
@@ -10,16 +15,33 @@
     "up": {
         "gesture_type": "docker_toggle",
         "parameters": {
-            "docker_name": "lasso"
+            "docker_name": "Toolbox"
         }
     },
-    "down": {},
+    "down": {
+        "gesture_type": "action",
+        "parameters": {
+            "action_id": "invert_selection"
+        }
+    },
     "right_up": {
         "gesture_type": "brush",
         "parameters": {
-            "brush_name": "set_01"
+            "brush_name": "Paint Test 2"
         }
     },
-    "right": {},
-    "right_down": {}
+    "right": {
+        "gesture_type": "action",
+        "parameters": {
+            "action_id": "KisToolSelectOutline"
+        }
+    },
+    "right_down": {},
+    "gesture_key": "D",
+    "center": {
+        "gesture_type": "action",
+        "parameters": {
+            "action_id": "KisToolSelectOutline"
+        }
+    }
 }
