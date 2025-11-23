@@ -726,4 +726,4 @@ class GestureConfigDialog(QDialog):
         """Handle dialog rejection (Cancel button)"""
         # Notify gesture system that config dialog is no longer active
         set_config_dialog_active(False)
-        self.reject()
+        super().reject()
