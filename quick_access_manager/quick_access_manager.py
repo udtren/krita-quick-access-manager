@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
 from .dialogs.settings_dialog import CommonConfigDialog
+from .gesture.gesture_config_dialog import GestureConfigDialog
 from .utils.styles import docker_btn_style
 from .utils.config_utils import (
     get_spacing_between_grids,
@@ -87,6 +88,13 @@ class QuickAccessDockerWidget(QDockWidget):
         add_grid_button.setFixedWidth(70)
         button_layout_1.addWidget(add_grid_button)
 
+        # Gesture button
+        gesture_button = QPushButton("Gesture")
+        gesture_button.setStyleSheet(docker_btn_style())
+        gesture_button.clicked.connect(self.open_gesture_config)
+        gesture_button.setFixedWidth(70)
+        button_layout_1.addWidget(gesture_button)
+
         # Add Setting button
         setting_btn = QPushButton("Setting")
         setting_btn.setStyleSheet(docker_btn_style())
@@ -123,6 +131,13 @@ class QuickAccessDockerWidget(QDockWidget):
             # Set first grid active
             if self.grids:
                 self.set_active_grid(self.grids[0])
+
+    def open_gesture_config(self):
+        """Open gesture configuration dialog"""
+        dialog = GestureConfigDialog()
+        dialog.show()  # Non-blocking - use show() instead of exec_()
+        # Store reference to keep dialog alive
+        dialog.setAttribute(Qt.WA_DeleteOnClose, False)
 
     def show_settings_dialog(self):
         dlg = CommonConfigDialog(self.common_config_path, self)

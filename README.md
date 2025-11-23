@@ -2,7 +2,6 @@
 
 A plugin for Krita that provides quick access to brush presets and shortcut management.
 
-The purpose of creating this plugin was to have a function similar to the Quick Access Palette in Clip Studio Paint.
 
 ![Sample](./quick_access_manager/image/000.png)
 ---
@@ -43,6 +42,106 @@ Edit the following value to change shortcut key and icon/button size:
     - `ActionsPopupShortcut`
     - `ActionButtonSizeX`
     - `ActionButtonSizeY`
+
+## Gesture System
+![Gesture Configuration](./quick_access_manager\image\gesture.png)
+
+A gesture-based control system that allows you to trigger actions using keyboard + mouse movements.
+
+### Features
+- **9-Directional Gestures**: Execute different actions based on 8 directional swipes  plus a center tap action
+- **Multiple Gesture Pages**: Each with its own trigger key
+- **Gesture Actions**: Support for brush presets, actions, and docker visibility toggles
+- **Customizable Sensitivity**: Adjust the minimum pixel movement required to trigger gestures
+- **Visual Configuration**: Intuitive UI with arrow icons and action previews
+
+### How to Use
+
+> **First-time setup**: When opening the gesture configuration dialog for the first time, you may see an empty "1" tab. Ignore it and simply click the "+" button to create your first gesture page.
+
+1. **Open Configuration**: Click the "Gesture" button in the Quick Access Manager docker to open the gesture configuration dialog
+
+2. **Configure Trigger Key**: 
+   - Click the center "Config Key" button
+   - Press any key (A-Z, 0-9, F1-F12, etc.) to assign it as the gesture trigger
+   - Configure the center tap action (executed when you press and release the key without moving)
+   - **Important**: If the key is already assigned to a Krita shortcut, you must remove it first, as Krita's native shortcuts take priority
+
+3. **Configure Directional Gestures**:
+   - Click any arrow button to configure an action for that direction
+   - Choose from:
+     - **Brush Preset**: Select the currently active brush
+     - **Action**: Choose any Krita action from the list
+     - **Docker Toggle**: Show/hide a specific docker by name
+     - **None**: Clear the gesture configuration
+
+4. **Add More Gesture Pages**:
+   - Click the "+" button to create additional gesture configurations
+   - Each page can have its own trigger key and 9 actions
+
+5. **Settings**:
+   - Click the "Settings" button to access:
+     - **Enable Gesture System**: Toggle the entire gesture system on/off (Require Krita restart)
+     - **Minimum Pixels to Move**: Adjust gesture sensitivity (1-200 pixels)
+
+6. **Execute Gestures**:
+   - Press and hold the configured trigger key
+   - Move(hover) your mouse in one of the 8 directions
+   - Release the key to execute the action
+   - Or simply press and release without moving to trigger the center action
+
+### Status Indicator
+- **Green**: Gesture system is enabled and running
+- **Gray**: Gesture system is disabled or not initialized
+
+### Tips
+- The dialog is modeless, allowing you to continue working in Krita while it's open
+- Gesture detection is automatically disabled while the configuration dialog is active
+- All configurations are saved automatically when you click "Save"
+- Configuration files are stored in `quick_access_manager\gesture\config\`
+
+### External API
+
+The gesture system provides a public API for external plugins to pause and resume gesture detection when needed:
+
+```python
+from quick_access_manager.gesture.gesture_main import (
+    pause_gesture_event_filter,
+    resume_gesture_event_filter,
+    is_gesture_filter_paused
+)
+
+# Pause gesture detection (completely removes event filter)
+pause_gesture_event_filter()
+
+# Resume gesture detection (reinstalls event filter)
+resume_gesture_event_filter()
+
+# Check if gesture filter is currently paused
+if is_gesture_filter_paused():
+    print("Gesture detection is paused")
+```
+
+**Use Cases:**
+- Pause gestures during heavy document operations to prevent UI freezing
+- Disable gestures when other plugins need exclusive keyboard/mouse control
+- Temporarily suspend gesture detection during critical operations
+
+**Example:**
+```python
+try:
+    pause_gesture_event_filter()
+    # Perform heavy operations (e.g., document loading, batch processing)
+    open_document(file_path)
+finally:
+    # Always resume in finally block to ensure gestures are re-enabled
+    resume_gesture_event_filter()
+```
+
+**Technical Details:**
+- `pause_gesture_event_filter()`: Calls `QApplication.removeEventFilter()` for zero overhead when paused
+- `resume_gesture_event_filter()`: Calls `QApplication.installEventFilter()` to restore gesture detection
+- When paused, the event filter is completely removed from Qt's event chain, eliminating all processing overhead
 
 ## Global Config
 Use the "Setting" button to customize the UI and layout, including the default font color, background color, and font size for shortcut buttons.
