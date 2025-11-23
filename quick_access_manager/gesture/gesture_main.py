@@ -189,6 +189,40 @@ class GestureDetector(QObject):
             except Exception as e:
                 write_log(f"Error uninstalling event filter: {e}")
 
+    def pause_event_filter(self):
+        """Pause event filtering by removing the filter (API for external use)"""
+        if self.event_filter_installed:
+            try:
+                QApplication.instance().removeEventFilter(self)
+                self.event_filter_installed = False
+                write_log("⏸️ Gesture event filter paused (removed from QApplication)")
+            except Exception as e:
+                write_log(f"Error pausing event filter: {e}")
+        else:
+            write_log("⚠️ Event filter not installed, cannot pause")
+
+    def resume_event_filter(self):
+        """Resume event filtering by re-installing the filter (API for external use)"""
+        if not self.event_filter_installed:
+            try:
+                app = Krita.instance()
+                if app.activeWindow():
+                    main_window = app.activeWindow().qwindow()
+                    if main_window:
+                        QApplication.instance().installEventFilter(self)
+                        self.event_filter_installed = True
+                        write_log(
+                            "▶️ Gesture event filter resumed (re-installed to QApplication)"
+                        )
+                    else:
+                        write_log("⚠️ Cannot resume: No main window available")
+                else:
+                    write_log("⚠️ Cannot resume: No active window")
+            except Exception as e:
+                write_log(f"Error resuming event filter: {e}")
+        else:
+            write_log("⚠️ Event filter already installed, cannot resume")
+
     def eventFilter(self, _obj, event):
         """Filter events to detect key+mouse gestures"""
         # Track recursion depth
@@ -452,6 +486,41 @@ def set_config_dialog_active(active):
     manager = get_gesture_manager()
     if manager.detector:
         manager.detector.set_config_dialog_active(active)
+
+
+def pause_gesture_event_filter():
+    """
+    Pause the gesture event filter (API for external use).
+    Call this before operations that might trigger many events.
+    """
+    manager = get_gesture_manager()
+    if manager.detector:
+        manager.detector.pause_event_filter()
+    else:
+        write_log("⚠️ Cannot pause: Gesture detector not initialized")
+
+
+def resume_gesture_event_filter():
+    """
+    Resume the gesture event filter (API for external use).
+    Call this after operations that required the filter to be paused.
+    """
+    manager = get_gesture_manager()
+    if manager.detector:
+        manager.detector.resume_event_filter()
+    else:
+        write_log("⚠️ Cannot resume: Gesture detector not initialized")
+
+
+def is_gesture_filter_paused():
+    """
+    Check if the gesture event filter is currently paused (not installed).
+    Returns True if paused (not installed), False if active (installed), None if detector not initialized.
+    """
+    manager = get_gesture_manager()
+    if manager.detector:
+        return not manager.detector.event_filter_installed
+    return None
 
 
 def is_gesture_enabled():

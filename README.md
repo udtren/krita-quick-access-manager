@@ -100,6 +100,49 @@ A gesture-based control system that allows you to trigger actions using keyboard
 - All configurations are saved automatically when you click "Save"
 - Configuration files are stored in `quick_access_manager\gesture\config\`
 
+### External API
+
+The gesture system provides a public API for external plugins to pause and resume gesture detection when needed:
+
+```python
+from quick_access_manager.gesture.gesture_main import (
+    pause_gesture_event_filter,
+    resume_gesture_event_filter,
+    is_gesture_filter_paused
+)
+
+# Pause gesture detection (completely removes event filter)
+pause_gesture_event_filter()
+
+# Resume gesture detection (reinstalls event filter)
+resume_gesture_event_filter()
+
+# Check if gesture filter is currently paused
+if is_gesture_filter_paused():
+    print("Gesture detection is paused")
+```
+
+**Use Cases:**
+- Pause gestures during heavy document operations to prevent UI freezing
+- Disable gestures when other plugins need exclusive keyboard/mouse control
+- Temporarily suspend gesture detection during critical operations
+
+**Example:**
+```python
+try:
+    pause_gesture_event_filter()
+    # Perform heavy operations (e.g., document loading, batch processing)
+    open_document(file_path)
+finally:
+    # Always resume in finally block to ensure gestures are re-enabled
+    resume_gesture_event_filter()
+```
+
+**Technical Details:**
+- `pause_gesture_event_filter()`: Calls `QApplication.removeEventFilter()` for zero overhead when paused
+- `resume_gesture_event_filter()`: Calls `QApplication.installEventFilter()` to restore gesture detection
+- When paused, the event filter is completely removed from Qt's event chain, eliminating all processing overhead
+
 ## Global Config
 Use the "Setting" button to customize the UI and layout, including the default font color, background color, and font size for shortcut buttons.
 ![Setting](./quick_access_manager/image/image3.png)
