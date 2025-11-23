@@ -1,0 +1,25 @@
+{
+    "left_up": {},
+    "left": {},
+    "left_down": {
+        "gesture_type": "action",
+        "parameters": {
+            "action_id": "Select Normal Blending Mode"
+        }
+    },
+    "up": {
+        "gesture_type": "docker_toggle",
+        "parameters": {
+            "docker_name": "lasso"
+        }
+    },
+    "down": {},
+    "right_up": {
+        "gesture_type": "brush",
+        "parameters": {
+            "brush_name": "set_01"
+        }
+    },
+    "right": {},
+    "right_down": {}
+}
