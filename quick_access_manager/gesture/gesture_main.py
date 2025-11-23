@@ -25,9 +25,10 @@ class GestureDetector(QObject):
         self.gesture_active = False
         self.start_pos = None
         self.last_pos = None
-        self.threshold = 20  # Minimum pixels to move before registering a gesture
+        self.threshold = 20  # Default minimum pixels, will be loaded from settings
         self.event_filter_installed = False
         self.window_created_connected = False
+        self.load_threshold_from_settings()
 
         # Gesture uses pen hover mode - tracks pen movement without touching tablet
         # When gesture key is pressed, starts tracking immediately
@@ -99,6 +100,20 @@ class GestureDetector(QObject):
                 write_log(f"Error loading gesture config {json_file}: {e}")
 
         write_log(f"Total gesture configs loaded: {len(self.gesture_configs)}")
+
+    def load_threshold_from_settings(self):
+        """Load minimum_pixels_to_move from gesture.json settings"""
+        try:
+            settings_path = os.path.join(os.path.dirname(__file__), "gesture.json")
+            if os.path.exists(settings_path):
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+                    self.threshold = settings.get("minimum_pixels_to_move", 20)
+                    write_log(f"Loaded threshold from settings: {self.threshold}")
+            else:
+                write_log("No gesture.json found, using default threshold: 20")
+        except Exception as e:
+            write_log(f"Error loading threshold from settings: {e}")
 
     def install_event_filter(self):
         """Install event filter to capture key and mouse events"""

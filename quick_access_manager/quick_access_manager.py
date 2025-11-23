@@ -134,8 +134,10 @@ class QuickAccessDockerWidget(QDockWidget):
 
     def open_gesture_config(self):
         """Open gesture configuration dialog"""
-        dlg = GestureConfigDialog(self)
-        dlg.exec_()
+        dialog = GestureConfigDialog()
+        dialog.show()  # Non-blocking - use show() instead of exec_()
+        # Store reference to keep dialog alive
+        dialog.setAttribute(Qt.WA_DeleteOnClose, False)
 
     def show_settings_dialog(self):
         dlg = CommonConfigDialog(self.common_config_path, self)

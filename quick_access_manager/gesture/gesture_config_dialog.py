@@ -148,6 +148,11 @@ class GestureConfigDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        # Make the dialog modeless and stay on top
+        self.setModal(False)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+
         self.setWindowTitle("Gesture Configuration")
         self.resize(600, 500)
 
@@ -225,12 +230,23 @@ class GestureConfigDialog(QDialog):
         )
 
         # Tab widget for different config files
+        top_layout = QHBoxLayout()
         self.tab_widget = QTabWidget()
-        main_layout.addWidget(self.tab_widget)
 
-        # Bottom buttons: Indicator, Enable/Disable, Plus, Save, Cancel
-        btn_layout = QHBoxLayout()
+        # Plus button to add new config
+        self.plus_btn = QPushButton("+")
+        self.plus_btn.setFixedSize(30, 30)
+        self.plus_btn.setToolTip("Add new gesture config")
+        self.plus_btn.clicked.connect(self.add_new_config)
 
+        top_layout.addWidget(self.plus_btn)
+
+        top_layout.addStretch()
+
+        # Settings button
+        self.settings_btn = QPushButton("Settings")
+        self.settings_btn.clicked.connect(self.open_settings)
+        top_layout.addWidget(self.settings_btn)
         # Status indicator (green/gray circle)
         self.status_indicator = QLabel()
         self.status_indicator.setFixedSize(20, 20)
@@ -238,27 +254,20 @@ class GestureConfigDialog(QDialog):
             """
             QLabel {
                 background-color: #808080;
-                border-radius: 10px;
+                border-radius: 2px;
                 border: 2px solid #555;
             }
         """
         )
         self.status_indicator.setToolTip("Gesture system status")
-        btn_layout.addWidget(self.status_indicator)
+        top_layout.addWidget(self.status_indicator)
 
-        # Enable/Disable gesture system button
-        self.toggle_btn = QPushButton("Enable Gesture System")
-        self.toggle_btn.clicked.connect(self.toggle_gesture_system)
-        btn_layout.addWidget(self.toggle_btn)
+        main_layout.addLayout(top_layout)
 
-        # Plus button to add new config
-        self.plus_btn = QPushButton("+")
-        self.plus_btn.setFixedSize(30, 30)
-        self.plus_btn.setToolTip("Add new gesture config")
-        self.plus_btn.clicked.connect(self.add_new_config)
-        btn_layout.addWidget(self.plus_btn)
+        main_layout.addWidget(self.tab_widget)
 
-        btn_layout.addStretch()
+        # Bottom buttons: Indicator, Enable/Disable, Plus, Save, Cancel
+        btn_layout = QHBoxLayout()
 
         self.save_btn = QPushButton("Save")
         self.cancel_btn = QPushButton("Cancel")
@@ -303,31 +312,23 @@ class GestureConfigDialog(QDialog):
                 print(f"Error loading config {json_file}: {e}")
 
     def load_gesture_settings(self):
-        """Load gesture system enable/disable settings"""
+        """Load gesture system settings"""
         try:
             if os.path.exists(self.gesture_settings_path):
                 with open(self.gesture_settings_path, "r", encoding="utf-8") as f:
-                    settings = json.load(f)
-                    self.gesture_enabled = settings.get("enabled", True)
+                    self.gesture_settings = json.load(f)
             else:
-                # Default to enabled
-                self.gesture_enabled = True
+                # Default settings
+                self.gesture_settings = {"enabled": True, "minimum_pixels_to_move": 20}
         except Exception as e:
             print(f"Error loading gesture settings: {e}")
-            self.gesture_enabled = True
-
-        # Update toggle button text
-        if self.gesture_enabled:
-            self.toggle_btn.setText("Disable Gesture System")
-        else:
-            self.toggle_btn.setText("Enable Gesture System")
+            self.gesture_settings = {"enabled": True, "minimum_pixels_to_move": 20}
 
     def save_gesture_settings(self):
-        """Save gesture system enable/disable settings"""
+        """Save gesture system settings"""
         try:
-            settings = {"enabled": self.gesture_enabled}
             with open(self.gesture_settings_path, "w", encoding="utf-8") as f:
-                json.dump(settings, f, indent=4)
+                json.dump(self.gesture_settings, f, indent=4)
         except Exception as e:
             print(f"Error saving gesture settings: {e}")
 
@@ -335,14 +336,15 @@ class GestureConfigDialog(QDialog):
         """Update the status indicator based on gesture manager state"""
         manager = get_gesture_manager()
         is_running = manager.detector is not None if manager else False
+        is_enabled = self.gesture_settings.get("enabled", True)
 
-        if is_running:
+        if is_running and is_enabled:
             # Green indicator
             self.status_indicator.setStyleSheet(
                 """
                 QLabel {
                     background-color: #4CAF50;
-                    border-radius: 10px;
+                    border-radius: 2px;
                     border: 2px solid #388E3C;
                 }
             """
@@ -354,27 +356,62 @@ class GestureConfigDialog(QDialog):
                 """
                 QLabel {
                     background-color: #808080;
-                    border-radius: 10px;
+                    border-radius: 2px;
                     border: 2px solid #555;
                 }
             """
             )
             self.status_indicator.setToolTip("Gesture system is not running")
 
-    def toggle_gesture_system(self):
-        """Toggle gesture system on/off"""
-        self.gesture_enabled = not self.gesture_enabled
+    def open_settings(self):
+        """Open settings dialog"""
+        from PyQt5.QtWidgets import QCheckBox, QSpinBox, QFormLayout
 
-        if self.gesture_enabled:
-            self.toggle_btn.setText("Disable Gesture System")
-        else:
-            self.toggle_btn.setText("Enable Gesture System")
+        settings_dialog = QDialog(self)
+        settings_dialog.setWindowTitle("Gesture Settings")
+        settings_dialog.resize(300, 150)
+        settings_dialog.setStyleSheet(self.styleSheet())  # Apply same dark theme
 
-        # Save the setting immediately
-        self.save_gesture_settings()
+        layout = QVBoxLayout()
+        form_layout = QFormLayout()
 
-        # Update the indicator
-        self.update_indicator()
+        # Enabled checkbox
+        enabled_checkbox = QCheckBox()
+        enabled_checkbox.setChecked(self.gesture_settings.get("enabled", True))
+        form_layout.addRow("Enable Gesture System:", enabled_checkbox)
+
+        # Minimum pixels spinbox
+        min_pixels_spinbox = QSpinBox()
+        min_pixels_spinbox.setMinimum(1)
+        min_pixels_spinbox.setMaximum(200)
+        min_pixels_spinbox.setValue(
+            self.gesture_settings.get("minimum_pixels_to_move", 20)
+        )
+        form_layout.addRow("Minimum Pixels to Move:", min_pixels_spinbox)
+
+        layout.addLayout(form_layout)
+
+        # Buttons
+        btn_layout = QHBoxLayout()
+        ok_btn = QPushButton("OK")
+        cancel_btn = QPushButton("Cancel")
+        btn_layout.addWidget(ok_btn)
+        btn_layout.addWidget(cancel_btn)
+        layout.addLayout(btn_layout)
+
+        settings_dialog.setLayout(layout)
+
+        def save_settings():
+            self.gesture_settings["enabled"] = enabled_checkbox.isChecked()
+            self.gesture_settings["minimum_pixels_to_move"] = min_pixels_spinbox.value()
+            self.save_gesture_settings()
+            self.update_indicator()
+            settings_dialog.accept()
+
+        ok_btn.clicked.connect(save_settings)
+        cancel_btn.clicked.connect(settings_dialog.reject)
+
+        settings_dialog.exec_()
 
     def add_new_config(self):
         """Add a new empty config file with next available number"""
@@ -411,7 +448,7 @@ class GestureConfigDialog(QDialog):
         tab_layout = QVBoxLayout()
         tab_widget.setLayout(tab_layout)
 
-        # Create the 3x3 gesture grid
+        # Create the 5x5 gesture grid
         gesture_grid = self.create_gesture_grid(name, config_data)
         tab_layout.addLayout(gesture_grid)
 
@@ -462,14 +499,24 @@ class GestureConfigDialog(QDialog):
                 center_label.setFixedSize(100, 60)
                 center_label.setProperty("direction", "center")
                 center_label.setProperty("config_name", config_name)
-                center_label.setStyleSheet(
-                    """
-                    QLabel {
-                        font-size: 10px;
-                        color: #4FC3F7;
-                    }
-                """
-                )
+
+                # If it's a brush preset, try to show the brush image
+                if gesture_config.get("gesture_type") == "brush":
+                    brush_name = gesture_config.get("parameters", {}).get("brush_name")
+                    if brush_name and brush_name in self.preset_dict:
+                        preset = self.preset_dict[brush_name]
+                        try:
+                            preset_image = preset.image()
+                            if preset_image:
+                                pixmap = QPixmap.fromImage(preset_image).scaled(
+                                    64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                )
+                                center_label.setPixmap(pixmap)
+                                center_label.setText(
+                                    ""
+                                )  # Clear text when showing image
+                        except:
+                            pass  # Keep text label if image fails
 
                 # Store label widget for later updates
                 label_key = f"{config_name}_center"
@@ -497,7 +544,7 @@ class GestureConfigDialog(QDialog):
                 if os.path.exists(icon_path):
                     icon = QIcon(icon_path)
                     arrow_btn.setIcon(icon)
-                    arrow_btn.setIconSize(QSize(32, 32))
+                    arrow_btn.setIconSize(QSize(64, 64))
                 else:
                     # Fallback to text if image not found
                     arrow_btn.setText(direction)
@@ -513,7 +560,8 @@ class GestureConfigDialog(QDialog):
                 config_label = QLabel(label_text)
                 config_label.setAlignment(Qt.AlignCenter)
                 config_label.setWordWrap(True)
-                config_label.setFixedSize(100, 100)
+                config_label.setMinimumSize(100, 100)
+                config_label.setMaximumHeight(100)
                 config_label.setProperty("direction", direction)
                 config_label.setProperty("config_name", config_name)
 
@@ -618,7 +666,7 @@ class GestureConfigDialog(QDialog):
                         preset_image = preset.image()
                         if preset_image:
                             pixmap = QPixmap.fromImage(preset_image).scaled(
-                                32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation
                             )
                             label.setPixmap(pixmap)
                             label.setText("")  # Clear text when showing image

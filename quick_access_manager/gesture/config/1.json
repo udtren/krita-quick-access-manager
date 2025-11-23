@@ -30,7 +30,12 @@
             "action_id": "KisToolSelectOutline"
         }
     },
-    "right_down": {},
+    "right_down": {
+        "gesture_type": "brush",
+        "parameters": {
+            "brush_name": "e) Marker Chisel Smooth"
+        }
+    },
     "gesture_key": "F",
     "center": {
         "gesture_type": "action",
