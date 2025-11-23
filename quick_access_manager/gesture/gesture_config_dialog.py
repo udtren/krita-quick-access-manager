@@ -424,6 +424,7 @@ class GestureConfigDialog(QDialog):
         """Create the 3x3 grid of gesture arrows and labels"""
         grid_layout = QGridLayout()
         grid_layout.setSpacing(10)
+        grid_layout.setAlignment(Qt.AlignCenter)
 
         # Direction mappings: (row, col) -> direction_key
         direction_map = {
@@ -444,14 +445,49 @@ class GestureConfigDialog(QDialog):
                 current_key = config_data.get("gesture_key", "")
                 button_text = f"Key: {current_key}" if current_key else "Config Key"
                 key_button = QPushButton(button_text)
-                key_button.setMinimumSize(80, 80)
+                key_button.setFixedSize(80, 30)
                 key_button.setProperty("config_name", config_name)
                 key_button.clicked.connect(
                     lambda _, cn=config_name, btn=key_button: self.config_gesture_key(
                         cn, btn
                     )
                 )
-                grid_layout.addWidget(key_button, 2, 2)  # Center of 5x5 grid
+
+                # Create label to show center action config
+                gesture_config = config_data.get("center", {})
+                label_text = self.format_gesture_label(gesture_config)
+                center_label = QLabel(label_text)
+                center_label.setAlignment(Qt.AlignCenter)
+                center_label.setWordWrap(True)
+                center_label.setFixedSize(100, 60)
+                center_label.setProperty("direction", "center")
+                center_label.setProperty("config_name", config_name)
+                center_label.setStyleSheet(
+                    """
+                    QLabel {
+                        font-size: 10px;
+                        color: #4FC3F7;
+                    }
+                """
+                )
+
+                # Store label widget for later updates
+                label_key = f"{config_name}_center"
+                self.label_widgets[label_key] = center_label
+
+                # Create vertical layout for center (button + label)
+                from PyQt5.QtWidgets import QVBoxLayout
+
+                center_widget = QWidget()
+                center_layout = QVBoxLayout()
+                center_layout.setSpacing(5)
+                center_layout.addWidget(key_button, alignment=Qt.AlignCenter)
+                center_layout.addWidget(center_label, alignment=Qt.AlignCenter)
+                center_widget.setLayout(center_layout)
+
+                grid_layout.addWidget(
+                    center_widget, 2, 2, Qt.AlignCenter
+                )  # Center of 5x5 grid
             else:
                 # Create arrow button with image icon
                 arrow_btn = QPushButton()
@@ -466,7 +502,7 @@ class GestureConfigDialog(QDialog):
                     # Fallback to text if image not found
                     arrow_btn.setText(direction)
 
-                arrow_btn.setMinimumSize(60, 60)
+                arrow_btn.setFixedSize(64, 64)
                 arrow_btn.setProperty("direction", direction)
                 arrow_btn.setProperty("config_name", config_name)
                 arrow_btn.clicked.connect(self.config_gesture_action)
@@ -477,7 +513,7 @@ class GestureConfigDialog(QDialog):
                 config_label = QLabel(label_text)
                 config_label.setAlignment(Qt.AlignCenter)
                 config_label.setWordWrap(True)
-                config_label.setMinimumWidth(100)
+                config_label.setFixedSize(100, 100)
                 config_label.setProperty("direction", direction)
                 config_label.setProperty("config_name", config_name)
 
@@ -490,7 +526,7 @@ class GestureConfigDialog(QDialog):
                             preset_image = preset.image()
                             if preset_image:
                                 pixmap = QPixmap.fromImage(preset_image).scaled(
-                                    32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                    64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation
                                 )
                                 config_label.setPixmap(pixmap)
                                 config_label.setText(
@@ -508,18 +544,18 @@ class GestureConfigDialog(QDialog):
                 arrow_col = col + 1  # Arrow columns: 1, 2, 3
 
                 if row == 0:  # Top row
-                    grid_layout.addWidget(config_label, 0, label_col)
-                    grid_layout.addWidget(arrow_btn, 1, arrow_col)
+                    grid_layout.addWidget(config_label, 0, label_col, Qt.AlignCenter)
+                    grid_layout.addWidget(arrow_btn, 1, arrow_col, Qt.AlignCenter)
                 elif row == 1:  # Middle row
                     if col == 0:  # Left
-                        grid_layout.addWidget(config_label, 2, 0)
-                        grid_layout.addWidget(arrow_btn, 2, 1)
+                        grid_layout.addWidget(config_label, 2, 0, Qt.AlignCenter)
+                        grid_layout.addWidget(arrow_btn, 2, 1, Qt.AlignCenter)
                     else:  # Right (col == 2)
-                        grid_layout.addWidget(arrow_btn, 2, 3)
-                        grid_layout.addWidget(config_label, 2, 4)
+                        grid_layout.addWidget(arrow_btn, 2, 3, Qt.AlignCenter)
+                        grid_layout.addWidget(config_label, 2, 4, Qt.AlignCenter)
                 else:  # Bottom row (row == 2)
-                    grid_layout.addWidget(arrow_btn, 3, arrow_col)
-                    grid_layout.addWidget(config_label, 4, label_col)
+                    grid_layout.addWidget(arrow_btn, 3, arrow_col, Qt.AlignCenter)
+                    grid_layout.addWidget(config_label, 4, label_col, Qt.AlignCenter)
 
         return grid_layout
 
@@ -550,12 +586,17 @@ class GestureConfigDialog(QDialog):
         dialog = ArrowConfigPopup(direction, config_name, self, self)
         if dialog.exec_():
             gesture_config = dialog.get_gesture_config()
-            if gesture_config:
-                # Update the config data
+            # Update the config data (including None to clear)
+            if gesture_config is None:
+                # Remove the direction from config to clear it
+                if direction in self.configs[config_name]["data"]:
+                    del self.configs[config_name]["data"][direction]
+            else:
+                # Set the gesture config
                 self.configs[config_name]["data"][direction] = gesture_config
 
-                # Update the label to show new config
-                self.update_gesture_label(config_name, direction)
+            # Update the label to show new config
+            self.update_gesture_label(config_name, direction)
 
     def update_gesture_label(self, config_name, direction):
         """Update the label for a specific gesture direction"""
@@ -585,7 +626,8 @@ class GestureConfigDialog(QDialog):
                         pass  # Keep text label if image fails
 
     def config_gesture_key(self, config_name, button=None):
-        """Open dialog to configure the gesture trigger key"""
+        """Open dialog to configure the gesture trigger key and center action"""
+        # First, configure the key
         dialog = KeyCaptureDialog(config_name, self)
         if dialog.exec_():
             key = dialog.get_captured_key()
@@ -600,6 +642,16 @@ class GestureConfigDialog(QDialog):
                 self.configs[config_name]["data"]["gesture_key"] = ""
                 if button:
                     button.setText("Config Key")
+
+            # Then, configure the center action (key press action)
+            action_dialog = ArrowConfigPopup("center", config_name, self, self)
+            if action_dialog.exec_():
+                gesture_config = action_dialog.get_gesture_config()
+                if gesture_config:
+                    # Update the config data for center action
+                    self.configs[config_name]["data"]["center"] = gesture_config
+                    # Update the label to show new config
+                    self.update_gesture_label(config_name, "center")
 
     def save_and_close(self):
         """Save all configurations and close dialog"""

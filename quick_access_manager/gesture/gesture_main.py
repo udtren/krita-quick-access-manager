@@ -80,6 +80,7 @@ class GestureDetector(QObject):
                     "left_down",
                     "down",
                     "right_down",
+                    "center",
                 ]
 
                 for direction in directions:
@@ -253,6 +254,15 @@ class GestureDetector(QObject):
         # Check if movement is significant enough
         if distance < self.threshold:
             write_log(f"Gesture too small (threshold: {self.threshold})")
+            # Execute center action if configured
+            if self.active_key in self.gesture_configs:
+                gesture_map = self.gesture_configs[self.active_key]
+                if "center" in gesture_map:
+                    gesture_config = gesture_map["center"]
+                    write_log(f"Executing center action: {gesture_config}")
+                    execute_gesture(gesture_config)
+                else:
+                    write_log("No center action configured")
             self.cancel_gesture()
             return
 

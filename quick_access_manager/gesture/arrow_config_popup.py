@@ -32,7 +32,8 @@ class ArrowConfigPopup(QDialog):
         layout = QVBoxLayout()
 
         # Apply dark mode styling
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QDialog {
                 background-color: #2b2b2b;
                 color: #e0e0e0;
@@ -87,14 +88,15 @@ class ArrowConfigPopup(QDialog):
                 background-color: #2a2a2a;
                 border: 1px solid #444;
             }
-        """)
+        """
+        )
 
         # Type selection
         type_label = QLabel("Gesture Type:")
         layout.addWidget(type_label)
 
         self.type_combo = QComboBox()
-        self.type_combo.addItems(["Brush Preset", "Action", "Docker Toggle"])
+        self.type_combo.addItems(["Brush Preset", "Action", "Docker Toggle", "None"])
         layout.addWidget(self.type_combo)
 
         # Docker name input (initially hidden)
@@ -144,6 +146,8 @@ class ArrowConfigPopup(QDialog):
             self.configure_action()
         elif gesture_type == "Docker Toggle":
             self.configure_docker_toggle()
+        elif gesture_type == "None":
+            self.configure_none()
 
     def configure_brush_preset(self):
         """Configure brush preset gesture"""
@@ -154,9 +158,7 @@ class ArrowConfigPopup(QDialog):
             if current_preset:
                 self.gesture_config = {
                     "gesture_type": "brush",
-                    "parameters": {
-                        "brush_name": current_preset.name()
-                    }
+                    "parameters": {"brush_name": current_preset.name()},
                 }
                 self.accept()
             else:
@@ -177,9 +179,7 @@ class ArrowConfigPopup(QDialog):
             if action_id:
                 self.gesture_config = {
                     "gesture_type": "action",
-                    "parameters": {
-                        "action_id": action_id
-                    }
+                    "parameters": {"action_id": action_id},
                 }
                 self.accept()
 
@@ -187,17 +187,18 @@ class ArrowConfigPopup(QDialog):
         """Configure docker toggle gesture"""
         docker_name = self.docker_input.text().strip()
         if not docker_name:
-            QMessageBox.warning(
-                self, "No Docker Name", "Please enter a docker name."
-            )
+            QMessageBox.warning(self, "No Docker Name", "Please enter a docker name.")
             return
 
         self.gesture_config = {
             "gesture_type": "docker_toggle",
-            "parameters": {
-                "docker_name": docker_name
-            }
+            "parameters": {"docker_name": docker_name},
         }
+        self.accept()
+
+    def configure_none(self):
+        """Configure no action gesture"""
+        self.gesture_config = None
         self.accept()
 
     def get_gesture_config(self):

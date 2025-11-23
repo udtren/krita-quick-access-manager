@@ -6,12 +6,6 @@
         }
     },
     "left": {},
-    "left_down": {
-        "gesture_type": "action",
-        "parameters": {
-            "action_id": "Select Normal Blending Mode"
-        }
-    },
     "up": {
         "gesture_type": "docker_toggle",
         "parameters": {
@@ -37,11 +31,17 @@
         }
     },
     "right_down": {},
-    "gesture_key": "D",
+    "gesture_key": "F",
     "center": {
         "gesture_type": "action",
         "parameters": {
             "action_id": "KisToolSelectOutline"
+        }
+    },
+    "left_down": {
+        "gesture_type": "action",
+        "parameters": {
+            "action_id": "view_zoom_out"
         }
     }
 }
