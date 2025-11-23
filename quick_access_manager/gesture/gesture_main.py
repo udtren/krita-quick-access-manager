@@ -28,6 +28,7 @@ class GestureDetector(QObject):
         self.threshold = 20  # Default minimum pixels, will be loaded from settings
         self.event_filter_installed = False
         self.window_created_connected = False
+        self.config_dialog_active = False  # Track if config dialog is open
         self.load_threshold_from_settings()
 
         # Gesture uses pen hover mode - tracks pen movement without touching tablet
@@ -183,6 +184,10 @@ class GestureDetector(QObject):
     def eventFilter(self, _obj, event):
         """Filter events to detect key+mouse gestures"""
         try:
+            # Ignore events when config dialog is active
+            if self.config_dialog_active:
+                return False
+
             event_type = event.type()
 
             # Key press - check if it's a gesture key
@@ -197,7 +202,7 @@ class GestureDetector(QObject):
                 if key_text and key_text in self.gesture_configs:
                     self.active_key = key_text
                     write_log(f"Gesture key '{key_text}' pressed")
-                    write_log(f"Current Gesture Configs: {self.gesture_configs}")
+                    # write_log(f"Current Gesture Configs: {self.gesture_configs}")
 
                     # Start gesture immediately using current cursor position
                     if not self.gesture_active:
@@ -299,6 +304,11 @@ class GestureDetector(QObject):
 
         # Reset gesture state
         self.cancel_gesture()
+
+    def set_config_dialog_active(self, active):
+        """Set whether config dialog is currently active"""
+        self.config_dialog_active = active
+        write_log(f"Config dialog active state: {active}")
 
     def calculate_direction(self, dx, dy):
         """
@@ -406,6 +416,13 @@ def shutdown_gesture_system():
     """Shutdown the gesture system (call on plugin unload)"""
     manager = get_gesture_manager()
     manager.shutdown()
+
+
+def set_config_dialog_active(active):
+    """Set whether config dialog is active (disables gesture detection)"""
+    manager = get_gesture_manager()
+    if manager.detector:
+        manager.detector.set_config_dialog_active(active)
 
 
 def is_gesture_enabled():

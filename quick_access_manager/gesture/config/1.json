@@ -5,17 +5,29 @@
             "action_id": "fill_selection_foreground_color"
         }
     },
-    "left": {},
-    "up": {
+    "left": {
         "gesture_type": "docker_toggle",
         "parameters": {
-            "docker_name": "Toolbox"
+            "docker_name": "Tool Options"
+        }
+    },
+    "up": {
+        "gesture_type": "action",
+        "parameters": {
+            "action_id": "invert_selection"
         }
     },
     "down": {
         "gesture_type": "action",
         "parameters": {
-            "action_id": "invert_selection"
+            "action_id": "deselect"
+        }
+    },
+    "gesture_key": "F",
+    "center": {
+        "gesture_type": "action",
+        "parameters": {
+            "action_id": "KisToolSelectOutline"
         }
     },
     "right_up": {
@@ -27,26 +39,13 @@
     "right": {
         "gesture_type": "action",
         "parameters": {
-            "action_id": "KisToolSelectOutline"
+            "action_id": "KritaShape/KisToolBrush"
         }
     },
     "right_down": {
-        "gesture_type": "brush",
-        "parameters": {
-            "brush_name": "e) Marker Chisel Smooth"
-        }
-    },
-    "gesture_key": "F",
-    "center": {
         "gesture_type": "action",
         "parameters": {
-            "action_id": "KisToolSelectOutline"
-        }
-    },
-    "left_down": {
-        "gesture_type": "action",
-        "parameters": {
-            "action_id": "view_zoom_out"
+            "action_id": "KisToolSelectRectangular"
         }
     }
 }

@@ -14,7 +14,11 @@ from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QPixmap, QKeyEvent
 from krita import Krita  # type: ignore
 from .arrow_config_popup import ArrowConfigPopup
-from .gesture_main import reload_gesture_configs, get_gesture_manager
+from .gesture_main import (
+    reload_gesture_configs,
+    get_gesture_manager,
+    set_config_dialog_active,
+)
 
 
 class KeyCaptureDialog(QDialog):
@@ -176,6 +180,9 @@ class GestureConfigDialog(QDialog):
         self.load_gesture_settings()
         self.update_indicator()
 
+        # Notify gesture system that config dialog is active
+        set_config_dialog_active(True)
+
     def setup_ui(self):
         """Setup the UI elements"""
         main_layout = QVBoxLayout()
@@ -232,6 +239,7 @@ class GestureConfigDialog(QDialog):
         # Tab widget for different config files
         top_layout = QHBoxLayout()
         self.tab_widget = QTabWidget()
+        top_layout.addStretch()
 
         # Plus button to add new config
         self.plus_btn = QPushButton("+")
@@ -240,8 +248,6 @@ class GestureConfigDialog(QDialog):
         self.plus_btn.clicked.connect(self.add_new_config)
 
         top_layout.addWidget(self.plus_btn)
-
-        top_layout.addStretch()
 
         # Settings button
         self.settings_btn = QPushButton("Settings")
@@ -712,8 +718,21 @@ class GestureConfigDialog(QDialog):
 
         # Reload gesture configurations after saving
         reload_gesture_configs()
+        set_config_dialog_active(False)
 
         self.accept()
+
+    def reject(self):
+        """Handle dialog rejection (Cancel button)"""
+        # Notify gesture system that config dialog is no longer active
+        set_config_dialog_active(False)
+        super().reject()
+
+    def closeEvent(self, event):
+        """Handle dialog close event"""
+        # Notify gesture system that config dialog is no longer active
+        set_config_dialog_active(False)
+        super().closeEvent(event)
 
 
 # if __name__ == "__main__":
