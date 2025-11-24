@@ -90,9 +90,12 @@ A gesture-based control system that allows you to trigger actions using keyboard
    - Release the key to execute the action
    - Or simply press and release without moving to trigger the center action
 
-### Status Indicator
-- **Green**: Gesture system is enabled and running
-- **Gray**: Gesture system is disabled or not initialized
+### Preview
+![Gesture Preview](quick_access_manager/image/gesture_preview.png)
+
+By default, a visual preview overlay appears when you press and hold the gesture key, showing all configured actions for each direction. 
+
+You can disable the preview overlay in the gesture settings (top-right corner of the gesture config dialog).
 
 ### Tips
 - The dialog is modeless, allowing you to continue working in Krita while it's open
@@ -142,50 +145,6 @@ finally:
 - `pause_gesture_event_filter()`: Calls `QApplication.removeEventFilter()` for zero overhead when paused
 - `resume_gesture_event_filter()`: Calls `QApplication.installEventFilter()` to restore gesture detection
 - When paused, the event filter is completely removed from Qt's event chain, eliminating all processing overhead
-
-## Global Config
-Use the "Setting" button to customize the UI and layout, including the default font color, background color, and font size for shortcut buttons.
-![Setting](./quick_access_manager/image/image3.png)
-
-## Shortcut Button Config
-To customize an individual shortcut button, hold <kbd>Alt</kbd> and right-click the button.
-If the "Use Global Settings" is checked, the color of font and background will use the value in the global config file.
-![Shortcut Button Config](./quick_access_manager/image/image4.png)
-
-## Sort/Remove
-
-**Sort:**  
-To reorder a brush or shortcut button within a grid or move it between grids, hold <kbd>Ctrl</kbd> and left-click and drag the button to the desired position or grid.
-
-**Advanced Sort:**  
-- To move a shortcut button up by one position within the same grid, hold <kbd>Shift</kbd> and left-click the grid name.
-- To move a shortcut button down by one position within the same grid, hold <kbd>Shift</kbd> and right-click the grid name.
-- To move a grid up by one position, hold <kbd>Shift</kbd> and left-click the grid name.
-- To move a grid down by one position, hold <kbd>Shift</kbd> and right-click the grid name.
-
-**Remove:**  
-To remove a brush or shortcut from a grid, hold <kbd>Ctrl</kbd> and right-click on the button you want to remove.
-
-**Remove Grid:**  
-To delete an entire grid, hold <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> and right-click the grid name.
-
-**Rename Grid:**  
-To rename a grid, hold <kbd>Alt</kbd> and right-click the grid name.
-
-**Activate Grid:**  
-To activate a grid, simply left-click the grid name.
-
-## Config file
-
-The configuration files for grids and shortcuts are stored in `./quick_access_manager/config`.
-
-- `grids_data.json`: Stores the brush preset grids.
-- `shortcut_grid_data.json`: Stores the shortcut grids.
-- `common.json`: Stores UI and layout settings.
-
-**Note:**  
-There is no profile management function, but you can manually edit these files while Krita is closed.  
-If you want to reset or backup your settings, you can copy or edit these files directly.
 
 ## Quick Brush Adjustments Docker
 ![Quick Brush Adjustments](./quick_access_manager/image/004.png)
@@ -237,3 +196,48 @@ Available customization options:
 - Number of color/brush history items
 - Icon sizes for history widgets
 - Available blend modes in dropdowns
+
+## Global Config
+Use the "Setting" button to customize the UI and layout, including the default font color, background color, and font size for shortcut buttons.
+![Setting](./quick_access_manager/image/image3.png)
+
+## Shortcut Button Config
+To customize an individual shortcut button, hold <kbd>Alt</kbd> and right-click the button.
+If the "Use Global Settings" is checked, the color of font and background will use the value in the global config file.
+![Shortcut Button Config](./quick_access_manager/image/image4.png)
+
+## Sort/Remove
+
+**Sort:**  
+To reorder a brush or shortcut button within a grid or move it between grids, hold <kbd>Ctrl</kbd> and left-click and drag the button to the desired position or grid.
+
+**Advanced Sort:**  
+- To move a shortcut button up by one position within the same grid, hold <kbd>Shift</kbd> and left-click the grid name.
+- To move a shortcut button down by one position within the same grid, hold <kbd>Shift</kbd> and right-click the grid name.
+- To move a grid up by one position, hold <kbd>Shift</kbd> and left-click the grid name.
+- To move a grid down by one position, hold <kbd>Shift</kbd> and right-click the grid name.
+
+**Remove:**  
+To remove a brush or shortcut from a grid, hold <kbd>Ctrl</kbd> and right-click on the button you want to remove.
+
+**Remove Grid:**  
+To delete an entire grid, hold <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> and right-click the grid name.
+
+**Rename Grid:**  
+To rename a grid, hold <kbd>Alt</kbd> and right-click the grid name.
+
+**Activate Grid:**  
+To activate a grid, simply left-click the grid name.
+
+## Config file
+
+The configuration files for grids and shortcuts are stored in `./quick_access_manager/config`.
+
+- `grids_data.json`: Stores the brush preset grids.
+- `shortcut_grid_data.json`: Stores the shortcut grids.
+- `common.json`: Stores UI and layout settings.
+
+**Note:**  
+There is no profile management function, but you can manually edit these files while Krita is closed.  
+If you want to reset or backup your settings, you can copy or edit these files directly.
+
