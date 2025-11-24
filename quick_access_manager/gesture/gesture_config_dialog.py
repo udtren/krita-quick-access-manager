@@ -18,6 +18,8 @@ from .gesture_main import (
     reload_gesture_configs,
     get_gesture_manager,
     set_config_dialog_active,
+    pause_gesture_event_filter,
+    resume_gesture_event_filter,
 )
 
 
@@ -408,9 +410,25 @@ class GestureConfigDialog(QDialog):
         settings_dialog.setLayout(layout)
 
         def save_settings():
-            self.gesture_settings["enabled"] = enabled_checkbox.isChecked()
+            enabled = enabled_checkbox.isChecked()
+            self.gesture_settings["enabled"] = enabled
             self.gesture_settings["minimum_pixels_to_move"] = min_pixels_spinbox.value()
             self.save_gesture_settings()
+
+            # Get current event filter installation state
+            manager = get_gesture_manager()
+            event_filter_installed = False
+            if manager and manager.detector:
+                event_filter_installed = manager.detector.event_filter_installed
+
+            # Pause or resume based on enabled state and current installation state
+            if not enabled and event_filter_installed:
+                # Checkbox is false and filter is installed -> pause
+                pause_gesture_event_filter()
+            elif enabled and not event_filter_installed:
+                # Checkbox is true and filter is not installed -> resume
+                resume_gesture_event_filter()
+
             self.update_indicator()
             settings_dialog.accept()
 
