@@ -4,6 +4,8 @@ Gesture preview widget that displays available actions in a 3x3 grid.
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout
+from PyQt5.QtGui import QPixmap
+from krita import Krita  # type: ignore
 
 
 class GesturePreviewWidget(QWidget):
@@ -22,6 +24,11 @@ class GesturePreviewWidget(QWidget):
         self.layout = QGridLayout(self)
         self.layout.setSpacing(2)
         self.layout.setContentsMargins(8, 8, 8, 8)
+
+        try:
+            self.preset_dict = Krita.instance().resources("preset")
+        except:
+            self.preset_dict = {}
 
         # Create labels for each direction (3x3 grid)
         # Positions: (row, col)
@@ -45,48 +52,28 @@ class GesturePreviewWidget(QWidget):
             label = QLabel("none")
             label.setAlignment(Qt.AlignCenter)
             label.setMinimumSize(100, 40)
-            # label.setStyleSheet(
-            #     """
-            #     QLabel {
-            #         background-color: rgba(50, 50, 50, 200);
-            #         color: #888;
-            #         border: 1px solid #555;
-            #         border-radius: 4px;
-            #         padding: 8px;
-            #         font-size: 11px;
-            #     }
-            # """
-            # )
             self.layout.addWidget(label, row, col)
             self.direction_labels[direction] = label
-
-        # Style the center differently
-        # self.direction_labels["center"].setStyleSheet(
-        #     """
-        #     QLabel {
-        #         background-color: rgba(70, 70, 120, 200);
-        #         color: #aaf;
-        #         border: 2px solid #77f;
-        #         border-radius: 4px;
-        #         padding: 8px;
-        #         font-size: 11px;
-        #         font-weight: bold;
-        #     }
-        # """
-        # )
 
         # Set window style
         self.setStyleSheet(
             """
             QWidget {
-                background-color: rgba(30, 30, 30, 230);
-                border: 2px solid #666;
-                border-radius: 6px;
+                background-color: rgba(70, 70, 120, 0);
+                color: transparent;
+                border: 2px solid rgba(119, 119, 255, 0);
             }
         """
         )
 
         self.hide()
+
+    def clear_all_labels(self):
+        """Clear all labels (text, pixmap, and styles)"""
+        for label in self.direction_labels.values():
+            label.clear()  # Clears both text and pixmap
+            label.setText("")
+            label.setStyleSheet("")  # Reset style
 
     def show_preview(self, gesture_map, cursor_pos):
         """
@@ -96,6 +83,9 @@ class GesturePreviewWidget(QWidget):
             gesture_map: Dict mapping direction to gesture config
             cursor_pos: QPoint of cursor position
         """
+        # First, clear all labels to remove old content (text/pixmaps)
+        self.clear_all_labels()
+
         # Update labels with action names
         for direction, label in self.direction_labels.items():
             if direction in gesture_map:
@@ -106,91 +96,126 @@ class GesturePreviewWidget(QWidget):
                     action_name = gesture_config["parameters"].get(
                         "action_id", "unknown"
                     )
+                    label.clear()  # Clear any previous pixmap
+                    label.setText(action_name)
+                    label.setStyleSheet(
+                        """
+                        QLabel {
+                            background-color: #aea152;
+                            color: #000000;
+                            border-radius: 4px;
+                            padding: 8px;
+                            font-size: 24px;
+                            opacity: 0.7;
+                        }
+                    """
+                    )
                 elif gesture_type == "brush":
                     action_name = gesture_config["parameters"].get(
                         "brush_name", "unknown"
                     )
+                    brush_set_successfully = False
+                    try:
+                        if action_name and action_name in self.preset_dict:
+                            preset = self.preset_dict[action_name]
+                            preset_image = preset.image()
+                            if preset_image:
+                                pixmap = QPixmap.fromImage(preset_image).scaled(
+                                    64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                )
+                                label.setPixmap(pixmap)
+                                label.setText("")  # Clear text when showing pixmap
+                                label.setStyleSheet(
+                                    """
+                                    QLabel {
+                                        background-color: #7e7cb8;
+                                        border-radius: 4px;
+                                        padding: 8px;
+                                    }
+                                    """
+                                )
+                                brush_set_successfully = True
+                    except:
+                        pass
+
+                    # Fallback to text if pixmap failed
+                    if not brush_set_successfully:
+                        label.clear()  # Clear any pixmap
+                        label.setText(action_name)
+                        label.setStyleSheet(
+                            """
+                            QLabel {
+                                background-color: #7e7cb8;
+                                color: #000000;
+                                border-radius: 4px;
+                                padding: 8px;
+                                font-size: 24px;
+                                opacity: 0.7;
+                            }
+                            """
+                        )
+
                 elif gesture_type == "docker_toggle":
                     action_name = gesture_config["parameters"].get(
                         "docker_name", "unknown"
                     )
-                else:
-                    action_name = "-"
-
-                label.setText(action_name)
-
-                # Highlight configured actions
-                if direction == "center":
+                    label.clear()  # Clear any previous pixmap
+                    label.setText(action_name)
                     label.setStyleSheet(
                         """
                         QLabel {
-                            background-color: rgba(70, 120, 70, 220);
-                            color: #afa;
-                            border: 2px solid #7f7;
+                            background-color: #909090;
+                            color: #000000;
                             border-radius: 4px;
                             padding: 8px;
-                            font-size: 16px;
-                            font-weight: bold;
+                            font-size: 24px;
                             opacity: 0.7;
                         }
                     """
                     )
                 else:
+                    # Unknown gesture type - make transparent
+                    label.clear()  # Clear any previous pixmap
+                    label.setText("")
                     label.setStyleSheet(
                         """
                         QLabel {
-                            background-color: rgba(70, 70, 70, 220);
-                            color: #eee;
-                            border: 1px solid #999;
+                            background-color: rgba(70, 70, 120, 0);
+                            color: transparent;
+                            border: 2px solid rgba(119, 119, 255, 0);
                             border-radius: 4px;
                             padding: 8px;
-                            font-size: 16px;
-                            font-weight: bold;
-                            opacity: 0.7;
+                            font-size: 11px;
                         }
                     """
                     )
             else:
-                label.setText("")  # Empty text for unconfigured
-                if direction == "center":
-                    label.setStyleSheet(
-                        """
-                        QLabel {
-                            background-color: rgba(70, 70, 120, 0);
-                            color: transparent;
-                            border: 2px solid rgba(119, 119, 255, 0);
-                            border-radius: 4px;
-                            padding: 8px;
-                            font-size: 11px;
-                            font-weight: bold;
-                        }
+                # No gesture configured for this direction - make transparent
+                label.clear()  # Clear any previous pixmap
+                label.setText("")
+                label.setStyleSheet(
                     """
-                    )
-                else:
-                    label.setStyleSheet(
-                        """
-                        QLabel {
-                            background-color: rgba(70, 70, 120, 0);
-                            color: transparent;
-                            border: 2px solid rgba(119, 119, 255, 0);
-                            border-radius: 4px;
-                            padding: 8px;
-                            font-size: 11px;
-                            font-weight: bold;
-                        }
+                    QLabel {
+                        background-color: rgba(0, 0, 0, 0);
+                        color: transparent;
+                        border: none;
+                    }
                     """
-                    )
+                )
 
         # Position widget near cursor (offset to not block cursor)
         self.adjustSize()
-        offset_x = 30
-        offset_y = 30
-        self.move(cursor_pos.x() + offset_x, cursor_pos.y() + offset_y)
+        preview_width = self.width()
+        preview_height = self.height()
+        self.move(
+            cursor_pos.x() - preview_width // 2, cursor_pos.y() - preview_height // 2
+        )
 
         # Show the widget
         self.show()
         self.raise_()
 
     def hide_preview(self):
-        """Hide the preview widget"""
+        """Hide the preview widget and clear all labels"""
+        self.clear_all_labels()  # Clear pixmaps and text before hiding
         self.hide()
