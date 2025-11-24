@@ -93,6 +93,8 @@ A gesture-based control system that allows you to trigger actions using keyboard
 ### Preview
 ![Gesture Preview](quick_access_manager/image/gesture_preview.png)
 
+<iframe src="https://player.vimeo.com/video/1139942269?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;muted=1" width="988" height="764" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" title="gesture_preview"></iframe>
+
 By default, a visual preview overlay appears when you press and hold the gesture key, showing all configured actions for each direction. 
 
 You can disable the preview overlay in the gesture settings (top-right corner of the gesture config dialog).
