@@ -91,7 +91,9 @@ A gesture-based control system that allows you to trigger actions using keyboard
    - Or simply press and release without moving to trigger the center action
 
 ### Preview
-![Gesture Preview](quick_access_manager/image/gesture_preview.png)
+[![Gesture Preview](https://vumbnail.com/1139942269.jpg)](https://vimeo.com/1139942269)
+
+*Click the image above to watch the gesture system demo video*
 
 By default, a visual preview overlay appears when you press and hold the gesture key, showing all configured actions for each direction. 
 
