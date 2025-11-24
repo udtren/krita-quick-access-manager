@@ -3,7 +3,7 @@ import os
 
 def write_log(log_msg, enable_debug=False):
 
-    enable_debug = False
+    enable_debug = True
 
     if enable_debug:
         # Get the directory where this file is located (utils folder)

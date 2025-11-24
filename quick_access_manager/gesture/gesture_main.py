@@ -7,8 +7,10 @@ import json
 import os
 from PyQt5.QtCore import Qt, QObject, QEvent
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QCursor
 from krita import Krita  # type: ignore
 from .gesture_actions import execute_gesture
+from .widgets.gesture_preview import GesturePreviewWidget
 from ..utils.logs import write_log
 
 
@@ -26,12 +28,14 @@ class GestureDetector(QObject):
         self.start_pos = None
         self.last_pos = None
         self.threshold = 20  # Default minimum pixels, will be loaded from settings
+        self.show_preview = True  # Whether to show preview widget, loaded from settings
         self.event_filter_installed = False
         self.window_created_connected = False
         self.config_dialog_active = False  # Track if config dialog is open
         self.event_filter_call_count = 0  # Track eventFilter calls to detect recursion
         self.max_event_filter_depth = 0  # Track max recursion depth
-        self.load_threshold_from_settings()
+        self.preview_widget = None  # Preview widget for showing gestures (lazy init)
+        self.load_settings()
 
     def load_gesture_configs(self):
         """Load all gesture configurations from config directory"""
@@ -100,19 +104,24 @@ class GestureDetector(QObject):
 
         write_log(f"Total gesture configs loaded: {len(self.gesture_configs)}")
 
-    def load_threshold_from_settings(self):
-        """Load minimum_pixels_to_move from gesture.json settings"""
+    def load_settings(self):
+        """Load settings from gesture.json (threshold and preview flag)"""
         try:
             settings_path = os.path.join(os.path.dirname(__file__), "gesture.json")
             if os.path.exists(settings_path):
                 with open(settings_path, "r", encoding="utf-8") as f:
                     settings = json.load(f)
                     self.threshold = settings.get("minimum_pixels_to_move", 20)
-                    write_log(f"Loaded threshold from settings: {self.threshold}")
+                    self.show_preview = settings.get("show_preview", True)
+                    write_log(
+                        f"Loaded settings - threshold: {self.threshold}, show_preview: {self.show_preview}"
+                    )
             else:
-                write_log("No gesture.json found, using default threshold: 20")
+                write_log(
+                    "No gesture.json found, using defaults: threshold=20, show_preview=True"
+                )
         except Exception as e:
-            write_log(f"Error loading threshold from settings: {e}")
+            write_log(f"Error loading settings: {e}")
 
     def install_event_filter(self):
         """Install event filter to capture key and mouse events"""
@@ -182,6 +191,11 @@ class GestureDetector(QObject):
             try:
                 QApplication.instance().removeEventFilter(self)
                 self.event_filter_installed = False
+                # Clean up preview widget if it exists
+                if self.preview_widget is not None:
+                    self.preview_widget.hide_preview()
+                    self.preview_widget.deleteLater()
+                    self.preview_widget = None
                 write_log("✅ Gesture event filter uninstalled successfully")
                 write_log(
                     f"Max recursion depth reached during session: {self.max_event_filter_depth}"
@@ -261,14 +275,22 @@ class GestureDetector(QObject):
 
                 if key_text and key_text in self.gesture_configs:
                     self.active_key = key_text
-                    write_log(f"Gesture key '{key_text}' pressed")
+                    # write_log(f"Gesture key '{key_text}' pressed")
                     # write_log(f"Current Gesture Configs: {self.gesture_configs}")
 
                     # Start gesture immediately using current cursor position
                     if not self.gesture_active:
-                        from PyQt5.QtGui import QCursor
+                        cursor_pos = QCursor.pos()
+                        self.start_gesture(cursor_pos)
 
-                        self.start_gesture(QCursor.pos())
+                        # Show preview widget if enabled
+                        if self.show_preview:
+                            # Lazy initialization of preview widget
+                            if self.preview_widget is None:
+                                self.preview_widget = GesturePreviewWidget()
+
+                            gesture_map = self.gesture_configs[key_text]
+                            self.preview_widget.show_preview(gesture_map, cursor_pos)
 
             # Key release - deactivate gesture
             elif event_type == QEvent.KeyRelease:
@@ -280,6 +302,10 @@ class GestureDetector(QObject):
                         key_text = f"F{key - Qt.Key_F1 + 1}"
 
                 if key_text and key_text == self.active_key:
+                    # Hide preview widget if it exists
+                    if self.preview_widget is not None:
+                        self.preview_widget.hide_preview()
+
                     # Execute gesture on key release
                     if self.gesture_active:
                         self.execute_current_gesture()
@@ -308,7 +334,7 @@ class GestureDetector(QObject):
         self.gesture_active = True
         self.start_pos = pos
         self.last_pos = pos
-        write_log(f"Gesture started at {pos}")
+        # write_log(f"Gesture started at {pos}")
 
     def update_gesture(self, pos):
         """Update gesture tracking with new mouse position"""
@@ -320,6 +346,9 @@ class GestureDetector(QObject):
         self.active_key = None
         self.start_pos = None
         self.last_pos = None
+        # Hide preview if still showing
+        if self.preview_widget is not None:
+            self.preview_widget.hide_preview()
 
     def execute_current_gesture(self):
         """Determine gesture direction and execute corresponding action"""
@@ -332,33 +361,34 @@ class GestureDetector(QObject):
         dy = self.last_pos.y() - self.start_pos.y()
         distance = (dx * dx + dy * dy) ** 0.5
 
-        write_log(f"Gesture: dx={dx}, dy={dy}, distance={distance}")
+        # write_log(f"Gesture: dx={dx}, dy={dy}, distance={distance}")
 
         # Check if movement is significant enough
         if distance < self.threshold:
-            write_log(f"Gesture too small (threshold: {self.threshold})")
+            # write_log(f"Gesture too small (threshold: {self.threshold})")
             # Execute center action if configured
             if self.active_key in self.gesture_configs:
                 gesture_map = self.gesture_configs[self.active_key]
                 if "center" in gesture_map:
                     gesture_config = gesture_map["center"]
-                    write_log(f"Executing center action: {gesture_config}")
+                    # write_log(f"Executing center action: {gesture_config}")
                     execute_gesture(gesture_config)
                 else:
-                    write_log("No center action configured")
+                    # write_log("No center action configured")
+                    pass
             self.cancel_gesture()
             return
 
         # Determine direction based on angle
         direction = self.calculate_direction(dx, dy)
-        write_log(f"Gesture direction: {direction}")
+        # write_log(f"Gesture direction: {direction}")
 
         # Get gesture config for this key and direction
         if self.active_key in self.gesture_configs:
             gesture_map = self.gesture_configs[self.active_key]
             if direction in gesture_map:
                 gesture_config = gesture_map[direction]
-                write_log(f"Executing gesture: {gesture_config}")
+                # write_log(f"Executing gesture: {gesture_config}")
                 execute_gesture(gesture_config)
             else:
                 write_log(f"No gesture configured for direction: {direction}")

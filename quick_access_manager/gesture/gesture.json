@@ -1,4 +1,5 @@
 {
     "enabled": true,
-    "minimum_pixels_to_move": 20
+    "minimum_pixels_to_move": 20,
+    "show_preview": true
 }
