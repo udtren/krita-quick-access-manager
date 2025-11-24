@@ -103,7 +103,7 @@ class GesturePreviewWidget(QWidget):
                         QLabel {
                             background-color: #aea152;
                             color: #000000;
-                            border-radius: 4px;
+                            border-radius: 8px;
                             padding: 8px;
                             font-size: 24px;
                             opacity: 0.7;
@@ -129,7 +129,7 @@ class GesturePreviewWidget(QWidget):
                                     """
                                     QLabel {
                                         background-color: #7e7cb8;
-                                        border-radius: 4px;
+                                        border-radius: 8px;
                                         padding: 8px;
                                     }
                                     """
@@ -147,7 +147,7 @@ class GesturePreviewWidget(QWidget):
                             QLabel {
                                 background-color: #7e7cb8;
                                 color: #000000;
-                                border-radius: 4px;
+                                border-radius: 8px;
                                 padding: 8px;
                                 font-size: 24px;
                                 opacity: 0.7;
@@ -166,7 +166,7 @@ class GesturePreviewWidget(QWidget):
                         QLabel {
                             background-color: #909090;
                             color: #000000;
-                            border-radius: 4px;
+                            border-radius: 8px;
                             padding: 8px;
                             font-size: 24px;
                             opacity: 0.7;
@@ -183,7 +183,7 @@ class GesturePreviewWidget(QWidget):
                             background-color: rgba(70, 70, 120, 0);
                             color: transparent;
                             border: 2px solid rgba(119, 119, 255, 0);
-                            border-radius: 4px;
+                            border-radius: 8px;
                             padding: 8px;
                             font-size: 11px;
                         }
@@ -203,7 +203,7 @@ class GesturePreviewWidget(QWidget):
                     """
                 )
 
-        # Position widget near cursor (offset to not block cursor)
+        # Position widget at cursor position, centered
         self.adjustSize()
         preview_width = self.width()
         preview_height = self.height()

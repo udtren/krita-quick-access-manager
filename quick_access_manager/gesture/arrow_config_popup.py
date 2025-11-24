@@ -102,7 +102,7 @@ class ArrowConfigPopup(QDialog):
         # Docker name input (initially hidden)
         self.docker_label = QLabel("Docker Name:")
         self.docker_input = QLineEdit()
-        self.docker_input.setPlaceholderText("Enter docker name (e.g., 'lasso')")
+        self.docker_input.setPlaceholderText("Enter docker name (e.g., 'Tool Options')")
         self.docker_label.hide()
         self.docker_input.hide()
         layout.addWidget(self.docker_label)

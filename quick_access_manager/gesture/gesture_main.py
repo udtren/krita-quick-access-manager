@@ -14,6 +14,9 @@ from .widgets.gesture_preview import GesturePreviewWidget
 from ..utils.logs import write_log
 
 
+# ==================================================================
+# Gesture Detector Class
+# ==================================================================
 class GestureDetector(QObject):
     """
     Detects and executes key+mouse gestures.
@@ -123,6 +126,9 @@ class GestureDetector(QObject):
         except Exception as e:
             write_log(f"Error loading settings: {e}")
 
+    # ==================================================================
+    # Event Filter Installation and Handling
+    # ==================================================================
     def install_event_filter(self):
         """Install event filter to capture key and mouse events"""
         if self.event_filter_installed:
@@ -203,6 +209,12 @@ class GestureDetector(QObject):
             except Exception as e:
                 write_log(f"Error uninstalling event filter: {e}")
 
+    # ==================================================================
+
+    # ==================================================================
+    # Gesture Pasuse/Resume API
+    # ==================================================================
+
     def pause_event_filter(self):
         """Pause event filtering by removing the filter (API for external use)"""
         if self.event_filter_installed:
@@ -236,6 +248,12 @@ class GestureDetector(QObject):
                 write_log(f"Error resuming event filter: {e}")
         else:
             write_log("⚠️ Event filter already installed, cannot resume")
+
+    # ==================================================================
+
+    # ==================================================================
+    # Gesture Detection and Execution
+    # ==================================================================
 
     def eventFilter(self, _obj, event):
         """Filter events to detect key+mouse gestures"""
@@ -329,6 +347,55 @@ class GestureDetector(QObject):
         # Always pass events through
         return False
 
+    # ==================================================================
+
+    # ==================================================================
+    # Gesture Tracking and Execution
+    # ==================================================================
+    def calculate_direction(self, dx, dy):
+        """
+        Calculate gesture direction based on movement.
+
+        Returns one of: 'left_up', 'up', 'right_up', 'left', 'right',
+                        'left_down', 'down', 'right_down'
+        """
+        import math
+
+        # Calculate angle in degrees (0 = right, 90 = up, 180 = left, 270 = down)
+        angle = math.degrees(
+            math.atan2(-dy, dx)
+        )  # Negative dy because Y increases downward
+        if angle < 0:
+            angle += 360
+
+        # Map angles to 8 directions
+        # Each direction covers 45 degrees (360/8)
+        # Right: -22.5 to 22.5 (337.5 to 360, 0 to 22.5)
+        # Right-Up: 22.5 to 67.5
+        # Up: 67.5 to 112.5
+        # Left-Up: 112.5 to 157.5
+        # Left: 157.5 to 202.5
+        # Left-Down: 202.5 to 247.5
+        # Down: 247.5 to 292.5
+        # Right-Down: 292.5 to 337.5
+
+        if angle >= 337.5 or angle < 22.5:
+            return "right"
+        elif angle < 67.5:
+            return "right_up"
+        elif angle < 112.5:
+            return "up"
+        elif angle < 157.5:
+            return "left_up"
+        elif angle < 202.5:
+            return "left"
+        elif angle < 247.5:
+            return "left_down"
+        elif angle < 292.5:
+            return "down"
+        else:  # 292.5 to 337.5
+            return "right_down"
+
     def start_gesture(self, pos):
         """Start tracking a gesture"""
         self.gesture_active = True
@@ -398,56 +465,25 @@ class GestureDetector(QObject):
         # Reset gesture state
         self.cancel_gesture()
 
+    # ==================================================================
+
+    # ==================================================================
+    # Configuration Dialog State Management
+    # ==================================================================
     def set_config_dialog_active(self, active):
         """Set whether config dialog is currently active"""
         self.config_dialog_active = active
         write_log(f"Config dialog active state: {active}")
 
-    def calculate_direction(self, dx, dy):
-        """
-        Calculate gesture direction based on movement.
-
-        Returns one of: 'left_up', 'up', 'right_up', 'left', 'right',
-                        'left_down', 'down', 'right_down'
-        """
-        import math
-
-        # Calculate angle in degrees (0 = right, 90 = up, 180 = left, 270 = down)
-        angle = math.degrees(
-            math.atan2(-dy, dx)
-        )  # Negative dy because Y increases downward
-        if angle < 0:
-            angle += 360
-
-        # Map angles to 8 directions
-        # Each direction covers 45 degrees (360/8)
-        # Right: -22.5 to 22.5 (337.5 to 360, 0 to 22.5)
-        # Right-Up: 22.5 to 67.5
-        # Up: 67.5 to 112.5
-        # Left-Up: 112.5 to 157.5
-        # Left: 157.5 to 202.5
-        # Left-Down: 202.5 to 247.5
-        # Down: 247.5 to 292.5
-        # Right-Down: 292.5 to 337.5
-
-        if angle >= 337.5 or angle < 22.5:
-            return "right"
-        elif angle < 67.5:
-            return "right_up"
-        elif angle < 112.5:
-            return "up"
-        elif angle < 157.5:
-            return "left_up"
-        elif angle < 202.5:
-            return "left"
-        elif angle < 247.5:
-            return "left_down"
-        elif angle < 292.5:
-            return "down"
-        else:  # 292.5 to 337.5
-            return "right_down"
+    def enable_gesture_preview(self, enable):
+        """Enable or disable gesture preview widget"""
+        self.show_preview = enable
+        write_log(f"Gesture preview enabled: {enable}")
 
 
+# ==================================================================
+# Gesture Manager Singleton and API Functions
+# ==================================================================
 class GestureManager:
     """
     Manager for the gesture system.
@@ -481,7 +517,10 @@ class GestureManager:
             write_log("Gesture system shutdown")
 
 
-# Global gesture manager instance
+# ==================================================================
+# Global Gesture Manager Instance and API Functions
+# ==================================================================
+
 _gesture_manager = None
 
 
@@ -570,3 +609,12 @@ def is_gesture_enabled():
         write_log(f"Error reading gesture settings: {e}")
 
     return True  # Default to enabled
+
+
+def enable_gesture_preview(enable):
+    """Enable or disable gesture preview widget"""
+    manager = get_gesture_manager()
+    if manager.detector:
+        manager.detector.enable_gesture_preview(enable)
+    else:
+        write_log("⚠️ Cannot set preview: Gesture detector not initialized")

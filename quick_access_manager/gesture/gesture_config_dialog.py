@@ -20,133 +20,8 @@ from .gesture_main import (
     set_config_dialog_active,
     pause_gesture_event_filter,
     resume_gesture_event_filter,
+    enable_gesture_preview,
 )
-
-
-class KeyCaptureDialog(QDialog):
-    """Dialog for capturing a key press for gesture trigger"""
-
-    def __init__(self, config_name, parent=None):
-        super().__init__(parent)
-        self.config_name = config_name
-        self.captured_key = None
-        self.setup_ui()
-
-    def setup_ui(self):
-        """Setup the UI elements"""
-        self.setWindowTitle("Configure Gesture Key")
-        self.resize(400, 200)
-        layout = QVBoxLayout()
-
-        # Apply dark mode styling
-        self.setStyleSheet(
-            """
-            QDialog {
-                background-color: #2b2b2b;
-                color: #e0e0e0;
-            }
-            QLabel {
-                color: #e0e0e0;
-                background-color: transparent;
-                font-size: 14px;
-            }
-            QPushButton {
-                background-color: #3c3c3c;
-                color: #e0e0e0;
-                border: 1px solid #555;
-                border-radius: 4px;
-                padding: 8px;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #4a4a4a;
-                border: 1px solid #666;
-            }
-            QPushButton:pressed {
-                background-color: #2a2a2a;
-                border: 1px solid #444;
-            }
-        """
-        )
-
-        # Instructions
-        title_label = QLabel(f"Configure gesture key for: {self.config_name}")
-        title_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title_label)
-
-        instruction_label = QLabel("Press any key (A-Z, 0-9, F1-F12, etc.)")
-        instruction_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(instruction_label)
-
-        # Display captured key
-        self.key_label = QLabel("No key captured")
-        self.key_label.setAlignment(Qt.AlignCenter)
-        self.key_label.setStyleSheet(
-            """
-            QLabel {
-                font-size: 24px;
-                font-weight: bold;
-                color: #4FC3F7;
-                padding: 20px;
-            }
-        """
-        )
-        layout.addWidget(self.key_label)
-
-        layout.addStretch()
-
-        # Buttons
-        btn_layout = QHBoxLayout()
-        self.ok_btn = QPushButton("OK")
-        self.cancel_btn = QPushButton("Cancel")
-        self.clear_btn = QPushButton("Clear Key")
-        btn_layout.addWidget(self.clear_btn)
-        btn_layout.addWidget(self.ok_btn)
-        btn_layout.addWidget(self.cancel_btn)
-        layout.addLayout(btn_layout)
-
-        self.setLayout(layout)
-
-        # Connect buttons
-        self.ok_btn.clicked.connect(self.accept)
-        self.cancel_btn.clicked.connect(self.reject)
-        self.clear_btn.clicked.connect(self.clear_key)
-
-    def keyPressEvent(self, event: QKeyEvent):
-        """Capture key press event"""
-        # Ignore modifier-only keys
-        if event.key() in [Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_Meta]:
-            return
-
-        # Get the key text
-        key_text = event.text().upper()
-
-        # Handle special keys
-        key = event.key()
-        if key == Qt.Key_Escape:
-            self.reject()
-            return
-        elif key >= Qt.Key_F1 and key <= Qt.Key_F12:
-            key_text = f"F{key - Qt.Key_F1 + 1}"
-        elif key == Qt.Key_Space:
-            key_text = "SPACE"
-        elif key == Qt.Key_Return or key == Qt.Key_Enter:
-            key_text = "ENTER"
-        elif not key_text or not key_text.isalnum():
-            # Only accept alphanumeric keys and F-keys
-            return
-
-        self.captured_key = key_text
-        self.key_label.setText(f"Key: {key_text}")
-
-    def clear_key(self):
-        """Clear the captured key"""
-        self.captured_key = None
-        self.key_label.setText("No key captured")
-
-    def get_captured_key(self):
-        """Return the captured key"""
-        return self.captured_key
 
 
 class GestureConfigDialog(QDialog):
@@ -185,6 +60,9 @@ class GestureConfigDialog(QDialog):
         # Notify gesture system that config dialog is active
         set_config_dialog_active(True)
 
+    # ========================================================================
+    # UI Setup and Loading/Saving Configs
+    # ========================================================================
     def setup_ui(self):
         """Setup the UI elements"""
         main_layout = QVBoxLayout()
@@ -287,200 +165,9 @@ class GestureConfigDialog(QDialog):
         self.save_btn.clicked.connect(self.save_and_close)
         self.cancel_btn.clicked.connect(self.reject)
 
-    def load_configs(self):
-        """Load all JSON config files from the config directory"""
-        if not os.path.exists(self.config_dir):
-            os.makedirs(self.config_dir)
-            return
-
-        # Find all JSON files (excluding gesture.json which is for settings)
-        json_files = [
-            f
-            for f in os.listdir(self.config_dir)
-            if f.endswith(".json") and f != "gesture.json"
-        ]
-
-        if not json_files:
-            # Create a default tab if no configs exist
-            self.add_config_tab("1", {})
-            return
-
-        for json_file in sorted(json_files):
-            config_path = os.path.join(self.config_dir, json_file)
-            try:
-                with open(config_path, "r", encoding="utf-8") as f:
-                    config_data = json.load(f)
-
-                # Use filename without extension as tab name
-                tab_name = os.path.splitext(json_file)[0]
-                self.configs[tab_name] = {"path": config_path, "data": config_data}
-
-                self.add_config_tab(tab_name, config_data)
-            except Exception as e:
-                print(f"Error loading config {json_file}: {e}")
-
-    def load_gesture_settings(self):
-        """Load gesture system settings"""
-        try:
-            if os.path.exists(self.gesture_settings_path):
-                with open(self.gesture_settings_path, "r", encoding="utf-8") as f:
-                    self.gesture_settings = json.load(f)
-            else:
-                # Default settings
-                self.gesture_settings = {"enabled": True, "minimum_pixels_to_move": 20}
-        except Exception as e:
-            print(f"Error loading gesture settings: {e}")
-            self.gesture_settings = {"enabled": True, "minimum_pixels_to_move": 20}
-
-    def save_gesture_settings(self):
-        """Save gesture system settings"""
-        try:
-            with open(self.gesture_settings_path, "w", encoding="utf-8") as f:
-                json.dump(self.gesture_settings, f, indent=4)
-        except Exception as e:
-            print(f"Error saving gesture settings: {e}")
-
-    def update_indicator(self):
-        """Update the status indicator based on gesture manager state"""
-        manager = get_gesture_manager()
-        is_running = manager.detector is not None if manager else False
-        is_enabled = self.gesture_settings.get("enabled", True)
-
-        if is_running and is_enabled:
-            # Green indicator
-            self.status_indicator.setStyleSheet(
-                """
-                QLabel {
-                    background-color: #4CAF50;
-                    border-radius: 2px;
-                    border: 2px solid #388E3C;
-                }
-            """
-            )
-            self.status_indicator.setToolTip("Gesture system is running")
-        else:
-            # Gray indicator
-            self.status_indicator.setStyleSheet(
-                """
-                QLabel {
-                    background-color: #808080;
-                    border-radius: 2px;
-                    border: 2px solid #555;
-                }
-            """
-            )
-            self.status_indicator.setToolTip("Gesture system is not running")
-
-    def open_settings(self):
-        """Open settings dialog"""
-        from PyQt5.QtWidgets import QCheckBox, QSpinBox, QFormLayout
-
-        settings_dialog = QDialog(self)
-        settings_dialog.setWindowTitle("Gesture Settings")
-        settings_dialog.resize(300, 150)
-        settings_dialog.setStyleSheet(self.styleSheet())  # Apply same dark theme
-
-        layout = QVBoxLayout()
-        form_layout = QFormLayout()
-
-        # Enabled checkbox
-        enabled_checkbox = QCheckBox()
-        enabled_checkbox.setChecked(self.gesture_settings.get("enabled", True))
-        form_layout.addRow("Enable Gesture System:", enabled_checkbox)
-
-        # Minimum pixels spinbox
-        min_pixels_spinbox = QSpinBox()
-        min_pixels_spinbox.setMinimum(1)
-        min_pixels_spinbox.setMaximum(200)
-        min_pixels_spinbox.setValue(
-            self.gesture_settings.get("minimum_pixels_to_move", 20)
-        )
-        form_layout.addRow("Minimum Pixels to Move:", min_pixels_spinbox)
-
-        layout.addLayout(form_layout)
-
-        # Buttons
-        btn_layout = QHBoxLayout()
-        ok_btn = QPushButton("OK")
-        cancel_btn = QPushButton("Cancel")
-        btn_layout.addWidget(ok_btn)
-        btn_layout.addWidget(cancel_btn)
-        layout.addLayout(btn_layout)
-
-        settings_dialog.setLayout(layout)
-
-        def save_settings():
-            enabled = enabled_checkbox.isChecked()
-            self.gesture_settings["enabled"] = enabled
-            self.gesture_settings["minimum_pixels_to_move"] = min_pixels_spinbox.value()
-            self.save_gesture_settings()
-
-            # Get current event filter installation state
-            manager = get_gesture_manager()
-            event_filter_installed = False
-            if manager and manager.detector:
-                event_filter_installed = manager.detector.event_filter_installed
-
-            # Pause or resume based on enabled state and current installation state
-            if not enabled and event_filter_installed:
-                # Checkbox is false and filter is installed -> pause
-                pause_gesture_event_filter()
-            elif enabled and not event_filter_installed:
-                # Checkbox is true and filter is not installed -> resume
-                resume_gesture_event_filter()
-
-            self.update_indicator()
-            settings_dialog.accept()
-
-        ok_btn.clicked.connect(save_settings)
-        cancel_btn.clicked.connect(settings_dialog.reject)
-
-        settings_dialog.exec_()
-
-    def add_new_config(self):
-        """Add a new empty config file with next available number"""
-        # Find the next available number
-        existing_numbers = []
-        for config_name in self.configs.keys():
-            try:
-                num = int(config_name)
-                existing_numbers.append(num)
-            except ValueError:
-                pass  # Skip non-numeric config names
-
-        # Get next number
-        next_num = 1
-        if existing_numbers:
-            next_num = max(existing_numbers) + 1
-
-        new_name = str(next_num)
-        new_path = os.path.join(self.config_dir, f"{new_name}.json")
-
-        # Create empty config
-        empty_config = {}
-        self.configs[new_name] = {"path": new_path, "data": empty_config}
-
-        # Add tab
-        self.add_config_tab(new_name, empty_config)
-
-        # Switch to the new tab
-        self.tab_widget.setCurrentIndex(self.tab_widget.count() - 1)
-
-    def add_config_tab(self, name, config_data):
-        """Add a new tab with gesture configuration UI"""
-        tab_widget = QWidget()
-        tab_layout = QVBoxLayout()
-        tab_widget.setLayout(tab_layout)
-
-        # Create the 5x5 gesture grid
-        gesture_grid = self.create_gesture_grid(name, config_data)
-        tab_layout.addLayout(gesture_grid)
-
-        tab_layout.addStretch()
-
-        # Add tab to tab widget
-        self.tab_widget.addTab(tab_widget, name)
-
+    # ========================================================================
+    # Gesture Grid Creation and Handlers
+    # ========================================================================
     def create_gesture_grid(self, config_name, config_data):
         """Create the 3x3 grid of gesture arrows and labels"""
         grid_layout = QGridLayout()
@@ -648,6 +335,227 @@ class GestureConfigDialog(QDialog):
         else:
             return f"{gesture_type}"
 
+    # ========================================================================
+    def load_configs(self):
+        """Load all JSON config files from the config directory"""
+        if not os.path.exists(self.config_dir):
+            os.makedirs(self.config_dir)
+            return
+
+        # Find all JSON files (excluding gesture.json which is for settings)
+        json_files = [
+            f
+            for f in os.listdir(self.config_dir)
+            if f.endswith(".json") and f != "gesture.json"
+        ]
+
+        if not json_files:
+            # Create a default tab if no configs exist
+            self.add_config_tab("1", {})
+            return
+
+        for json_file in sorted(json_files):
+            config_path = os.path.join(self.config_dir, json_file)
+            try:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    config_data = json.load(f)
+
+                # Use filename without extension as tab name
+                tab_name = os.path.splitext(json_file)[0]
+                self.configs[tab_name] = {"path": config_path, "data": config_data}
+
+                self.add_config_tab(tab_name, config_data)
+            except Exception as e:
+                print(f"Error loading config {json_file}: {e}")
+
+    def update_indicator(self):
+        """Update the status indicator based on gesture manager state"""
+        manager = get_gesture_manager()
+        is_running = manager.detector is not None if manager else False
+        is_enabled = self.gesture_settings.get("enabled", True)
+
+        if is_running and is_enabled:
+            # Green indicator
+            self.status_indicator.setStyleSheet(
+                """
+                QLabel {
+                    background-color: #4CAF50;
+                    border-radius: 2px;
+                    border: 2px solid #388E3C;
+                }
+            """
+            )
+            self.status_indicator.setToolTip("Gesture system is running")
+        else:
+            # Gray indicator
+            self.status_indicator.setStyleSheet(
+                """
+                QLabel {
+                    background-color: #808080;
+                    border-radius: 2px;
+                    border: 2px solid #555;
+                }
+            """
+            )
+            self.status_indicator.setToolTip("Gesture system is not running")
+
+    # ========================================================================
+    # Gesture System Settings Dialog
+    # ========================================================================
+    def open_settings(self):
+        """Open settings dialog"""
+        from PyQt5.QtWidgets import QCheckBox, QSpinBox, QFormLayout
+
+        settings_dialog = QDialog(self)
+        settings_dialog.setWindowTitle("Gesture Settings")
+        settings_dialog.resize(300, 150)
+        settings_dialog.setStyleSheet(self.styleSheet())  # Apply same dark theme
+
+        layout = QVBoxLayout()
+        form_layout = QFormLayout()
+
+        # Enabled checkbox
+        enabled_checkbox = QCheckBox()
+        enabled_checkbox.setChecked(self.gesture_settings.get("enabled", True))
+        form_layout.addRow("Enable Gesture System:", enabled_checkbox)
+
+        # Minimum pixels spinbox
+        min_pixels_spinbox = QSpinBox()
+        min_pixels_spinbox.setMinimum(1)
+        min_pixels_spinbox.setMaximum(200)
+        min_pixels_spinbox.setValue(
+            self.gesture_settings.get("minimum_pixels_to_move", 20)
+        )
+        form_layout.addRow("Minimum Pixels to Move:", min_pixels_spinbox)
+
+        # Show preview checkbox
+        show_preview_checkbox = QCheckBox()
+        show_preview_checkbox.setChecked(
+            self.gesture_settings.get("show_preview", True)
+        )
+        form_layout.addRow("Show Gesture Preview:", show_preview_checkbox)
+
+        layout.addLayout(form_layout)
+
+        # Buttons
+        btn_layout = QHBoxLayout()
+        ok_btn = QPushButton("OK")
+        cancel_btn = QPushButton("Cancel")
+        btn_layout.addWidget(ok_btn)
+        btn_layout.addWidget(cancel_btn)
+        layout.addLayout(btn_layout)
+
+        settings_dialog.setLayout(layout)
+
+        def save_settings():
+            enabled = enabled_checkbox.isChecked()
+            show_gesture_preview = show_preview_checkbox.isChecked()
+            self.gesture_settings["enabled"] = enabled
+            self.gesture_settings["minimum_pixels_to_move"] = min_pixels_spinbox.value()
+            self.gesture_settings["show_preview"] = show_gesture_preview
+            self.save_gesture_settings()
+
+            # Get current event filter installation state
+            manager = get_gesture_manager()
+            event_filter_installed = False
+            if manager and manager.detector:
+                event_filter_installed = manager.detector.event_filter_installed
+
+            # Pause or resume based on enabled state and current installation state
+            if not enabled and event_filter_installed:
+                # Checkbox is false and filter is installed -> pause
+                pause_gesture_event_filter()
+            elif enabled and not event_filter_installed:
+                # Checkbox is true and filter is not installed -> resume
+                resume_gesture_event_filter()
+
+            # Enable or disable gesture preview
+            if show_gesture_preview:
+                enable_gesture_preview(True)
+            else:
+                enable_gesture_preview(False)
+
+            self.update_indicator()
+            settings_dialog.accept()
+
+        ok_btn.clicked.connect(save_settings)
+        cancel_btn.clicked.connect(settings_dialog.reject)
+
+        settings_dialog.exec_()
+
+    # ========================================================================
+
+    def load_gesture_settings(self):
+        """Load gesture system settings"""
+        try:
+            if os.path.exists(self.gesture_settings_path):
+                with open(self.gesture_settings_path, "r", encoding="utf-8") as f:
+                    self.gesture_settings = json.load(f)
+            else:
+                # Default settings
+                self.gesture_settings = {"enabled": True, "minimum_pixels_to_move": 20}
+        except Exception as e:
+            print(f"Error loading gesture settings: {e}")
+            self.gesture_settings = {
+                "enabled": True,
+                "minimum_pixels_to_move": 20,
+                "show_preview": True,
+            }
+
+    def save_gesture_settings(self):
+        """Save gesture system settings"""
+        try:
+            with open(self.gesture_settings_path, "w", encoding="utf-8") as f:
+                json.dump(self.gesture_settings, f, indent=4)
+        except Exception as e:
+            print(f"Error saving gesture settings: {e}")
+
+    # ========================================================================
+
+    def add_new_config(self):
+        """Add a new empty config file with next available number"""
+        # Find the next available number
+        existing_numbers = []
+        for config_name in self.configs.keys():
+            try:
+                num = int(config_name)
+                existing_numbers.append(num)
+            except ValueError:
+                pass  # Skip non-numeric config names
+
+        # Get next number
+        next_num = 1
+        if existing_numbers:
+            next_num = max(existing_numbers) + 1
+
+        new_name = str(next_num)
+        new_path = os.path.join(self.config_dir, f"{new_name}.json")
+
+        # Create empty config
+        empty_config = {}
+        self.configs[new_name] = {"path": new_path, "data": empty_config}
+
+        # Add tab
+        self.add_config_tab(new_name, empty_config)
+
+        # Switch to the new tab
+        self.tab_widget.setCurrentIndex(self.tab_widget.count() - 1)
+
+    def add_config_tab(self, name, config_data):
+        """Add a new tab with gesture configuration UI"""
+        tab_widget = QWidget()
+        tab_layout = QVBoxLayout()
+        tab_widget.setLayout(tab_layout)
+
+        # Create the 5x5 gesture grid
+        gesture_grid = self.create_gesture_grid(name, config_data)
+        tab_layout.addLayout(gesture_grid)
+
+        tab_layout.addStretch()
+
+        # Add tab to tab widget
+        self.tab_widget.addTab(tab_widget, name)
+
     def config_gesture_action(self):
         """Open dialog to configure a gesture action"""
         button = self.sender()
@@ -745,3 +653,129 @@ class GestureConfigDialog(QDialog):
         # Notify gesture system that config dialog is no longer active
         set_config_dialog_active(False)
         super().reject()
+
+
+class KeyCaptureDialog(QDialog):
+    """Dialog for capturing a key press for gesture trigger"""
+
+    def __init__(self, config_name, parent=None):
+        super().__init__(parent)
+        self.config_name = config_name
+        self.captured_key = None
+        self.setup_ui()
+
+    def setup_ui(self):
+        """Setup the UI elements"""
+        self.setWindowTitle("Configure Gesture Key")
+        self.resize(400, 200)
+        layout = QVBoxLayout()
+
+        # Apply dark mode styling
+        self.setStyleSheet(
+            """
+            QDialog {
+                background-color: #2b2b2b;
+                color: #e0e0e0;
+            }
+            QLabel {
+                color: #e0e0e0;
+                background-color: transparent;
+                font-size: 14px;
+            }
+            QPushButton {
+                background-color: #3c3c3c;
+                color: #e0e0e0;
+                border: 1px solid #555;
+                border-radius: 4px;
+                padding: 8px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #4a4a4a;
+                border: 1px solid #666;
+            }
+            QPushButton:pressed {
+                background-color: #2a2a2a;
+                border: 1px solid #444;
+            }
+        """
+        )
+
+        # Instructions
+        title_label = QLabel(f"Configure gesture key for: {self.config_name}")
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
+
+        instruction_label = QLabel("Press any key (A-Z, 0-9, F1-F12, etc.)")
+        instruction_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(instruction_label)
+
+        # Display captured key
+        self.key_label = QLabel("No key captured")
+        self.key_label.setAlignment(Qt.AlignCenter)
+        self.key_label.setStyleSheet(
+            """
+            QLabel {
+                font-size: 24px;
+                font-weight: bold;
+                color: #4FC3F7;
+                padding: 20px;
+            }
+        """
+        )
+        layout.addWidget(self.key_label)
+
+        layout.addStretch()
+
+        # Buttons
+        btn_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.clear_btn = QPushButton("Clear Key")
+        btn_layout.addWidget(self.clear_btn)
+        btn_layout.addWidget(self.ok_btn)
+        btn_layout.addWidget(self.cancel_btn)
+        layout.addLayout(btn_layout)
+
+        self.setLayout(layout)
+
+        # Connect buttons
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        self.clear_btn.clicked.connect(self.clear_key)
+
+    def keyPressEvent(self, event: QKeyEvent):
+        """Capture key press event"""
+        # Ignore modifier-only keys
+        if event.key() in [Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_Meta]:
+            return
+
+        # Get the key text
+        key_text = event.text().upper()
+
+        # Handle special keys
+        key = event.key()
+        if key == Qt.Key_Escape:
+            self.reject()
+            return
+        elif key >= Qt.Key_F1 and key <= Qt.Key_F12:
+            key_text = f"F{key - Qt.Key_F1 + 1}"
+        elif key == Qt.Key_Space:
+            key_text = "SPACE"
+        elif key == Qt.Key_Return or key == Qt.Key_Enter:
+            key_text = "ENTER"
+        elif not key_text or not key_text.isalnum():
+            # Only accept alphanumeric keys and F-keys
+            return
+
+        self.captured_key = key_text
+        self.key_label.setText(f"Key: {key_text}")
+
+    def clear_key(self):
+        """Clear the captured key"""
+        self.captured_key = None
+        self.key_label.setText("No key captured")
+
+    def get_captured_key(self):
+        """Return the captured key"""
+        return self.captured_key
