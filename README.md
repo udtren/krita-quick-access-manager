@@ -83,12 +83,16 @@ A gesture-based control system that allows you to trigger actions using keyboard
    - Click the "Settings" button to access:
      - **Enable Gesture System**: Toggle the entire gesture system on/off (Require Krita restart)
      - **Minimum Pixels to Move**: Adjust gesture sensitivity (1-200 pixels)
+     - **Preview Overlay**: Enable/Disable preview overlay
 
 6. **Execute Gestures**:
    - Press and hold the configured trigger key
    - Move(hover) your mouse in one of the 8 directions
    - Release the key to execute the action
    - Or simply press and release without moving to trigger the center action
+
+### Temporarily Disable
+There is a Krita shortcut `Toggle Gesture Recognition` that can be used to disable gesture recognition temporarily.
 
 ### Preview
 [![Gesture Preview](https://vumbnail.com/1139942269.jpg)](https://vimeo.com/1139942269)
