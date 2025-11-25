@@ -627,11 +627,15 @@ class GestureConfigDialog(QDialog):
             action_dialog = ArrowConfigPopup("center", config_name, self, self)
             if action_dialog.exec_():
                 gesture_config = action_dialog.get_gesture_config()
-                if gesture_config:
+                if gesture_config is None:
+                    # Remove the direction from config to clear it
+                    if "center" in self.configs[config_name]["data"]:
+                        del self.configs[config_name]["data"]["center"]
+                else:
                     # Update the config data for center action
                     self.configs[config_name]["data"]["center"] = gesture_config
-                    # Update the label to show new config
-                    self.update_gesture_label(config_name, "center")
+                # Update the label to show new config
+            self.update_gesture_label(config_name, "center")
 
     def save_and_close(self):
         """Save all configurations and close dialog"""
