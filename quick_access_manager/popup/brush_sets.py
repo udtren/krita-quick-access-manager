@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QGridLayout,
     QPushButton,
     QLabel,
@@ -10,9 +11,11 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from krita import Krita  # type: ignore
+from ..utils.logs import write_log
 
 BrushSetsPopupShortcut = QKeySequence(Qt.Key_W)
 BrushIconSize = 46
+GridLabelWidth = 80
 
 
 class BrushSetsPopup:
@@ -68,7 +71,7 @@ class BrushSetsPopup:
             self.popup_window.raise_()
 
             # Auto-hide after 10 seconds (optional)
-            QTimer.singleShot(10000, self.popup_window.hide)
+            # QTimer.singleShot(10000, self.popup_window.hide)
 
         except Exception as e:
             print(f"Error showing popup: {e}")
@@ -80,16 +83,7 @@ class BrushSetsPopup:
         """Create the popup window with brush grid content"""
         self.popup_window = QFrame()
         self.popup_window.setWindowFlags(
-            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
-        )
-        self.popup_window.setStyleSheet(
-            """
-            QFrame {
-                border: 2px solid #0078d4;
-                background-color: #2d2d2d;
-                border-radius: 5px;
-            }
-        """
+            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         )
 
         popup_layout = QVBoxLayout()
@@ -119,7 +113,25 @@ class BrushSetsPopup:
 
         # Display all grids
         for grid_info in self.parent_docker.grids:
-            # Create grid for brushes (removed grid header label)
+            grid_name = grid_info.get("name", "Unnamed Grid")
+            grid_label = QLabel(grid_name)
+            grid_label.setFixedWidth(GridLabelWidth)
+            grid_label.setWordWrap(True)
+            grid_label.setAlignment(Qt.AlignCenter)
+            grid_label.setStyleSheet(
+                """
+                color: #000000;
+                background-color: #919191;
+                font-weight: bold;
+                font-size: 12px;
+                """
+            )
+
+            grid_name_preset_layout = QHBoxLayout()
+            grid_name_preset_layout.setContentsMargins(0, 0, 0, 0)
+            grid_name_preset_layout.setSpacing(5)
+            grid_name_preset_layout.addWidget(grid_label)
+
             if grid_info.get("brush_presets"):
                 grid_widget = QWidget()
                 grid_layout = QGridLayout()
@@ -212,9 +224,7 @@ class BrushSetsPopup:
                     )
 
                     grid_layout.addWidget(brush_btn, row, col)
-
                 grid_widget.setLayout(grid_layout)
-                main_layout.addWidget(grid_widget)
             else:
                 # Empty grid message
                 empty_label = QLabel("  (empty)")
@@ -222,6 +232,9 @@ class BrushSetsPopup:
                     "color: #666; font-style: italic; font-size: 10px; margin-left: 10px;"
                 )
                 main_layout.addWidget(empty_label)
+            grid_name_preset_layout.addWidget(grid_widget)
+            grid_name_preset_layout.addStretch()
+            main_layout.addLayout(grid_name_preset_layout)
 
         main_widget.setLayout(main_layout)
         popup_layout.addWidget(main_widget)

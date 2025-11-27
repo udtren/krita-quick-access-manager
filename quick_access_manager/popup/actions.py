@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QGridLayout,
     QPushButton,
     QLabel,
@@ -11,12 +12,14 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from krita import Krita  # type: ignore
 from ..utils.action_manager import ActionManager
+from ..utils.logs import write_log
 import json
 import os
 
 ActionsPopupShortcut = QKeySequence(Qt.Key_Tab)
 ActionButtonSizeX = 100
 ActionButtonSizeY = 35
+GridLabelWidth = 80
 
 
 class ActionsPopup:
@@ -197,7 +200,7 @@ class ActionsPopup:
             self.popup_window.raise_()
 
             # Auto-hide after 10 seconds (optional)
-            QTimer.singleShot(10000, self.popup_window.hide)
+            # QTimer.singleShot(10000, self.popup_window.hide)
 
         except Exception as e:
             print(f"Error showing actions popup: {e}")
@@ -211,15 +214,7 @@ class ActionsPopup:
         self.popup_window.setWindowFlags(
             Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
         )
-        self.popup_window.setStyleSheet(
-            """
-            QFrame {
-                border: 2px solid #0078d4;
-                background-color: #2d2d2d;
-                border-radius: 5px;
-            }
-        """
-        )
+
         popup_layout = QVBoxLayout()
         popup_layout.setContentsMargins(5, 5, 5, 5)
         popup_layout.setSpacing(2)
@@ -248,7 +243,25 @@ class ActionsPopup:
 
         # Display all action grids from shortcut_grid_data.json ONLY
         for grid_data in self.shortcut_grid_data["grids"]:
-            # Create grid for actions (no grid name label as requested)
+            write_log(f"Processing action grid: {grid_data}")
+            grid_name = grid_data.get("name", "Unnamed Grid")
+            grid_label = QLabel(grid_name)
+            grid_label.setFixedWidth(GridLabelWidth)
+            grid_label.setWordWrap(True)
+            grid_label.setAlignment(Qt.AlignCenter)
+            grid_label.setStyleSheet(
+                """
+                color: #000000;
+                background-color: #919191;
+                font-weight: bold;
+                font-size: 12px;
+                """
+            )
+
+            grid_name_action_layout = QHBoxLayout()
+            grid_name_action_layout.setContentsMargins(0, 0, 0, 0)
+            grid_name_action_layout.setSpacing(5)
+            grid_name_action_layout.addWidget(grid_label)
             if grid_data.get("shortcuts"):
                 grid_widget_container = QWidget()
                 grid_layout = QGridLayout()
@@ -344,9 +357,7 @@ class ActionsPopup:
                         )
 
                     grid_layout.addWidget(action_btn, row, col)
-
                 grid_widget_container.setLayout(grid_layout)
-                main_layout.addWidget(grid_widget_container)
             else:
                 # Empty grid message
                 empty_label = QLabel(f"  {grid_data.get('name', 'Grid')} (empty)")
@@ -354,6 +365,9 @@ class ActionsPopup:
                     "color: #666; font-style: italic; font-size: 10px; margin-left: 10px;"
                 )
                 main_layout.addWidget(empty_label)
+            grid_name_action_layout.addWidget(grid_widget_container)
+            grid_name_action_layout.addStretch()
+            main_layout.addLayout(grid_name_action_layout)
 
         main_widget.setLayout(main_layout)
         popup_layout.addWidget(main_widget)
