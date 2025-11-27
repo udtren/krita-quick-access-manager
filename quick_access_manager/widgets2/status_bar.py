@@ -1,0 +1,121 @@
+import os
+from krita import *
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QFrame
+from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtGui import QPixmap
+
+
+class StatusBarWidget(QWidget):
+    """Status bar widget to display document information"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.icon_dir = os.path.join(os.path.dirname(__file__), "icon")
+        self.init_ui()
+        self.update_status()
+
+        # Timer to periodically update status
+        self.status_update_timer = QTimer()
+        self.status_update_timer.timeout.connect(self.update_status)
+        self.status_update_timer.start(1000)  # Update every second
+
+    def init_ui(self):
+        layout = QHBoxLayout()
+        layout.setContentsMargins(5, 0, 5, 0)
+        layout.setSpacing(3)
+
+        # Create labels with fixed size for icons
+        self.selection_info_label = QLabel()
+        self.selection_info_label.setFixedSize(18, 18)
+        self.selection_info_label.setScaledContents(True)
+
+        self.alphalock_info_label = QLabel()
+        self.alphalock_info_label.setFixedSize(18, 18)
+        self.alphalock_info_label.setScaledContents(True)
+
+        self.inherit_alpha_info_label = QLabel()
+        self.inherit_alpha_info_label.setFixedSize(18, 18)
+        self.inherit_alpha_info_label.setScaledContents(True)
+
+        layout.addWidget(self.selection_info_label)
+        layout.addWidget(self._create_separator())
+        layout.addWidget(self.alphalock_info_label)
+        layout.addWidget(self._create_separator())
+        layout.addWidget(self.inherit_alpha_info_label)
+        layout.addStretch()
+
+        self.setLayout(layout)
+
+    def _create_separator(self):
+        """Create a vertical separator line"""
+        separator = QFrame()
+        separator.setFrameShape(QFrame.VLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        separator.setStyleSheet(
+            """
+            QFrame {
+                color: #3a3a3a;
+                margin: 2px 8px;
+            }
+            """
+        )
+        return separator
+
+    def update_status(self):
+        # Update selection icon
+        selection_info = self.get_selection_status()
+        selection_icon = "selection_on.png" if selection_info else "selection_off.png"
+        selection_tooltip = "Selection: On" if selection_info else "Selection: Off"
+        self.selection_info_label.setToolTip(selection_tooltip)
+        self.selection_info_label.setPixmap(
+            QPixmap(os.path.join(self.icon_dir, selection_icon))
+        )
+
+        # Update alpha lock icon
+        alphalock_info = self.get_alphalock_status()
+        alphalock_icon = "alpha_lock_on.png" if alphalock_info else "alpha_lock_off.png"
+        alphalock_tooltip = "Alpha Lock: On" if alphalock_info else "Alpha Lock: Off"
+        self.alphalock_info_label.setToolTip(alphalock_tooltip)
+        self.alphalock_info_label.setPixmap(
+            QPixmap(os.path.join(self.icon_dir, alphalock_icon))
+        )
+
+        # Update inherit alpha icon
+        inherit_alpha_info = self.get_inherit_alpha_status()
+        inherit_alpha_icon = (
+            "inherit_alpha_on.png" if inherit_alpha_info else "inherit_alpha_off.png"
+        )
+        inherit_alpha_tooltip = (
+            "Inherit Alpha: On" if inherit_alpha_info else "Inherit Alpha: Off"
+        )
+        self.inherit_alpha_info_label.setToolTip(inherit_alpha_tooltip)
+        self.inherit_alpha_info_label.setPixmap(
+            QPixmap(os.path.join(self.icon_dir, inherit_alpha_icon))
+        )
+
+    def get_selection_status(self):
+        doc = Krita.instance().activeDocument()
+        if doc is None:
+            return False
+        selection = doc.selection()
+        if selection is None:
+            return False
+        return True
+
+    def get_alphalock_status(self):
+        doc = Krita.instance().activeDocument()
+        if doc is None:
+            return False
+        active_node = doc.activeNode()
+        if active_node is None:
+            return False
+        return active_node.alphaLocked()
+
+    def get_inherit_alpha_status(self):
+        doc = Krita.instance().activeDocument()
+        if doc is None:
+            return False
+        active_node = doc.activeNode()
+        if active_node is None:
+            return False
+        return active_node.inheritAlpha()
