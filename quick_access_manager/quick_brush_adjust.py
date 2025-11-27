@@ -19,6 +19,7 @@ from .widgets2 import (
     ColorHistoryWidget,
     CircularRotationWidget,
     BrushHistoryWidget,
+    StatusBarWidget,
     BRUSH_ADJUSTMENT_FONT_SIZE,
     BRUSH_ADJUSTMENT_NUMBER_SIZE,
     COLOR_HISTORY_NUMBER,
@@ -412,6 +413,9 @@ class BrushAdjustmentWidget(QWidget):
             self, BRUSH_HISTORY_NUMBER, BRUSH_HISTORY_ICON_SIZE
         )
         layout.addWidget(self.brush_history_widget)
+
+        self.status_bar_widget = StatusBarWidget(self)
+        layout.addWidget(self.status_bar_widget)
 
         # Add dynamic docker buttons below the brush history widget
         docker_buttons_layout = QHBoxLayout()

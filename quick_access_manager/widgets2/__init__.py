@@ -1,6 +1,7 @@
 from .color_history_widget import ColorHistoryWidget
 from .circular_rotation_widget import CircularRotationWidget
 from .brush_history_widget import BrushHistoryWidget
+from .status_bar import StatusBarWidget
 
 BRUSH_ADJUSTMENT_FONT_SIZE = "12px"
 BRUSH_ADJUSTMENT_NUMBER_SIZE = "12px"
@@ -25,6 +26,7 @@ __all__ = [
     "ColorHistoryWidget",
     "CircularRotationWidget",
     "BrushHistoryWidget",
+    "StatusBarWidget",
     "BRUSH_ADJUSTMENT_FONT_SIZE",
     "BRUSH_ADJUSTMENT_NUMBER_SIZE",
     "COLOR_HISTORY_NUMBER",
