@@ -155,7 +155,8 @@ finally:
 ## Quick Brush Adjustments Docker
 ![Quick Brush Adjustments](./quick_access_manager/image/004.png)
 
-A dedicated docker for quick brush and layer adjustments, providing instant access to commonly used painting settings.
+A dedicated docker for quick brush and layer adjustments, providing instant access to commonly used painting settings. 
+The docker also includes a status bar at the bottom that displays real-time indicators for active selection, alpha lock, and inherit alpha states. 
 
 ### Features
 
