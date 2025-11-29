@@ -15,7 +15,7 @@ from ..utils.logs import write_log
 
 BrushSetsPopupShortcut = QKeySequence(Qt.Key_W)
 BrushIconSize = 46
-GridLabelWidth = 80
+GridLabelWidth = 60
 
 
 class BrushSetsPopup:
@@ -49,10 +49,8 @@ class BrushSetsPopup:
 
     def show_popup_at_cursor(self):
         """Show popup window at cursor position"""
-        print("Popup shortcut activated!")  # Debug message
         try:
             if self.popup_window and self.popup_window.isVisible():
-                print("Hiding existing popup")
                 self.popup_window.hide()
                 return
 
@@ -74,7 +72,6 @@ class BrushSetsPopup:
             # QTimer.singleShot(10000, self.popup_window.hide)
 
         except Exception as e:
-            print(f"Error showing popup: {e}")
             import traceback
 
             traceback.print_exc()
@@ -122,6 +119,7 @@ class BrushSetsPopup:
                 """
                 color: #000000;
                 background-color: #919191;
+                border-radius: 4px;
                 font-weight: bold;
                 font-size: 12px;
                 """
@@ -175,15 +173,11 @@ class BrushSetsPopup:
                                 )
                                 brush_btn.setIcon(QIcon(scaled_pixmap))
                                 brush_btn.setIconSize(scaled_pixmap.size())
-                                print(f"Successfully set icon for {preset.name()}")
                             else:
-                                print(f"Failed to create pixmap for {preset.name()}")
                                 raise Exception("Null pixmap")
                         else:
-                            print(f"No image available for {preset.name()}")
                             raise Exception("No image")
                     except Exception as e:
-                        print(f"Error loading brush icon for {preset.name()}: {e}")
                         # Fallback: use first 2 characters
                         brush_btn.setText(preset.name()[:2].upper())
                         brush_btn.setStyleSheet(
@@ -210,7 +204,7 @@ class BrushSetsPopup:
                         QPushButton {
                             border: 1px solid #555;
                             background-color: #3d3d3d;
-                            border-radius: 3px;
+                            border-radius: 8px;
                             padding: 2px;
                         }
                         QPushButton:hover {

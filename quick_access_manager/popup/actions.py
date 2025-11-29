@@ -19,7 +19,7 @@ import os
 ActionsPopupShortcut = QKeySequence(Qt.Key_Tab)
 ActionButtonSizeX = 100
 ActionButtonSizeY = 35
-GridLabelWidth = 80
+GridLabelWidth = 60
 
 
 class ActionsPopup:
@@ -253,6 +253,7 @@ class ActionsPopup:
                 """
                 color: #000000;
                 background-color: #919191;
+                border-radius: 4px;
                 font-weight: bold;
                 font-size: 12px;
                 """
@@ -312,7 +313,7 @@ class ActionsPopup:
                         QPushButton {{
                             border: 1px solid #555;
                             background-color: {bg_color};
-                            border-radius: 3px;
+                            border-radius: 4px;
                             padding: 2px;
                             color: {font_color};
                             font-size: {font_size}px;
