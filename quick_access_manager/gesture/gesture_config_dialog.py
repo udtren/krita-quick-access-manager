@@ -810,6 +810,8 @@ class KeyCaptureDialog(QDialog):
             key_text = "SPACE"
         elif key == Qt.Key_Return or key == Qt.Key_Enter:
             key_text = "ENTER"
+        elif key == Qt.Key_QuoteLeft:
+            key_text = "`"
         elif not key_text or not key_text.isalnum():
             # Only accept alphanumeric keys and F-keys
             return

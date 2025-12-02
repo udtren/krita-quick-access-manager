@@ -13,3 +13,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Improved gesture preview overlay styling with better contrast and borders
+- Gesture now support the backtick (`) key
