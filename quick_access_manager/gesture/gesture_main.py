@@ -38,6 +38,7 @@ class GestureDetector(QObject):
         self.event_filter_call_count = 0  # Track eventFilter calls to detect recursion
         self.max_event_filter_depth = 0  # Track max recursion depth
         self.preview_widget = None  # Preview widget for showing gestures (lazy init)
+        self.gesture_alias = {}  # Alias dictionary loaded from settings
         self.load_settings()
 
     def load_gesture_configs(self):
@@ -116,6 +117,7 @@ class GestureDetector(QObject):
                     settings = json.load(f)
                     self.threshold = settings.get("minimum_pixels_to_move", 20)
                     self.show_preview = settings.get("show_preview", True)
+                    self.gesture_alias = settings.get("alias", {})
                     write_log(
                         f"Loaded settings - threshold: {self.threshold}, show_preview: {self.show_preview}"
                     )
@@ -305,7 +307,9 @@ class GestureDetector(QObject):
                         if self.show_preview:
                             # Lazy initialization of preview widget
                             if self.preview_widget is None:
-                                self.preview_widget = GesturePreviewWidget()
+                                self.preview_widget = GesturePreviewWidget(
+                                    self.gesture_alias
+                                )
 
                             gesture_map = self.gesture_configs[key_text]
                             self.preview_widget.show_preview(gesture_map, cursor_pos)
@@ -618,3 +622,23 @@ def enable_gesture_preview(enable):
         manager.detector.enable_gesture_preview(enable)
     else:
         write_log("⚠️ Cannot set preview: Gesture detector not initialized")
+
+
+def refresh_gesture_setting(gesture_alias):
+    """Refresh the gesture alias dictionary from settings"""
+    manager = get_gesture_manager()
+    if manager and manager.detector:
+        manager.detector.load_settings()
+        try:
+            # Update existing widget if it exists, otherwise create new one
+            if manager.detector.preview_widget:
+                manager.detector.preview_widget.update_gesture_alias(gesture_alias)
+            else:
+                # Create new widget if none exists
+                manager.detector.preview_widget = GesturePreviewWidget(gesture_alias)
+            write_log("Gesture alias dictionary refreshed from settings")
+            write_log(f"New gesture alias: {gesture_alias}")
+        except Exception as e:
+            write_log(f"Error refreshing gesture alias dictionary: {e}")
+    else:
+        write_log("⚠️ Cannot refresh alias: Gesture detector not initialized")

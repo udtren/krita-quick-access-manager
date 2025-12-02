@@ -94,6 +94,7 @@ A gesture-based control system that allows you to trigger actions using keyboard
 ### Temporarily Disable
 There is a Krita shortcut `Toggle Gesture Recognition` that can be used to disable gesture recognition temporarily.
 
+
 ### Preview
 [![Gesture Preview](https://vumbnail.com/1139942269.jpg)](https://vimeo.com/1139942269)
 
@@ -103,11 +104,41 @@ By default, a visual preview overlay appears when you press and hold the gesture
 
 You can disable the preview overlay in the gesture settings (top-right corner of the gesture config dialog).
 
-### Tips
+#### Tips
 - The dialog is modeless, allowing you to continue working in Krita while it's open
 - Gesture detection is automatically disabled while the configuration dialog is active
 - All configurations are saved automatically when you click "Save"
 - Configuration files are stored in `quick_access_manager\gesture\config\`
+
+#### Alias
+![alt text](quick_access_manager/image/gesture_preview.png)
+You can rename actions and add custom icons to the gesture preview overlay.
+
+**How to set up aliases:**
+1. Open the gesture config dialog
+2. Click the "Settings" button in the top-right corner
+3. Edit the "Alias Settings (JSON)" field
+
+**Example:**
+```json
+{
+    "KisToolSelectOutline": {
+        "alias_name": "Free Hand",
+        "icon_name": "free_hand.png"
+    },
+    "invert_selection": {
+        "alias_name": "Invert"
+    },
+    "Tool Options": {
+        "icon_name": "tool_option.png"
+    }
+}
+```
+
+- `alias_name`: Custom name to show instead of the action ID
+- `icon_name`: PNG file name from `quick_access_manager\gesture\icon\` folder
+- Both fields are optional
+- Priority: Icon > Alias Name > Original Name
 
 ### External API
 
