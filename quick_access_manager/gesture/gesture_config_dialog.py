@@ -444,18 +444,19 @@ class GestureConfigDialog(QDialog):
         alias_setting = QTextEdit()
         alias_setting.setPlaceholderText(
             """
-            Enter alias settings in JSON format
-            Both "alias_name" and "icon_name" are optional.
-            Priority is Icon > Alias Name > Original Name.
-            Example:
-                "original_id": {
-                    "alias_name": "new_name",
-                    "icon_name:": "png_icon_name"
-                },
-                "original_id2": {
-                    "alias_name": "new_name",
-                    "icon_name:": "png_icon_name"
-                }
+Enter alias settings in JSON format
+Both "alias_name" and "icon_name" are optional.
+Priority is Icon > Alias Name > Original Name.
+Example:
+    {
+    "KisToolSelectOutline": {
+        "alias_name": "Free Hand",
+        "icon_name": "free_hand.png"
+        },
+    "invert_selection": {
+        "alias_name": "Invert"
+        }
+    }
         """
         )
         alias_setting.setText(
