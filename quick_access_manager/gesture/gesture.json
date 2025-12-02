@@ -1,5 +1,69 @@
 {
     "enabled": true,
     "minimum_pixels_to_move": 20,
-    "show_preview": true
+    "show_preview": true,
+    "alias": {
+        "KisToolSelectOutline": {
+            "alias_name": "Free Hand",
+            "icon_name": "free_hand.png"
+        },
+        "invert_selection": {
+            "alias_name": "Invert"
+        },
+        "fill_selection_foreground_color": {
+            "alias_name": "Fill FG Color"
+        },
+        "KisToolSelectElliptical": {
+            "alias_name": "Elliptical",
+            "icon_name": "Elliptical.png"
+        },
+        "KisToolSelectRectangular": {
+            "alias_name": "Rectangular",
+            "icon_name": "Rectangular.png"
+        },
+        "borderselection": {
+            "alias_name": "Border"
+        },
+        "add_new_paint_layer": {
+            "alias_name": "Add Paint Layer"
+        },
+        "merge_layer": {
+            "alias_name": "Merge"
+        },
+        "duplicatelayer": {
+            "alias_name": "Duplicate"
+        },
+        "add_new_layer_alternative": {
+            "alias_name": "Add Layer Alt"
+        },
+        "duplicate_layer_alternative": {
+            "alias_name": "Duplicate Layer Alt"
+        },
+        "KisAssistantTool": {
+            "alias_name": "Assistant Tool"
+        },
+        "view_toggle_assistant_previews": {
+            "alias_name": "Toggle Previews"
+        },
+        "toggle_assistant": {
+            "alias_name": "Toggle Assistant"
+        },
+        "SvgTextTool": {
+            "alias_name": "Text Tool"
+        },
+        "KisToolSelectPolygonal": {
+            "alias_name": "Polygonal",
+            "icon_name": "Polygonal.png"
+        },
+        "KisToolSelectPath": {
+            "alias_name": "Brzier",
+            "icon_name": "Brzier.png"
+        },
+        "Tool Options": {
+            "icon_name": "tool_option.png"
+        },
+        "Toolbox": {
+            "icon_name": "toolbox.png"
+        }
+    }
 }

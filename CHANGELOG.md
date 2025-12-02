@@ -3,4 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+
+## 2025-12-02
+### Added
+- Alias settings for gesture actions and docker toggles in preview overlay
+  - Display custom names instead of internal action IDs
+  - Support custom icons (PNG files) for actions and dockers
+  - Configure aliases via JSON in the gesture settings dialog
+- Tab labels now show assigned gesture keys for quick identification (e.g., "1(A)", "2(B)")
+
+### Changed
+- Improved gesture preview overlay styling with better contrast and borders

@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QTabWidget,
     QWidget,
+    QTextEdit,
 )
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QPixmap, QKeyEvent
@@ -21,7 +22,9 @@ from .gesture_main import (
     pause_gesture_event_filter,
     resume_gesture_event_filter,
     enable_gesture_preview,
+    refresh_gesture_setting,
 )
+from ..utils.logs import write_log
 
 
 class GestureConfigDialog(QDialog):
@@ -363,6 +366,8 @@ class GestureConfigDialog(QDialog):
                 # Use filename without extension as tab name
                 tab_name = os.path.splitext(json_file)[0]
                 self.configs[tab_name] = {"path": config_path, "data": config_data}
+                gesture_key = config_data.get("gesture_key", "")
+                tab_name += f"({gesture_key})" if gesture_key else ""
 
                 self.add_config_tab(tab_name, config_data)
             except Exception as e:
@@ -408,7 +413,7 @@ class GestureConfigDialog(QDialog):
 
         settings_dialog = QDialog(self)
         settings_dialog.setWindowTitle("Gesture Settings")
-        settings_dialog.resize(300, 150)
+        settings_dialog.resize(500, 300)
         settings_dialog.setStyleSheet(self.styleSheet())  # Apply same dark theme
 
         layout = QVBoxLayout()
@@ -435,6 +440,30 @@ class GestureConfigDialog(QDialog):
         )
         form_layout.addRow("Show Gesture Preview:", show_preview_checkbox)
 
+        # Alias settings
+        alias_setting = QTextEdit()
+        alias_setting.setPlaceholderText(
+            """
+            Enter alias settings in JSON format
+            Both "alias_name" and "icon_name" are optional.
+            Priority is Icon > Alias Name > Original Name.
+            Example:
+                "original_id": {
+                    "alias_name": "new_name",
+                    "icon_name:": "png_icon_name"
+                },
+                "original_id2": {
+                    "alias_name": "new_name",
+                    "icon_name:": "png_icon_name"
+                }
+        """
+        )
+        alias_setting.setText(
+            json.dumps(self.gesture_settings.get("alias", {}), indent=4)
+        )
+        alias_setting.setMinimumHeight(300)
+        form_layout.addRow("Alias Settings (JSON):", alias_setting)
+
         layout.addLayout(form_layout)
 
         # Buttons
@@ -453,6 +482,14 @@ class GestureConfigDialog(QDialog):
             self.gesture_settings["enabled"] = enabled
             self.gesture_settings["minimum_pixels_to_move"] = min_pixels_spinbox.value()
             self.gesture_settings["show_preview"] = show_gesture_preview
+            # Load alias settings from text
+            try:
+                alias_json = alias_setting.toPlainText()
+                alias_dict = json.loads(alias_json)
+                self.gesture_settings["alias"] = alias_dict
+            except Exception as e:
+                print(f"Error parsing alias settings JSON: {e}")
+                self.gesture_settings["alias"] = {}
             self.save_gesture_settings()
 
             # Get current event filter installation state
@@ -491,6 +528,7 @@ class GestureConfigDialog(QDialog):
             if os.path.exists(self.gesture_settings_path):
                 with open(self.gesture_settings_path, "r", encoding="utf-8") as f:
                     self.gesture_settings = json.load(f)
+                    self.gesture_alias = self.gesture_settings.get("alias", {})
             else:
                 # Default settings
                 self.gesture_settings = {"enabled": True, "minimum_pixels_to_move": 20}
@@ -507,6 +545,9 @@ class GestureConfigDialog(QDialog):
         try:
             with open(self.gesture_settings_path, "w", encoding="utf-8") as f:
                 json.dump(self.gesture_settings, f, indent=4)
+            gesture_alias = self.gesture_settings.get("alias", {})
+            refresh_gesture_setting(gesture_alias)
+            write_log("Gesture settings saved and refreshed.")
         except Exception as e:
             print(f"Error saving gesture settings: {e}")
 

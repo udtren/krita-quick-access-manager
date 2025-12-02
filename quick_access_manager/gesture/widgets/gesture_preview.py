@@ -2,10 +2,12 @@
 Gesture preview widget that displays available actions in a 3x3 grid.
 """
 
+import os
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout
 from PyQt5.QtGui import QPixmap
 from krita import Krita  # type: ignore
+from quick_access_manager.utils.logs import write_log
 
 
 class GesturePreviewWidget(QWidget):
@@ -14,11 +16,16 @@ class GesturePreviewWidget(QWidget):
     Displays near the cursor when a gesture key is pressed.
     """
 
-    def __init__(self):
+    def __init__(self, gesture_alias):
         super().__init__(
             None, Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         )
         self.setWindowTitle("Gesture Preview")
+        self.gesture_alias = gesture_alias
+        write_log(f"Gesture alias loaded: {self.gesture_alias}")
+
+        # Get icon directory path
+        self.icon_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "icon")
 
         # Create grid layout (3x3)
         self.layout = QGridLayout(self)
@@ -96,6 +103,40 @@ class GesturePreviewWidget(QWidget):
                     action_name = gesture_config["parameters"].get(
                         "action_id", "unknown"
                     )
+                    # Check for alias icon
+                    if (
+                        action_name in self.gesture_alias
+                        and "icon_name" in self.gesture_alias[action_name]
+                    ):
+                        icon_name = self.gesture_alias[action_name]["icon_name"]
+                        try:
+                            icon_path = os.path.join(self.icon_dir, icon_name)
+                            pixmap = QPixmap(icon_path).scaled(
+                                32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                            )
+                            label.setPixmap(pixmap)
+                            label.setText("")  # Clear text when showing pixmap
+                            label.setStyleSheet(
+                                """
+                                QLabel {
+                                    background-color: #aea152;
+                                    border-radius: 8px;
+                                    border: 2px solid #1c2212;
+                                    padding: 8px;
+                                }
+                                """
+                            )
+                            continue  # Skip to next direction after setting pixmap
+                        except:
+                            pass  # If loading icon fails, fallback to text
+
+                    # Check for alias name
+                    if (
+                        action_name in self.gesture_alias
+                        and "alias_name" in self.gesture_alias[action_name]
+                    ):
+                        action_name = self.gesture_alias[action_name]["alias_name"]
+
                     label.clear()  # Clear any previous pixmap
                     label.setText(action_name)
                     label.setStyleSheet(
@@ -104,8 +145,10 @@ class GesturePreviewWidget(QWidget):
                             background-color: #aea152;
                             color: #000000;
                             border-radius: 8px;
-                            padding: 8px;
-                            font-size: 24px;
+                            border: 2px solid #1c2212;
+                            padding: 4px;
+                            font-size: 18px;
+                            font-weight: bold;
                             opacity: 0.7;
                         }
                     """
@@ -148,8 +191,10 @@ class GesturePreviewWidget(QWidget):
                                 background-color: #7e7cb8;
                                 color: #000000;
                                 border-radius: 8px;
-                                padding: 8px;
-                                font-size: 24px;
+                                border: 2px solid #1c2212;
+                                padding: 4px;
+                                font-size: 18px;
+                                font-weight: bold;
                                 opacity: 0.7;
                             }
                             """
@@ -159,6 +204,38 @@ class GesturePreviewWidget(QWidget):
                     action_name = gesture_config["parameters"].get(
                         "docker_name", "unknown"
                     )
+                    # Check for alias icon
+                    if (
+                        action_name in self.gesture_alias
+                        and "icon_name" in self.gesture_alias[action_name]
+                    ):
+                        icon_name = self.gesture_alias[action_name]["icon_name"]
+                        try:
+                            icon_path = os.path.join(self.icon_dir, icon_name)
+                            pixmap = QPixmap(icon_path).scaled(
+                                32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                            )
+                            label.setPixmap(pixmap)
+                            label.setText("")  # Clear text when showing pixmap
+                            label.setStyleSheet(
+                                """
+                                QLabel {
+                                    background-color: #323232;
+                                    border-radius: 8px;
+                                    border: 2px solid #1c2212;
+                                    padding: 8px;
+                                }
+                                """
+                            )
+                            continue  # Skip to next direction after setting pixmap
+                        except:
+                            pass  # If loading icon fails, fallback to text
+                    # Check for alias name
+                    if (
+                        action_name in self.gesture_alias
+                        and "alias_name" in self.gesture_alias[action_name]
+                    ):
+                        action_name = self.gesture_alias[action_name]["alias_name"]
                     label.clear()  # Clear any previous pixmap
                     label.setText(action_name)
                     label.setStyleSheet(
@@ -167,8 +244,10 @@ class GesturePreviewWidget(QWidget):
                             background-color: #909090;
                             color: #000000;
                             border-radius: 8px;
+                            border: 2px solid #1c2212;
                             padding: 8px;
-                            font-size: 24px;
+                            font-size: 18px;
+                            font-weight: bold;
                             opacity: 0.7;
                         }
                     """
@@ -214,6 +293,11 @@ class GesturePreviewWidget(QWidget):
         # Show the widget
         self.show()
         self.raise_()
+
+    def update_gesture_alias(self, gesture_alias):
+        """Update the gesture alias dictionary"""
+        self.gesture_alias = gesture_alias
+        write_log(f"Preview widget gesture alias updated: {self.gesture_alias}")
 
     def hide_preview(self):
         """Hide the preview widget and clear all labels"""
