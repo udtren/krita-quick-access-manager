@@ -112,6 +112,7 @@ You can disable the preview overlay in the gesture settings (top-right corner of
 
 #### Alias
 ![alt text](quick_access_manager/image/gesture_preview.png)
+
 You can rename actions and add custom icons to the gesture preview overlay.
 
 **How to set up aliases:**
