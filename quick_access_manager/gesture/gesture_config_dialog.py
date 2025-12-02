@@ -366,8 +366,8 @@ class GestureConfigDialog(QDialog):
                 # Use filename without extension as tab name
                 tab_name = os.path.splitext(json_file)[0]
                 self.configs[tab_name] = {"path": config_path, "data": config_data}
-                gesture_key = config_data.get("gesture_key", "")
-                tab_name += f"({gesture_key})" if gesture_key else ""
+                # gesture_key = config_data.get("gesture_key", "")
+                # tab_name += f"({gesture_key})" if gesture_key else ""
 
                 self.add_config_tab(tab_name, config_data)
             except Exception as e:
