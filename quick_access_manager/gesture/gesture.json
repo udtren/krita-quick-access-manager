@@ -64,6 +64,12 @@
         },
         "Toolbox": {
             "icon_name": "toolbox.png"
+        },
+        "create_selection_mask_alternative": {
+            "alias_name": "S_Mask Alt"
+        },
+        "create_selection_mask_popup": {
+            "alias_name": "S_Mask Popup"
         }
     }
 }
