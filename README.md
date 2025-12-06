@@ -228,7 +228,7 @@ The buttons at the bottom of the docker provide quick show/hide toggles for othe
 
 ### Customization
 To modify the docker's appearance and behavior, edit the parameters in:
-- `quick_access_manager\quick_brush_adjust_widgets\__init__.py`
+- `quick_access_manager\widgets2\__init__.py`
 
 Available customization options:
 - Font sizes for labels and values
