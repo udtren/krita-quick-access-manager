@@ -3,6 +3,11 @@ from PyQt5.QtCore import Qt, QPoint, QMimeData
 from PyQt5.QtGui import QDrag
 from ..utils.shortcut_utils import get_font_px, get_shortcut_button_config
 from ..dialogs.button_config_dialog import ShortcutButtonConfigDialog
+from ..gesture.gesture_main import (
+    pause_gesture_event_filter,
+    resume_gesture_event_filter,
+    is_gesture_filter_paused,
+)
 
 # from ..utils.data_manager import write_log
 
@@ -247,9 +252,14 @@ class ShortcutDraggableButton(QPushButton):
 
     def configure_button(self):
         """Open configuration dialog for button"""
+        gesture_filter_state = is_gesture_filter_paused()
+        if not gesture_filter_state:
+            pause_gesture_event_filter()
         dialog = ShortcutButtonConfigDialog(self)
         if dialog.exec_():
             self.apply_configuration(dialog)
+        if not gesture_filter_state:
+            resume_gesture_event_filter()
 
     def apply_configuration(self, dialog):
         """Apply configuration from dialog"""
