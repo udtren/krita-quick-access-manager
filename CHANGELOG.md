@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2025-12-16
+### Added
+- Quick Adjust Docker configuration system (`quick_adjust_docker.json`)
+  - Conditional widget creation based on enabled/disabled flags
+  - Individual enable/disable controls for all sliders (size, opacity, rotation, layer opacity)
+  - Configurable font sizes and number display sizes per slider
+  - Configurable icon sizes and total items for history widgets
+  - Custom blending modes list configuration
+- Settings dialog with tabbed interface
+  - Main tab for general plugin settings (color, font, layout)
+  - Quick Adjust tab for docker-specific configuration
+- Configuration loader module with automatic file creation
+  - Creates default configuration file if missing
+  - Provides getter functions for all configuration sections
+  - Automatic recovery if config file is deleted
+
+### Changed
+- Quick Adjust Docker widgets are now dynamically created based on configuration
+- Blend mode combo boxes only appear when their corresponding opacity sliders are enabled
+- All hardcoded constants replaced with configuration-driven values
+- Settings changes now reload the Quick Adjust Docker UI immediately
+
 ## 2025-12-06
 ### Changed
 - Gesture system will be paused during individual shortcut button configuration 

@@ -30,6 +30,7 @@ from .config.quick_adjust_docker_loader import (
     get_color_history_section,
     get_blender_mode_list,
     get_status_bar_section,
+    get_docker_toggle_section,
     get_font_size,
     get_number_size,
     get_color_history_total,
@@ -62,6 +63,7 @@ class BrushAdjustmentWidget(QWidget):
         self.brush_history_config = get_brush_history_section()
         self.color_history_config = get_color_history_section()
         self.status_bar_config = get_status_bar_section()
+        self.docker_toggle_config = get_docker_toggle_section()
         self.blender_modes = get_blender_mode_list()
 
         self.init_ui()
@@ -177,9 +179,7 @@ class BrushAdjustmentWidget(QWidget):
             if not button_icon:
                 # Create button with text
                 button = QPushButton(button_config["button_name"])
-                button.setStyleSheet(
-                    f"font-size: {get_font_size()}; padding: 2px 8px;"
-                )
+                button.setStyleSheet(f"font-size: {get_font_size()}; padding: 2px 8px;")
                 button.setFixedWidth(button_config["button_width"])
             else:
                 # Create button with icon
@@ -313,33 +313,38 @@ class BrushAdjustmentWidget(QWidget):
         # Brush blend mode and reset button
         brush_blend_reset_layout = QHBoxLayout()
 
-        self.blend_combo = QComboBox()
-        self.blend_combo.setStyleSheet(f"font-size: {get_font_size()};")
-        self.blend_combo.setEditable(True)
-        self.blend_combo.setMaximumWidth(150)
-        # Add blending modes from configuration
-        for mode in self.blender_modes:
-            self.blend_combo.addItem(mode.replace("_", " ").title(), mode)
+        # Only create blend combo if opacity slider is enabled
+        if opacity_config.get("enabled", True):
+            self.blend_combo = QComboBox()
+            self.blend_combo.setStyleSheet(f"font-size: {get_font_size()};")
+            self.blend_combo.setEditable(True)
+            self.blend_combo.setMaximumWidth(150)
+            # Add blending modes from configuration
+            for mode in self.blender_modes:
+                self.blend_combo.addItem(mode.replace("_", " ").title(), mode)
 
-        self.blend_combo.currentTextChanged.connect(self.on_blend_mode_changed)
+            self.blend_combo.currentTextChanged.connect(self.on_blend_mode_changed)
 
-        # ============================================
-        # Reset Button
-        # ============================================
-        reset_btn = QPushButton()
-        icon_path = os.path.join(os.path.dirname(__file__), "image", "refresh.png")
-        if os.path.exists(icon_path):
-            icon = QIcon(icon_path)
-            reset_btn.setIcon(icon)
-            reset_btn.setIconSize(QPixmap(16, 16).size())
+            # ============================================
+            # Reset Button
+            # ============================================
+            self.reset_btn = QPushButton()
+            icon_path = os.path.join(os.path.dirname(__file__), "image", "refresh.png")
+            if os.path.exists(icon_path):
+                icon = QIcon(icon_path)
+                self.reset_btn.setIcon(icon)
+                self.reset_btn.setIconSize(QPixmap(16, 16).size())
+            else:
+                self.reset_btn.setText("Reset")
+                self.reset_btn.setStyleSheet(
+                    f"font-size: {get_font_size()}; padding: 2px 8px;"
+                )
+            self.reset_btn.setFixedSize(24, 24)
+            self.reset_btn.setToolTip("Reset brush settings")
+            self.reset_btn.clicked.connect(self.reset_brush_settings)
         else:
-            reset_btn.setText("Reset")
-            reset_btn.setStyleSheet(
-                f"font-size: {get_font_size()}; padding: 2px 8px;"
-            )
-        reset_btn.setFixedSize(24, 24)
-        reset_btn.setToolTip("Reset brush settings")
-        reset_btn.clicked.connect(self.reset_brush_settings)
+            self.blend_combo = None
+            self.reset_btn = None
 
         # ============================================
         # Layer Section: Opacity Slider, Blend Mode (conditionally created)
@@ -370,19 +375,21 @@ class BrushAdjustmentWidget(QWidget):
             self.layer_opacity_slider = None
             self.layer_opacity_value_label = None
 
-        self.layer_blend_combo = QComboBox()
-        self.layer_blend_combo.setStyleSheet(
-            f"font-size: {get_font_size()};"
-        )
-        self.layer_blend_combo.setEditable(True)
-        self.layer_blend_combo.setMaximumWidth(150)
-        # Add blending modes from configuration
-        for mode in self.blender_modes:
-            self.layer_blend_combo.addItem(mode.replace("_", " ").title(), mode)
+        # Only create layer blend combo if layer opacity slider is enabled
+        if layer_opacity_config.get("enabled", True):
+            self.layer_blend_combo = QComboBox()
+            self.layer_blend_combo.setStyleSheet(f"font-size: {get_font_size()};")
+            self.layer_blend_combo.setEditable(True)
+            self.layer_blend_combo.setMaximumWidth(150)
+            # Add blending modes from configuration
+            for mode in self.blender_modes:
+                self.layer_blend_combo.addItem(mode.replace("_", " ").title(), mode)
 
-        self.layer_blend_combo.currentTextChanged.connect(
-            self.on_layer_blend_mode_changed
-        )
+            self.layer_blend_combo.currentTextChanged.connect(
+                self.on_layer_blend_mode_changed
+            )
+        else:
+            self.layer_blend_combo = None
 
         # ============================================
         # Assemble each section
@@ -391,15 +398,17 @@ class BrushAdjustmentWidget(QWidget):
         # Assemble brush section
         if opacity_config.get("enabled", True):
             brush_section_layout.addLayout(brush_opacity_layout)
-        brush_blend_reset_layout.addWidget(self.blend_combo)
-        brush_blend_reset_layout.addWidget(reset_btn)
+        if self.blend_combo is not None:
+            brush_blend_reset_layout.addWidget(self.blend_combo)
+            brush_blend_reset_layout.addWidget(self.reset_btn)
         brush_section_layout.addLayout(brush_blend_reset_layout)
         brush_section_layout.addStretch()
 
         # Assemble layer section
         if layer_opacity_config.get("enabled", True):
             layer_section_layout.addLayout(layer_opacity_layout)
-        layer_section_layout.addWidget(self.layer_blend_combo)
+        if self.layer_blend_combo is not None:
+            layer_section_layout.addWidget(self.layer_blend_combo)
         layer_section_layout.addStretch()
 
         brush_and_layer_layout.addLayout(brush_section_layout)
@@ -428,7 +437,9 @@ class BrushAdjustmentWidget(QWidget):
             self.rotation_value_label = QLabel("0°")
             self.rotation_value_label.setStyleSheet(f"font-size: {number_size};")
             self.rotation_value_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-            self.rotation_value_label.setFixedWidth(35)  # Smaller width for side placement
+            self.rotation_value_label.setFixedWidth(
+                35
+            )  # Smaller width for side placement
 
             right_layout.addWidget(self.rotation_widget)
             right_layout.addWidget(self.rotation_value_label)
@@ -447,8 +458,12 @@ class BrushAdjustmentWidget(QWidget):
 
         # Add color history widget below the main controls (conditionally created)
         if self.color_history_config.get("enabled", True):
-            color_history_total = self.color_history_config.get("total_items", get_color_history_total())
-            color_history_icon_size = self.color_history_config.get("icon_size", get_color_history_icon_size())
+            color_history_total = self.color_history_config.get(
+                "total_items", get_color_history_total()
+            )
+            color_history_icon_size = self.color_history_config.get(
+                "icon_size", get_color_history_icon_size()
+            )
             self.color_history_widget = ColorHistoryWidget(
                 self, color_history_total, color_history_icon_size
             )
@@ -458,8 +473,12 @@ class BrushAdjustmentWidget(QWidget):
 
         # Add brush history widget below the color history (conditionally created)
         if self.brush_history_config.get("enabled", True):
-            brush_history_total = self.brush_history_config.get("total_items", get_brush_history_total())
-            brush_history_icon_size = self.brush_history_config.get("icon_size", get_brush_history_icon_size())
+            brush_history_total = self.brush_history_config.get(
+                "total_items", get_brush_history_total()
+            )
+            brush_history_icon_size = self.brush_history_config.get(
+                "icon_size", get_brush_history_icon_size()
+            )
             self.brush_history_widget = BrushHistoryWidget(
                 self, brush_history_total, brush_history_icon_size
             )
@@ -474,13 +493,16 @@ class BrushAdjustmentWidget(QWidget):
         else:
             self.status_bar_widget = None
 
-        # Add dynamic docker buttons below the brush history widget
-        docker_buttons_layout = QHBoxLayout()
-        docker_buttons_layout.setSpacing(4)
-        docker_buttons_layout.setContentsMargins(0, 5, 0, 0)
-        docker_buttons_layout.setAlignment(Qt.AlignLeft)  # Align buttons to the left
-        self.create_docker_buttons(docker_buttons_layout)
-        layout.addLayout(docker_buttons_layout)
+        # Add dynamic docker buttons below the brush history widget (conditionally created)
+        if self.docker_toggle_config.get("enabled", True):
+            docker_buttons_layout = QHBoxLayout()
+            docker_buttons_layout.setSpacing(4)
+            docker_buttons_layout.setContentsMargins(0, 5, 0, 0)
+            docker_buttons_layout.setAlignment(
+                Qt.AlignLeft
+            )  # Align buttons to the left
+            self.create_docker_buttons(docker_buttons_layout)
+            layout.addLayout(docker_buttons_layout)
 
         self.setLayout(layout)
 
@@ -621,24 +643,27 @@ class BrushAdjustmentWidget(QWidget):
                     self.current_brush_rotation = 0
 
             # Get current blend mode
-            try:
-                blend_mode = view.currentBlendingMode()
-                if blend_mode:
-                    # Find the blend mode in the combo box
-                    index = self.blend_combo.findData(blend_mode)
-                    if index >= 0:
-                        self.blend_combo.setCurrentIndex(index)
-                    else:
-                        # If not found, add it to the combo
-                        self.blend_combo.addItem(
-                            blend_mode.replace("_", " ").title(), blend_mode
-                        )
-                        self.blend_combo.setCurrentIndex(self.blend_combo.count() - 1)
-                    self.current_blend_mode = blend_mode
-            except:
-                # Fallback if blend mode method doesn't exist
-                self.blend_combo.setCurrentIndex(0)  # Set to "Normal"
-                self.current_blend_mode = "normal"
+            if self.blend_combo is not None:
+                try:
+                    blend_mode = view.currentBlendingMode()
+                    if blend_mode:
+                        # Find the blend mode in the combo box
+                        index = self.blend_combo.findData(blend_mode)
+                        if index >= 0:
+                            self.blend_combo.setCurrentIndex(index)
+                        else:
+                            # If not found, add it to the combo
+                            self.blend_combo.addItem(
+                                blend_mode.replace("_", " ").title(), blend_mode
+                            )
+                            self.blend_combo.setCurrentIndex(
+                                self.blend_combo.count() - 1
+                            )
+                        self.current_blend_mode = blend_mode
+                except:
+                    # Fallback if blend mode method doesn't exist
+                    self.blend_combo.setCurrentIndex(0)  # Set to "Normal"
+                    self.current_blend_mode = "normal"
 
         self.updating_from_brush = False
 
@@ -702,31 +727,32 @@ class BrushAdjustmentWidget(QWidget):
                 self.current_layer_opacity = 255
 
         # Get current layer blend mode
-        try:
-            activeNode = (
-                app.activeDocument().activeNode() if app.activeDocument() else None
-            )
-            if activeNode:
-                layer_blend_mode = activeNode.blendingMode()
-                if layer_blend_mode:
-                    # Find the blend mode in the combo box
-                    index = self.layer_blend_combo.findData(layer_blend_mode)
-                    if index >= 0:
-                        self.layer_blend_combo.setCurrentIndex(index)
-                    else:
-                        # If not found, add it to the combo
-                        self.layer_blend_combo.addItem(
-                            layer_blend_mode.replace("_", " ").title(),
-                            layer_blend_mode,
-                        )
-                        self.layer_blend_combo.setCurrentIndex(
-                            self.layer_blend_combo.count() - 1
-                        )
-                    self.current_layer_blend_mode = layer_blend_mode
-        except:
-            # Fallback if layer blend mode method doesn't exist
-            self.layer_blend_combo.setCurrentIndex(0)
-            self.current_layer_blend_mode = "normal"
+        if self.layer_blend_combo is not None:
+            try:
+                activeNode = (
+                    app.activeDocument().activeNode() if app.activeDocument() else None
+                )
+                if activeNode:
+                    layer_blend_mode = activeNode.blendingMode()
+                    if layer_blend_mode:
+                        # Find the blend mode in the combo box
+                        index = self.layer_blend_combo.findData(layer_blend_mode)
+                        if index >= 0:
+                            self.layer_blend_combo.setCurrentIndex(index)
+                        else:
+                            # If not found, add it to the combo
+                            self.layer_blend_combo.addItem(
+                                layer_blend_mode.replace("_", " ").title(),
+                                layer_blend_mode,
+                            )
+                            self.layer_blend_combo.setCurrentIndex(
+                                self.layer_blend_combo.count() - 1
+                            )
+                        self.current_layer_blend_mode = layer_blend_mode
+            except:
+                # Fallback if layer blend mode method doesn't exist
+                self.layer_blend_combo.setCurrentIndex(0)
+                self.current_layer_blend_mode = "normal"
         self.updating_from_layer = False
 
     def on_opacity_changed_debounced(self, value):
@@ -849,7 +875,7 @@ class BrushAdjustmentWidget(QWidget):
 
     def on_blend_mode_changed(self, text):
         """Handle blend mode change"""
-        if self.updating_from_brush:
+        if self.updating_from_brush or self.blend_combo is None:
             return
 
         # Get the blend mode data from the combo box
@@ -869,7 +895,7 @@ class BrushAdjustmentWidget(QWidget):
 
     def on_layer_blend_mode_changed(self, text):
         """Handle layer blend mode change"""
-        if self.updating_from_layer:
+        if self.updating_from_layer or self.layer_blend_combo is None:
             return
 
         # Get the blend mode data from the combo box
@@ -924,10 +950,16 @@ class BrushAdjustmentWidget(QWidget):
         self.current_blend_mode = None
         self.update_from_current_brush()
         # Also force color history update
-        if hasattr(self, "color_history_widget") and self.color_history_widget is not None:
+        if (
+            hasattr(self, "color_history_widget")
+            and self.color_history_widget is not None
+        ):
             self.color_history_widget.force_color_update()
         # Also force brush history update
-        if hasattr(self, "brush_history_widget") and self.brush_history_widget is not None:
+        if (
+            hasattr(self, "brush_history_widget")
+            and self.brush_history_widget is not None
+        ):
             self.brush_history_widget.force_brush_update()
             # Add a test brush to verify functionality
             self.brush_history_widget.add_test_brush()
@@ -943,9 +975,15 @@ class BrushAdjustmentWidget(QWidget):
         """Clean up timers when widget is closed"""
         if hasattr(self, "brush_check_timer"):
             self.brush_check_timer.stop()
-        if hasattr(self, "color_history_widget") and self.color_history_widget is not None:
+        if (
+            hasattr(self, "color_history_widget")
+            and self.color_history_widget is not None
+        ):
             self.color_history_widget.closeEvent(event)
-        if hasattr(self, "brush_history_widget") and self.brush_history_widget is not None:
+        if (
+            hasattr(self, "brush_history_widget")
+            and self.brush_history_widget is not None
+        ):
             self.brush_history_widget.closeEvent(event)
         super().closeEvent(event)
 

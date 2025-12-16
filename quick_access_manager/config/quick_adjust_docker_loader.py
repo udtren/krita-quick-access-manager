@@ -2,10 +2,86 @@ import json
 import os
 
 
+def _get_default_config():
+    """Return the default configuration structure."""
+    return {
+        "brush_section": {
+            "size_slider": {
+                "enabled": True,
+                "number_size": "12px"
+            },
+            "opacity_slider": {
+                "enabled": True,
+                "number_size": "12px"
+            },
+            "rotation_slider": {
+                "enabled": True,
+                "number_size": "12px"
+            }
+        },
+        "layer_section": {
+            "opacity_slider": {
+                "enabled": True,
+                "number_size": "12px"
+            }
+        },
+        "brush_history_section": {
+            "enabled": True,
+            "total_items": 20,
+            "icon_size": 34
+        },
+        "color_history_section": {
+            "enabled": True,
+            "total_items": 20,
+            "icon_size": 30
+        },
+        "status_bar_section": {
+            "enabled": True
+        },
+        "docker_toggle_section": {
+            "enabled": True
+        },
+        "blender_mode_list": [
+            "normal",
+            "multiply",
+            "screen",
+            "dodge",
+            "overlay",
+            "soft_light_svg",
+            "hard_light",
+            "darken",
+            "lighten",
+            "greater"
+        ],
+        "font_size": "12px"
+    }
+
+
+def ensure_config_exists():
+    """Check if config file exists, create it with defaults if it doesn't.
+
+    Returns:
+        bool: True if config was created, False if it already existed
+    """
+    config_path = os.path.join(os.path.dirname(__file__), "quick_adjust_docker.json")
+
+    if not os.path.exists(config_path):
+        # Create the config file with default values
+        default_config = _get_default_config()
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(default_config, f, indent=4)
+        return True
+
+    return False
+
+
 def _load_config():
     """Load the quick_adjust_docker.json configuration file."""
+    # Ensure config exists before loading
+    ensure_config_exists()
+
     config_path = os.path.join(os.path.dirname(__file__), "quick_adjust_docker.json")
-    with open(config_path, 'r') as f:
+    with open(config_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 
@@ -67,6 +143,16 @@ def get_status_bar_section():
     """
     config = _load_config()
     return config.get("status_bar_section", {})
+
+
+def get_docker_toggle_section():
+    """Return the docker_toggle_section configuration.
+
+    Returns:
+        dict: Configuration for docker toggle buttons (enabled)
+    """
+    config = _load_config()
+    return config.get("docker_toggle_section", {})
 
 
 def get_font_size():

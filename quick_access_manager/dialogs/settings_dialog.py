@@ -267,6 +267,33 @@ class CommonConfigDialog(QDialog):
 
             layout.addLayout(hlayout)
 
+        # Add fields for docker_toggle_section
+        docker_toggle = self.quick_adjust_config.get("docker_toggle_section", {})
+        layout.addWidget(QLabel("[docker_toggle_section]"))
+
+        for key, value in docker_toggle.items():
+            hlayout = QHBoxLayout()
+            label = QLabel(f"  {key}")
+            label.setAlignment(Qt.AlignLeft)
+
+            if isinstance(value, bool):
+                edit = QCheckBox()
+                edit.setChecked(value)
+                hlayout.addWidget(label)
+                hlayout.addStretch()
+                hlayout.addWidget(edit)
+                self.quick_adjust_fields[("docker_toggle_section", key)] = edit
+            else:
+                edit = QLineEdit(str(value))
+                edit.setFixedWidth(80)
+                edit.setAlignment(Qt.AlignRight)
+                hlayout.addWidget(label)
+                hlayout.addStretch()
+                hlayout.addWidget(edit)
+                self.quick_adjust_fields[("docker_toggle_section", key)] = edit
+
+            layout.addLayout(hlayout)
+
         # Add font_size field
         font_size = self.quick_adjust_config.get("font_size", "12px")
         layout.addWidget(QLabel("[General]"))
