@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
     QWidget,
     QScrollArea,
     QCheckBox,
+    QTextEdit,
 )
 from PyQt5.QtCore import Qt
 
@@ -200,7 +201,9 @@ class CommonConfigDialog(QDialog):
                 hlayout.addWidget(label)
                 hlayout.addStretch()
                 hlayout.addWidget(edit)
-                self.quick_adjust_fields[("layer_section", "opacity_slider", key)] = edit
+                self.quick_adjust_fields[("layer_section", "opacity_slider", key)] = (
+                    edit
+                )
             else:
                 edit = QLineEdit(str(value))
                 edit.setFixedWidth(80)
@@ -208,12 +211,14 @@ class CommonConfigDialog(QDialog):
                 hlayout.addWidget(label)
                 hlayout.addStretch()
                 hlayout.addWidget(edit)
-                self.quick_adjust_fields[("layer_section", "opacity_slider", key)] = edit
+                self.quick_adjust_fields[("layer_section", "opacity_slider", key)] = (
+                    edit
+                )
 
             layout.addLayout(hlayout)
 
         # Add fields for history sections
-        for section_name in ["brush_history_section", "color_history_section"]:
+        for section_name in ["color_history_section", "brush_history_section"]:
             section = self.quick_adjust_config.get(section_name, {})
             layout.addWidget(QLabel(f"[{section_name}]"))
 
@@ -309,6 +314,23 @@ class CommonConfigDialog(QDialog):
         layout.addLayout(hlayout)
         self.quick_adjust_fields[("font_size",)] = edit
 
+        # Add blender_mode_list field
+        blender_modes = self.quick_adjust_config.get("blender_mode_list", [])
+        vlayout = QVBoxLayout()
+        label = QLabel("  blender_mode_list (one per line)")
+        label.setAlignment(Qt.AlignLeft)
+        # Convert list to newline-separated string for editing
+        blender_modes_str = "\n".join(blender_modes)
+        edit = QTextEdit()
+        edit.setPlainText(blender_modes_str)
+        edit.setMinimumHeight(100)
+        edit.setMaximumHeight(150)
+        edit.setPlaceholderText("Enter blend modes, one per line")
+        vlayout.addWidget(label)
+        vlayout.addWidget(edit)
+        layout.addLayout(vlayout)
+        self.quick_adjust_fields[("blender_mode_list",)] = edit
+
         layout.addStretch()
 
     def setup_connections(self):
@@ -340,8 +362,20 @@ class CommonConfigDialog(QDialog):
         if hasattr(self, "quick_adjust_path") and self.quick_adjust_fields:
             for key_tuple, edit in self.quick_adjust_fields.items():
                 if len(key_tuple) == 1:
-                    # font_size
-                    self.quick_adjust_config[key_tuple[0]] = edit.text()
+                    # font_size or blender_mode_list
+                    key = key_tuple[0]
+                    if key == "blender_mode_list":
+                        # Convert newline-separated string to list
+                        modes_str = edit.toPlainText().strip()
+                        if modes_str:
+                            # Split by newline and strip whitespace from each mode
+                            modes_list = [mode.strip() for mode in modes_str.split("\n") if mode.strip()]
+                            self.quick_adjust_config[key] = modes_list
+                        else:
+                            self.quick_adjust_config[key] = []
+                    else:
+                        # font_size or other single values
+                        self.quick_adjust_config[key] = edit.text()
                 elif len(key_tuple) == 2:
                     # history sections or status_bar
                     section, key = key_tuple
@@ -359,7 +393,9 @@ class CommonConfigDialog(QDialog):
                     # brush_section or layer_section
                     section, subsection, key = key_tuple
                     if isinstance(edit, QCheckBox):
-                        self.quick_adjust_config[section][subsection][key] = edit.isChecked()
+                        self.quick_adjust_config[section][subsection][
+                            key
+                        ] = edit.isChecked()
                     else:
                         val = edit.text()
                         self.quick_adjust_config[section][subsection][key] = val
