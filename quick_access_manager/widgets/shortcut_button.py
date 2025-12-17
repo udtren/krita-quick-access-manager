@@ -55,6 +55,9 @@ class ShortcutDraggableButton(QPushButton):
         # Apply colors
         self.apply_color_settings()
 
+        if self.has_icon:
+            self.setFixedSize(self.iconSize().width() + 5, self.iconSize().height() + 5)
+
     def load_icon(self):
         """Load and set icon if available"""
         # Check if config has icon_name
