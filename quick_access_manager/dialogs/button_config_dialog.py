@@ -46,6 +46,11 @@ class ShortcutButtonConfigDialog(QDialog):
         self.font_color_edit = QLineEdit()
         layout.addWidget(self.font_color_edit)
 
+        # Icon name
+        layout.addWidget(QLabel("Icon Name:"))
+        self.icon_name_edit = QLineEdit()
+        layout.addWidget(self.icon_name_edit)
+
         # Use global settings
         layout.addWidget(QLabel("Use Global Settings:"))
         self.use_global_settings_flag = QCheckBox()
@@ -68,8 +73,12 @@ class ShortcutButtonConfigDialog(QDialog):
 
     def load_current_values(self):
         """Load current button values into the form"""
-        # Button name
-        self.name_edit.setText(self.button.text())
+        # Button name - get from config if available, otherwise from button text
+        config = self.button.config
+        if config and config.get("customName"):
+            self.name_edit.setText(config.get("customName"))
+        else:
+            self.name_edit.setText(self.button.text())
 
         # Font size
         config = self.button.config
@@ -89,6 +98,10 @@ class ShortcutButtonConfigDialog(QDialog):
         self.font_color_edit.setText(
             self.button.palette().color(self.button.foregroundRole()).name()
         )
+
+        # Icon name
+        icon_name = config.get("icon_name", "") if config else ""
+        self.icon_name_edit.setText(icon_name)
 
         # global settings flag
         if config.get("useGlobalSettings") is True:

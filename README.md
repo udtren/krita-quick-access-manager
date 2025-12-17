@@ -33,15 +33,13 @@ If you find this tool helpful, you can support its development:
 1. **Brush Sets Popup**: Press `W` to show/hide the brush sets popup
 2. **Actions Popup**: Press `Tab` to show/hide the actions popup
 
-### Change Shortcut and icon/button size
-Edit the following value to change shortcut key and icon/button size:
+### Change Shortcut and icon size
+Edit the following value to change shortcut key:
 - `quick_access_manager\popup\brush_sets.py`
     - `BrushSetsPopupShortcut`
     - `BrushIconSize`
 - `quick_access_manager\popup\actions.py`
     - `ActionsPopupShortcut`
-    - `ActionButtonSizeX`
-    - `ActionButtonSizeY`
 
 ## Gesture System
 ![Gesture Configuration](./quick_access_manager/image/gesture.png)
@@ -237,13 +235,52 @@ Available customization options:
 - Available blend modes in dropdowns
 
 ## Global Config
-Use the "Setting" button to customize the UI and layout, including the default font color, background color, and font size for shortcut buttons.
+The global configuration allows you to customize the default appearance and behavior for all shortcut buttons and UI elements.
+
+**How to Access:**
+- Click the "Setting" button in the docker
+
+**Available Settings:**
+- **Default Font Color**: Sets the default text color for shortcut buttons
+- **Default Background Color**: Sets the default background color for shortcut buttons
+- **Default Font Size**: Sets the default text size for shortcut buttons
+- **Max Shortcut Per Row**: Controls how many buttons appear in each row (default: 4)
+- **Spacing Between Buttons/Grids**: Adjusts the spacing between UI elements
+- **Quick Brush Adjustments Docker Settings**: Customize font sizes, history sizes, and other docker-specific options
+
 ![Setting](./quick_access_manager/image/image3.png)
 
+**Note:** Individual buttons can override these global settings. See "Shortcut Button Config" below.
+
 ## Shortcut Button Config
-To customize an individual shortcut button, hold <kbd>Alt</kbd> and right-click the button.
-If the "Use Global Settings" is checked, the color of font and background will use the value in the global config file.
+Each shortcut button can be individually customized with its own appearance settings.
+
+**How to Access:**
+- Hold <kbd>Alt</kbd> and right-click any shortcut button
+
+**Available Options:**
+- **Button Name**: Custom display name for the button
+- **Font Size**: Override the global font size for this button
+- **Background Color**: Custom background color (hex color code, e.g., `#3d3d3d`)
+- **Font Color**: Custom text color (hex color code, e.g., `#ffffff`)
+- **Icon Name**: PNG filename to display as an icon instead of text
+- **Use Global Settings**: When checked, the button uses colors from the global config
+
 ![Shortcut Button Config](./quick_access_manager/image/image4.png)
+
+**Icon Support:**
+To display a button as an icon instead of text:
+1. Place your PNG icon file in `quick_access_manager\config\icon\`
+2. Open the button config dialog (<kbd>Alt</kbd> + right-click)
+3. Enter the filename in the "Icon Name" field (e.g., `my_icon.png`)
+4. Configure the grid's "Icon Size" parameter (see "Edit Grid Parameter" below)
+5. When both icon name and grid icon size are set, the icon will be displayed
+
+![Shortcut Button Config](./quick_access_manager/image/image5.png)
+
+**Tips:**
+- Leave "Icon Name" empty to display text instead
+- Icons automatically replace text when configured
 
 ## Sort/Remove
 
@@ -262,8 +299,22 @@ To remove a brush or shortcut from a grid, hold <kbd>Ctrl</kbd> and right-click 
 **Remove Grid:**  
 To delete an entire grid, hold <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> and right-click the grid name.
 
-**Rename Grid:**  
-To rename a grid, hold <kbd>Alt</kbd> and right-click the grid name.
+**Edit Grid Parameter:**
+Each grid can have its own configuration parameters that override global settings.
+
+**How to Access:**
+- Hold <kbd>Alt</kbd> and right-click the grid name
+
+**Available Parameters:**
+- **Grid Name**: Rename the grid to organize your shortcuts
+- **Max Shortcut Per Row**: Set a grid-specific column count (overrides global setting)
+  - Leave empty to use the global "Max Shortcut Per Row" setting
+  - Set a number (e.g., `6`) to use a custom column count for this grid only
+- **Icon Size**: Set the size for icon buttons in this grid (in pixels)
+  - Required for buttons with icons to display properly
+  - Leave empty for text-only grids
+  - Recommended value: `24` (pixels)
+  - Buttons with `icon_name` configured will only display icons if this is set
 
 **Activate Grid:**  
 To activate a grid, simply left-click the grid name.
