@@ -4,8 +4,11 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QGridLayout,
-    QInputDialog,
     QApplication,
+    QDialog,
+    QLineEdit,
+    QFormLayout,
+    QDialogButtonBox,
 )
 from PyQt5.QtCore import Qt, QSize
 from .shortcut_button import ShortcutDraggableButton
@@ -35,6 +38,17 @@ class SingleShortcutGridWidget(QWidget):
 
         self.setup_ui()
         self.setup_events()
+
+    def get_effective_max_shortcut_per_row(self):
+        """Get the effective max_shortcut_per_row value.
+        Uses grid-specific value if set, otherwise falls back to global config."""
+        grid_specific = self.grid_info.get("max_shortcut_per_row", "")
+        if grid_specific and grid_specific.strip():
+            try:
+                return int(grid_specific)
+            except ValueError:
+                pass
+        return get_max_shortcut_per_row()
 
     def setup_ui(self):
         """Setup the UI elements"""
@@ -87,9 +101,9 @@ class SingleShortcutGridWidget(QWidget):
             elif event.button() == Qt.LeftButton:
                 self.activate_grid()
 
-            # Alt + Right click: Rename grid
+            # Alt + Right click: Edit grid parameters
             elif event.button() == Qt.RightButton and modifiers == Qt.AltModifier:
-                self.rename_grid()
+                self.edit_grid_parameter()
 
             # Ctrl+Alt+Shift+Right click: Delete grid
             elif event.button() == Qt.RightButton and (
@@ -135,7 +149,7 @@ class SingleShortcutGridWidget(QWidget):
         self.shortcut_grid_layout.setAlignment(Qt.AlignTop)  # Ensure alignment
 
         # Get layout parameters
-        max_columns = get_max_shortcut_per_row()
+        max_columns = self.get_effective_max_shortcut_per_row()
         default_config = get_shortcut_button_config()
 
         # Create buttons
@@ -147,7 +161,13 @@ class SingleShortcutGridWidget(QWidget):
             shortcut_btn = ShortcutDraggableButton(
                 action, self.grid_info, self.parent_section, config
             )
-            shortcut_btn.setMinimumSize(QSize(40, 28))
+
+            # Set minimum size based on button type
+            if shortcut_btn.has_icon:
+                pass  # Icon buttons size is managed by icon size
+            else:
+                # Text buttons need minimum width
+                shortcut_btn.setMinimumSize(QSize(40, 28))
 
             # Apply styling
             self.apply_button_styling(shortcut_btn, config, default_config)
@@ -157,6 +177,12 @@ class SingleShortcutGridWidget(QWidget):
             col = idx % max_columns
             self.shortcut_grid_layout.addWidget(shortcut_btn, row, col)
             self.shortcut_buttons.append(shortcut_btn)
+
+        # Add stretch to fill remaining space
+        if self.grid_info["actions"]:
+            last_row = (len(self.grid_info["actions"]) - 1) // max_columns
+            self.shortcut_grid_layout.setRowStretch(last_row + 1, 0)
+            self.shortcut_grid_layout.setColumnStretch(max_columns, 1)
 
     def get_button_config(self, idx, action, default_config):
         """Get configuration for a button at the given index"""
@@ -282,19 +308,46 @@ class SingleShortcutGridWidget(QWidget):
             """
             )
 
-    def rename_grid(self):
-        """Rename this grid"""
-        new_name, ok = QInputDialog.getText(
-            self,
-            "Rename Shortcut Grid",
-            "Enter new grid name:",
-            text=self.grid_info["name"],
-        )
+    def edit_grid_parameter(self):
+        """Edit grid parameters (name, max_shortcut_per_row, icon_size)"""
+        # Create dialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Edit Grid Parameters")
+        layout = QFormLayout()
 
-        if ok and new_name.strip():
-            self.grid_info["name"] = new_name.strip()
-            self.grid_name_label.setText(self.grid_info["name"])
+        # Create input fields
+        name_input = QLineEdit(self.grid_info["name"])
+        max_per_row_input = QLineEdit(self.grid_info.get("max_shortcut_per_row", ""))
+        icon_size_input = QLineEdit(self.grid_info.get("icon_size", ""))
+
+        # Add fields to layout
+        layout.addRow("Grid Name:", name_input)
+        layout.addRow("Max Shortcut Per Row:", max_per_row_input)
+        layout.addRow("Icon Size:", icon_size_input)
+
+        # Add OK/Cancel buttons
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(dialog.accept)
+        button_box.rejected.connect(dialog.reject)
+        layout.addRow(button_box)
+
+        dialog.setLayout(layout)
+
+        # Show dialog and process result
+        if dialog.exec_() == QDialog.Accepted:
+            new_name = name_input.text().strip()
+            max_per_row = max_per_row_input.text().strip()
+            icon_size = icon_size_input.text().strip()
+
+            if new_name:
+                self.grid_info["name"] = new_name
+                self.grid_name_label.setText(self.grid_info["name"])
+
+            self.grid_info["max_shortcut_per_row"] = max_per_row
+            self.grid_info["icon_size"] = icon_size
+
             self.parent_section.save_grids_data()
+            self.update_grid()
 
     def remove_grid(self):
         """Remove this grid"""
@@ -368,7 +421,7 @@ class SingleShortcutGridWidget(QWidget):
 
     def calculate_drop_position(self, drop_pos):
         """Calculate the target position for a drop"""
-        max_columns = get_max_shortcut_per_row()
+        max_columns = self.get_effective_max_shortcut_per_row()
         col = min(drop_pos.x() // 90, max_columns - 1)
         row = drop_pos.y() // 36
         return row * max_columns + col

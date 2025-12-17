@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QPushButton, QApplication
-from PyQt5.QtCore import Qt, QPoint, QMimeData
-from PyQt5.QtGui import QDrag
+from PyQt5.QtCore import Qt, QPoint, QMimeData, QSize
+from PyQt5.QtGui import QDrag, QIcon, QPixmap
+import os
 from ..utils.shortcut_utils import get_font_px, get_shortcut_button_config
 from ..dialogs.button_config_dialog import ShortcutButtonConfigDialog
 from ..gesture.gesture_main import (
@@ -30,6 +31,7 @@ class ShortcutDraggableButton(QPushButton):
         self.parent_section = parent_section
         self.config = config or {}
         self.drag_start_position = QPoint()
+        self.has_icon = False
 
         # Setup button
         self.setup_button()
@@ -43,11 +45,51 @@ class ShortcutDraggableButton(QPushButton):
 
     def setup_button(self):
         """Setup button appearance and properties"""
-        # Apply font settings
-        self.apply_font_settings()
+        # Try to load icon first
+        self.load_icon()
+
+        # Apply font settings (only if no icon)
+        if not self.has_icon:
+            self.apply_font_settings()
 
         # Apply colors
         self.apply_color_settings()
+
+    def load_icon(self):
+        """Load and set icon if available"""
+        # Check if config has icon_name
+        icon_name = self.config.get("icon_name", "")
+        if not icon_name or not icon_name.strip():
+            return
+
+        # Check if grid has icon_size
+        icon_size_str = self.grid_info.get("icon_size", "24")
+
+        # Parse icon size
+        try:
+            icon_size = int(icon_size_str)
+        except ValueError:
+            return
+
+        # Build icon path
+        current_dir = os.path.dirname(os.path.dirname(__file__))
+        icon_path = os.path.join(current_dir, "config", "icon", icon_name)
+
+        # Check if icon file exists
+        if not os.path.exists(icon_path):
+            return
+
+        # Load and set icon
+        try:
+            pixmap = QPixmap(icon_path)
+            if not pixmap.isNull():
+                icon = QIcon(pixmap)
+                self.setIcon(icon)
+                self.setIconSize(QSize(icon_size, icon_size))
+                self.setText("")  # Clear text when showing icon
+                self.has_icon = True
+        except Exception:
+            pass
 
     def apply_font_settings(self):
         """Apply font size settings"""
@@ -296,6 +338,7 @@ class ShortcutDraggableButton(QPushButton):
                     if dialog.use_global_settings_flag.isChecked()
                     else dialog.bg_color_edit.text()
                 ),
+                "icon_name": dialog.icon_name_edit.text().strip(),
                 "useGlobalSettings": dialog.use_global_settings_flag.isChecked(),
             }
 

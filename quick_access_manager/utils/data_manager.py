@@ -134,6 +134,8 @@ def load_shortcut_grids_data(data_file, krita_instance):
             for grid_data in data.get("grids", []):
                 grid_counter += 1
                 grid_name = grid_data.get("name", f"Shortcut Grid {grid_counter}")
+                max_shortcut_per_row = grid_data.get("max_shortcut_per_row", "")
+                icon_size = grid_data.get("icon_size", "")
                 shortcut_items = grid_data.get("shortcuts", [])
                 actions = []
                 shortcut_configs = []
@@ -152,6 +154,8 @@ def load_shortcut_grids_data(data_file, krita_instance):
                             shortcut_configs.append({"actionName": shortcut})
                 grid_info = {
                     "name": grid_name,
+                    "max_shortcut_per_row": max_shortcut_per_row,
+                    "icon_size": icon_size,
                     "actions": actions,
                     "shortcut_configs": shortcut_configs,
                 }
@@ -166,6 +170,8 @@ def save_shortcut_grids_data(data_file, grids):
         "grids": [
             {
                 "name": grid["name"],
+                "max_shortcut_per_row": grid.get("max_shortcut_per_row", ""),
+                "icon_size": grid.get("icon_size", ""),
                 "shortcuts": grid["shortcuts"],
             }
             for grid in grids

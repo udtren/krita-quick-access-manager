@@ -103,7 +103,14 @@ class ShortcutAccessDockerWidget(QDockWidget):
         grid_name = f"Shortcut Grid {len(self.grids) + 1}"
         self.add_shortcut_grid(grid_name, save=True)
 
-    def add_shortcut_grid(self, grid_name, actions=None, save=True):
+    def add_shortcut_grid(
+        self,
+        grid_name,
+        actions=None,
+        max_shortcut_per_row="",
+        icon_size="24",
+        save=True,
+    ):
         """Add a shortcut grid with the given name and actions"""
         if actions is None:
             actions = []
@@ -118,6 +125,8 @@ class ShortcutAccessDockerWidget(QDockWidget):
 
         grid_info = {
             "name": grid_name,
+            "max_shortcut_per_row": max_shortcut_per_row,
+            "icon_size": icon_size,
             "actions": actions,
         }
 
@@ -185,7 +194,14 @@ class ShortcutAccessDockerWidget(QDockWidget):
         grids_data = []
         for grid_widget in self.grids:
             shortcuts = grid_widget.grid_info.get("shortcut_configs", [])
-            grid_info = {"name": grid_widget.grid_info["name"], "shortcuts": shortcuts}
+            grid_info = {
+                "name": grid_widget.grid_info["name"],
+                "max_shortcut_per_row": grid_widget.grid_info.get(
+                    "max_shortcut_per_row", ""
+                ),
+                "icon_size": grid_widget.grid_info.get("icon_size", ""),
+                "shortcuts": shortcuts,
+            }
             grids_data.append(grid_info)
 
         try:
@@ -206,7 +222,15 @@ class ShortcutAccessDockerWidget(QDockWidget):
         # Create grids
         grid_name_to_widget = {}
         for grid_info in grids_data:
-            grid_widget = self.add_shortcut_grid(grid_info["name"], [], save=False)
+            max_shortcut_per_row = grid_info.get("max_shortcut_per_row", "")
+            icon_size = grid_info.get("icon_size", "24")
+            grid_widget = self.add_shortcut_grid(
+                grid_info["name"],
+                [],
+                max_shortcut_per_row=max_shortcut_per_row,
+                icon_size=icon_size,
+                save=False,
+            )
             grid_name_to_widget[grid_info["name"]] = grid_widget
             # Restore configs
             grid_widget.grid_info["shortcut_configs"] = grid_info.get(

@@ -8,8 +8,8 @@ from PyQt5.QtWidgets import (
     QShortcut,
     QFrame,
 )
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QCursor, QKeySequence
+from PyQt5.QtCore import Qt, QTimer, QSize
+from PyQt5.QtGui import QCursor, QKeySequence, QIcon, QPixmap
 from krita import Krita  # type: ignore
 from ..utils.action_manager import ActionManager
 from ..utils.logs import write_log
@@ -17,8 +17,6 @@ import json
 import os
 
 ActionsPopupShortcut = QKeySequence(Qt.Key_Tab)
-ActionButtonSizeX = 100
-ActionButtonSizeY = 35
 GridLabelWidth = 60
 
 
@@ -272,9 +270,15 @@ class ActionsPopup:
                 # Set alignment to left
                 grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-                columns = (
-                    self.load_common_config()
-                )  # Use max_shortcut_per_row from common.json
+                # Get max_shortcut_per_row - use grid-specific if set, otherwise global config
+                grid_specific_columns = grid_data.get("max_shortcut_per_row", "")
+                if grid_specific_columns and grid_specific_columns.strip():
+                    try:
+                        columns = int(grid_specific_columns)
+                    except ValueError:
+                        columns = self.load_common_config()
+                else:
+                    columns = self.load_common_config()
 
                 for index, shortcut_data in enumerate(grid_data["shortcuts"]):
                     row = index // columns
@@ -282,9 +286,42 @@ class ActionsPopup:
 
                     # Create action button
                     action_btn = QPushButton()
-                    action_btn.setFixedSize(
-                        ActionButtonSizeX, ActionButtonSizeY
-                    )  # Wider for action text
+
+                    # Check for icon
+                    has_icon = False
+                    icon_name = shortcut_data.get("icon_name", "")
+                    icon_size_str = grid_data.get("icon_size", "")
+
+                    if (
+                        icon_name
+                        and icon_name.strip()
+                        and icon_size_str
+                        and icon_size_str.strip()
+                    ):
+                        try:
+                            icon_size = int(icon_size_str)
+                            # Build icon path
+                            plugin_dir = os.path.dirname(
+                                os.path.dirname(os.path.abspath(__file__))
+                            )
+                            icon_path = os.path.join(
+                                plugin_dir, "config", "icon", icon_name
+                            )
+
+                            if os.path.exists(icon_path):
+                                pixmap = QPixmap(icon_path)
+                                if not pixmap.isNull():
+                                    icon = QIcon(pixmap)
+                                    action_btn.setIcon(icon)
+                                    action_btn.setIconSize(QSize(icon_size, icon_size))
+                                    has_icon = True
+                        except (ValueError, Exception):
+                            pass
+
+                    # Set button size based on whether it has an icon
+                    if not has_icon:
+                        action_btn.setMinimumSize(QSize(40, 28))
+                        action_btn.setMaximumWidth(120)
 
                     # Store action name for execution
                     action_name = shortcut_data.get("actionName", "")
@@ -298,8 +335,11 @@ class ActionsPopup:
                     try:
                         # Get custom name and styling from JSON
                         action_text = shortcut_data.get("customName", action_name)
-                        display_text = action_text
-                        action_btn.setText(display_text)
+
+                        # Only set text if no icon
+                        if not has_icon:
+                            display_text = action_text
+                            action_btn.setText(display_text)
 
                         # Set full name as tooltip
                         action_btn.setToolTip(action_text)
@@ -314,7 +354,7 @@ class ActionsPopup:
                             border: 1px solid #555;
                             background-color: {bg_color};
                             border-radius: 4px;
-                            padding: 2px;
+                            padding: 5px;
                             color: {font_color};
                             font-size: {font_size}px;
                             font-weight: bold;
@@ -358,6 +398,10 @@ class ActionsPopup:
                         )
 
                     grid_layout.addWidget(action_btn, row, col)
+
+                # Add column stretch
+                grid_layout.setColumnStretch(columns, 1)
+
                 grid_widget_container.setLayout(grid_layout)
             else:
                 # Empty grid message
