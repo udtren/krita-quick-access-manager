@@ -322,6 +322,8 @@ class ActionsPopup:
                     if not has_icon:
                         action_btn.setMinimumSize(QSize(40, 28))
                         action_btn.setMaximumWidth(120)
+                    else:
+                        action_btn.setFixedSize(QSize(icon_size + 5, icon_size + 5))
 
                     # Store action name for execution
                     action_name = shortcut_data.get("actionName", "")
