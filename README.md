@@ -225,14 +225,7 @@ The buttons at the bottom of the docker provide quick show/hide toggles for othe
 ```
 
 ### Customization
-To modify the docker's appearance and behavior, edit the parameters in:
-- `quick_access_manager\widgets2\__init__.py`
-
-Available customization options:
-- Font sizes for labels and values
-- Number of color/brush history items
-- Icon sizes for history widgets
-- Available blend modes in dropdowns
+To modify the docker's appearance and behavior, see "Global Config".
 
 ## Global Config
 The global configuration allows you to customize the default appearance and behavior for all shortcut buttons and UI elements.
