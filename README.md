@@ -2,7 +2,6 @@
 
 A plugin for Krita that provides quick access to brush presets and shortcut management.
 
-
 ![Sample](./quick_access_manager/image/000.png)
 ---
 
@@ -11,6 +10,23 @@ A plugin for Krita that provides quick access to brush presets and shortcut mana
 If you find this tool helpful, you can support its development:
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/toma_omito)
+
+## Table of Contents
+- [How to Add a Brush Preset](#how-to-add-a-brush-preset)
+- [How to Add a Shortcut](#how-to-add-a-shortcut)
+- [Popup Window](#popup-window)
+- [Gesture System](#gesture-system)
+  - [Features](#features)
+  - [How to Use](#how-to-use)
+  - [Temporarily Disable](#temporarily-disable)
+  - [Preview](#preview)
+  - [Alias](#alias)
+  - [External API](#external-api)
+- [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker)
+- [Global Config](#global-config)
+- [Shortcut Button Config](#shortcut-button-config)
+- [Sort/Remove](#sortremove)
+- [Config File](#config-file)
 
 ## How to Add a Brush Preset
 1. In the "Quick Brush Sets" section, activate the grid you want to add to.
