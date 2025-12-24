@@ -44,7 +44,9 @@ If you find this tool helpful, you can support its development:
 ![How to Add a Shortcut](./quick_access_manager/image/image2.png)
  
 ## Popup Window
+![Popup Demo](./quick_access_manager/image/popup_demo.gif)
 ![Popup](./quick_access_manager/image/popup.png)
+
 ### How to Use
 1. **Brush Sets Popup**: Press `W` to show/hide the brush sets popup
 2. **Actions Popup**: Press `Tab` to show/hide the actions popup
