@@ -60,6 +60,7 @@ Edit the following value to change shortcut key:
     - `ActionsPopupShortcut`
 
 ## Gesture System
+![Gesture Demo](./quick_access_manager/image/gesture_demo.gif)
 ![Gesture Configuration](./quick_access_manager/image/gesture.png)
 
 A gesture-based control system that allows you to trigger actions using keyboard + mouse movements.
@@ -111,11 +112,7 @@ A gesture-based control system that allows you to trigger actions using keyboard
 There is a Krita shortcut `Toggle Gesture Recognition` that can be used to disable gesture recognition temporarily.
 
 
-### Preview
-[![Gesture Preview](https://vumbnail.com/1139942269.jpg)](https://vimeo.com/1139942269)
-
-*Click the image above to watch the gesture system demo video*
-
+### Preview Overlay
 By default, a visual preview overlay appears when you press and hold the gesture key, showing all configured actions for each direction. 
 
 You can disable the preview overlay in the gesture settings (top-right corner of the gesture config dialog).
