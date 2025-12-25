@@ -2,6 +2,13 @@
 
 A plugin for Krita that provides quick access to brush presets and shortcut management.
 
+## Features
+
+- **Quick Brush Sets**: Organize and access your favorite brush presets in customizable grids with popup window support for quick switching
+- **Quick Actions**: Create custom shortcut buttons for any Krita action with popup window for instant access
+- **Gesture System**: Execute actions using keyboard + mouse directional gestures with visual preview overlay
+- **Quick Brush Adjust Docker**: Dedicated docker with brush/layer controls, color/brush history, and real-time status indicators
+
 ![Sample](./quick_access_manager/image/000.png)
 ---
 
