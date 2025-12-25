@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2025-12-25
+### Added
+- Gesture system status icon in status bar
+  - Displays gesture on/off state next to alpha lock indicator
+  - Click icon to toggle gesture system on/off
+  - Updates in real-time to reflect current gesture state
 
 ## 2025-12-17
 ### Added
