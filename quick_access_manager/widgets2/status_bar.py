@@ -3,6 +3,11 @@ from krita import *
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QFrame
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QPixmap
+from ..gesture.gesture_main import (
+    pause_gesture_event_filter,
+    resume_gesture_event_filter,
+    is_gesture_filter_paused,
+)
 
 
 class StatusBarWidget(QWidget):
@@ -16,6 +21,7 @@ class StatusBarWidget(QWidget):
         self.is_selected = False
         self.is_alphalock = False
         self.is_inherit_alpha = False
+        self.is_gesture_paused = False
 
         self.init_ui()
         self.update_status()
@@ -55,11 +61,23 @@ class StatusBarWidget(QWidget):
         )
         self.alphalock_info_label.setToolTip("Alpha Lock: Off")
 
+        self.gesture_status_label = QLabel()
+        self.gesture_status_label.setFixedSize(18, 18)
+        self.gesture_status_label.setScaledContents(True)
+        self.gesture_status_label.setPixmap(
+            QPixmap(os.path.join(self.icon_dir, "gesture_on.png"))
+        )
+        self.gesture_status_label.setToolTip("Gesture: On")
+        self.gesture_status_label.setCursor(Qt.PointingHandCursor)
+        self.gesture_status_label.mousePressEvent = self.toggle_gesture_status
+
         layout.addWidget(self.selection_info_label)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.inherit_alpha_info_label)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.alphalock_info_label)
+        layout.addWidget(self._create_separator())
+        layout.addWidget(self.gesture_status_label)
         layout.addStretch()
 
         self.setLayout(layout)
@@ -125,6 +143,21 @@ class StatusBarWidget(QWidget):
                 QPixmap(os.path.join(self.icon_dir, inherit_alpha_icon))
             )
 
+        # Update gesture status icon only if status changed
+        gesture_paused = is_gesture_filter_paused()
+        if gesture_paused != self.is_gesture_paused:
+            self.is_gesture_paused = gesture_paused
+            gesture_icon = (
+                "gesture_off.png" if gesture_paused else "gesture_on.png"
+            )
+            gesture_tooltip = (
+                "Gesture: Off" if gesture_paused else "Gesture: On"
+            )
+            self.gesture_status_label.setToolTip(gesture_tooltip)
+            self.gesture_status_label.setPixmap(
+                QPixmap(os.path.join(self.icon_dir, gesture_icon))
+            )
+
     def get_selection_status(self):
         doc = Krita.instance().activeDocument()
         if doc is None:
@@ -151,3 +184,12 @@ class StatusBarWidget(QWidget):
         if active_node is None:
             return False
         return active_node.inheritAlpha()
+
+    def toggle_gesture_status(self, _event):
+        """Toggle gesture system on/off when clicking the icon"""
+        if is_gesture_filter_paused():
+            resume_gesture_event_filter()
+        else:
+            pause_gesture_event_filter()
+        # Force immediate update of the icon
+        self.update_status()

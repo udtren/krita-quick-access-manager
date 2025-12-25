@@ -201,7 +201,8 @@ finally:
 ![Quick Brush Adjustments](./quick_access_manager/image/004.png)
 
 A dedicated docker for quick brush and layer adjustments, providing instant access to commonly used painting settings. 
-The docker also includes a status bar at the bottom that displays real-time indicators for active selection, alpha lock, and inherit alpha states. 
+The docker also includes a status bar at the bottom that displays real-time indicators for active selection, alpha lock, inherit alpha, and gesture system states.
+**Click the gesture icon will toggle on/off the gesture system.**
 
 ### Features
 
