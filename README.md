@@ -67,6 +67,7 @@ Edit the following value to change shortcut key:
     - `ActionsPopupShortcut`
 
 ## Gesture System
+![Gesture Demo2](./quick_access_manager/image/gesture_demo2.gif)
 ![Gesture Demo](./quick_access_manager/image/gesture_demo.gif)
 ![Gesture Configuration](./quick_access_manager/image/gesture.png)
 
