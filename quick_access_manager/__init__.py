@@ -50,5 +50,12 @@ class QuickAccessManagerExtension(Extension):
             print(f"❌ Error shutting down gesture system: {e}")
 
 
-Krita.instance().addExtension(QuickAccessManagerExtension(Krita.instance()))
-Krita.instance().addExtension(ToggleGestureExtension(Krita.instance()))
+# Register all extensions with Krita
+app = Krita.instance()
+extensions = [
+    QuickAccessManagerExtension,
+    ToggleGestureExtension,
+]
+
+for extension_class in extensions:
+    app.addExtension(extension_class(app))

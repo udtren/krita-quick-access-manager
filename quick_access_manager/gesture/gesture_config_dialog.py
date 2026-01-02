@@ -124,16 +124,53 @@ class GestureConfigDialog(QDialog):
         self.tab_widget = QTabWidget()
         top_layout.addStretch()
 
+        # Get icon directory path (reused for both buttons)
+        icon_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", "system_icon")
+
         # Plus button to add new config
-        self.plus_btn = QPushButton("+")
-        self.plus_btn.setFixedSize(30, 30)
+        self.plus_btn = QPushButton()
+        add_icon = QIcon(os.path.join(icon_dir, "add.png"))
+        self.plus_btn.setIcon(add_icon)
+        self.plus_btn.setIconSize(QSize(18, 18))
+        self.plus_btn.setFixedSize(22, 22)
         self.plus_btn.setToolTip("Add new gesture config")
+        self.plus_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #828282;
+                border: none;
+                border-radius: 2px;
+            }
+            QPushButton:hover {
+                background-color: #9a9a9a;
+            }
+            QPushButton:pressed {
+                background-color: #6a6a6a;
+            }
+        """)
         self.plus_btn.clicked.connect(self.add_new_config)
 
         top_layout.addWidget(self.plus_btn)
 
         # Settings button
-        self.settings_btn = QPushButton("Settings")
+        self.settings_btn = QPushButton()
+        settings_icon = QIcon(os.path.join(icon_dir, "setting.png"))
+        self.settings_btn.setIcon(settings_icon)
+        self.settings_btn.setIconSize(QSize(18, 18))
+        self.settings_btn.setFixedSize(22, 22)
+        self.settings_btn.setToolTip("Settings")
+        self.settings_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #828282;
+                border: none;
+                border-radius: 2px;
+            }
+            QPushButton:hover {
+                background-color: #9a9a9a;
+            }
+            QPushButton:pressed {
+                background-color: #6a6a6a;
+            }
+        """)
         self.settings_btn.clicked.connect(self.open_settings)
         top_layout.addWidget(self.settings_btn)
         # Status indicator (green/gray circle)

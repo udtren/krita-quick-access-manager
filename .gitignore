@@ -6,3 +6,4 @@ quick_access_manager/logs/
 quick_access_manager/gesture/config/*.json
 quick_access_manager/gesture/icon/*.png
 __pycache__/
+settings.local.json

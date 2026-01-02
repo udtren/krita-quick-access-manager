@@ -3,6 +3,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-01-02
+### Added
+- Popup configuration system (`popup.json`)
+  - Configurable keyboard shortcuts for Actions Popup and Brush Sets Popup
+  - Configurable appearance settings (brush icon size, grid label width)
+  - All popup settings accessible via new "Popup" tab in Settings dialog
+- `PopupConfigLoader` module for centralized popup configuration management
+  - Singleton pattern ensures consistent configuration access
+  - Automatic default configuration creation if file is missing
+  - Runtime configuration updates with automatic file persistence
+- System icon buttons for cleaner UI
+  - Icon-based buttons in Quick Brush Sets docker (Add Brush, Add Grid, Gesture, Settings)
+  - Icon-based buttons in Quick Actions docker (Actions, Add Grid)
+  - Icon-based buttons in Gesture Config dialog (Add Config, Settings)
+  - All buttons use consistent 18×18px icons with #828282 background color
+
+### Changed
+- Settings dialog now uses `QTabWidget` for cleaner tab interface
+- Removed hardcoded popup shortcuts (`ActionsPopupShortcut`, `BrushSetsPopupShortcut`)
+- Removed hardcoded appearance constants (`BrushIconSize`, `GridLabelWidth`)
+- All popup-related constants now loaded from configuration file
+- Popup shortcuts support both simple keys and key combinations (e.g., "Tab", "Ctrl+W")
+- Docker control buttons replaced text labels with icons for more compact design
+- Button sizes standardized to 22×22px across all dockers and dialogs
+
 ## 2025-12-25
 ### Added
 - Gesture system status icon in status bar

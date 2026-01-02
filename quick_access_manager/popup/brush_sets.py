@@ -12,10 +12,7 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from krita import Krita  # type: ignore
 from ..utils.logs import write_log
-
-BrushSetsPopupShortcut = QKeySequence(Qt.Key_W)
-BrushIconSize = 46
-GridLabelWidth = 60
+from ..config.popup_loader import PopupConfigLoader
 
 
 class BrushSetsPopup:
@@ -25,6 +22,7 @@ class BrushSetsPopup:
         self.parent_docker = parent_docker
         self.popup_window = None
         self.popup_shortcut = None
+        self.popup_loader = PopupConfigLoader()
 
     def setup_popup_shortcut(self):
         """Setup shortcut for popup functionality"""
@@ -38,7 +36,9 @@ class BrushSetsPopup:
             # If we can't get the main window, use parent docker as parent
             parent = main_window if main_window else self.parent_docker
 
-            self.popup_shortcut = QShortcut(BrushSetsPopupShortcut, parent)
+            # Get shortcut from config
+            shortcut_key = self.popup_loader.get_brush_sets_popup_shortcut()
+            self.popup_shortcut = QShortcut(shortcut_key, parent)
             self.popup_shortcut.activated.connect(self.show_popup_at_cursor)
 
             # Enable the shortcut for application-wide use
@@ -67,9 +67,6 @@ class BrushSetsPopup:
             )
             self.popup_window.show()
             self.popup_window.raise_()
-
-            # Auto-hide after 10 seconds (optional)
-            # QTimer.singleShot(10000, self.popup_window.hide)
 
         except Exception as e:
             import traceback
@@ -112,7 +109,7 @@ class BrushSetsPopup:
         for grid_info in self.parent_docker.grids:
             grid_name = grid_info.get("name", "Unnamed Grid")
             grid_label = QLabel(grid_name)
-            grid_label.setFixedWidth(GridLabelWidth)
+            grid_label.setFixedWidth(self.popup_loader.get_grid_label_width())
             grid_label.setWordWrap(True)
             grid_label.setAlignment(Qt.AlignCenter)
             grid_label.setStyleSheet(
@@ -147,7 +144,7 @@ class BrushSetsPopup:
 
                     # Create brush button with icon
                     brush_btn = QPushButton()
-                    icon_size = BrushIconSize
+                    icon_size = self.popup_loader.get_brush_icon_size()
                     brush_btn.setFixedSize(icon_size, icon_size)
                     brush_btn.setToolTip(preset.name())
                     brush_btn.clicked.connect(

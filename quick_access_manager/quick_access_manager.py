@@ -12,7 +12,8 @@ from PyQt5.QtWidgets import (
     QInputDialog,
     QApplication,
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QIcon
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
 from .dialogs.settings_dialog import CommonConfigDialog
 from .gesture.gesture_config_dialog import GestureConfigDialog
@@ -71,36 +72,70 @@ class QuickAccessDockerWidget(QDockWidget):
         button_layout_1 = QHBoxLayout()
         button_layout_1.setSpacing(1)
 
-        # Add stretch to push buttons to the right
-        button_layout_1.addStretch()
+        # Common button style with icon size and background color
+        icon_size = QSize(18, 18)
+        button_style = """
+            QPushButton {
+                background-color: #828282;
+                border: none;
+                border-radius: 2px;
+            }
+            QPushButton:hover {
+                background-color: #9a9a9a;
+            }
+            QPushButton:pressed {
+                background-color: #6a6a6a;
+            }
+        """
+
+        # Get icon directory path
+        config_dir = os.path.dirname(__file__)
+        icon_dir = os.path.join(config_dir, "config", "system_icon")
 
         # Add Brush button
-        add_brush_button = QPushButton("AddBrush")
-        add_brush_button.setStyleSheet(docker_btn_style())
+        add_brush_button = QPushButton()
+        add_brush_icon = QIcon(os.path.join(icon_dir, "add_brush.png"))
+        add_brush_button.setIcon(add_brush_icon)
+        add_brush_button.setIconSize(icon_size)
+        add_brush_button.setStyleSheet(button_style)
+        add_brush_button.setFixedSize(22, 22)
+        add_brush_button.setToolTip("Add Current Brush")
         add_brush_button.clicked.connect(self.add_current_brush)
-        add_brush_button.setFixedWidth(70)
         button_layout_1.addWidget(add_brush_button)
 
         # Add Grid button
-        add_grid_button = QPushButton("AddGrid")
-        add_grid_button.setStyleSheet(docker_btn_style())
+        add_grid_button = QPushButton()
+        add_grid_icon = QIcon(os.path.join(icon_dir, "add_grid.png"))
+        add_grid_button.setIcon(add_grid_icon)
+        add_grid_button.setIconSize(icon_size)
+        add_grid_button.setStyleSheet(button_style)
+        add_grid_button.setFixedSize(22, 22)
+        add_grid_button.setToolTip("Add New Grid")
         add_grid_button.clicked.connect(self.add_new_grid)
-        add_grid_button.setFixedWidth(70)
         button_layout_1.addWidget(add_grid_button)
 
         # Gesture button
-        gesture_button = QPushButton("Gesture")
-        gesture_button.setStyleSheet(docker_btn_style())
+        gesture_button = QPushButton()
+        gesture_icon = QIcon(os.path.join(icon_dir, "gesture.png"))
+        gesture_button.setIcon(gesture_icon)
+        gesture_button.setIconSize(icon_size)
+        gesture_button.setStyleSheet(button_style)
+        gesture_button.setFixedSize(22, 22)
+        gesture_button.setToolTip("Gesture Configuration")
         gesture_button.clicked.connect(self.open_gesture_config)
-        gesture_button.setFixedWidth(70)
         button_layout_1.addWidget(gesture_button)
 
         # Add Setting button
-        setting_btn = QPushButton("Setting")
-        setting_btn.setStyleSheet(docker_btn_style())
-        setting_btn.setFixedWidth(70)
+        setting_btn = QPushButton()
+        setting_icon = QIcon(os.path.join(icon_dir, "setting.png"))
+        setting_btn.setIcon(setting_icon)
+        setting_btn.setIconSize(icon_size)
+        setting_btn.setStyleSheet(button_style)
+        setting_btn.setFixedSize(22, 22)
+        setting_btn.setToolTip("Settings")
         setting_btn.clicked.connect(self.show_settings_dialog)
         button_layout_1.addWidget(setting_btn)
+        button_layout_1.addStretch()
 
         central_widget.setLayout(main_layout)
         self.setWidget(central_widget)

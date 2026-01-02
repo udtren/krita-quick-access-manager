@@ -7,14 +7,15 @@ from PyQt5.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
-    QListWidget,
-    QStackedWidget,
     QWidget,
     QScrollArea,
     QCheckBox,
     QTextEdit,
+    QKeySequenceEdit,
+    QTabWidget,
 )
 from PyQt5.QtCore import Qt
+from ..config.popup_loader import PopupConfigLoader
 
 
 class CommonConfigDialog(QDialog):
@@ -28,42 +29,36 @@ class CommonConfigDialog(QDialog):
 
         self.fields = {}
         self.quick_adjust_fields = {}
+        self.popup_fields = {}
+        self.popup_loader = PopupConfigLoader()
 
         self.setup_ui()
         self.load_config()
         self.load_quick_adjust_config()
+        self.load_popup_config()
         self.setup_connections()
 
     def setup_ui(self):
-        """Setup the UI elements with QStackedWidget"""
+        """Setup the UI elements with QTabWidget"""
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
 
-        # Create horizontal layout for tab list and content
-        content_layout = QHBoxLayout()
+        # Create tab widget
+        self.tab_widget = QTabWidget()
 
-        # Create tab list on the left
-        self.tab_list = QListWidget()
-        self.tab_list.addItem("Main")
-        self.tab_list.addItem("Quick Adjust")
-        self.tab_list.setMaximumWidth(150)
-        self.tab_list.setCurrentRow(0)
-
-        # Create stacked widget for content
-        self.stacked_widget = QStackedWidget()
-
-        # Create main config page
+        # Create and add main config page
         self.main_page = self.create_main_page()
-        self.stacked_widget.addWidget(self.main_page)
+        self.tab_widget.addTab(self.main_page, "Main")
 
-        # Create quick adjust config page
+        # Create and add quick adjust config page
         self.quick_adjust_page = self.create_quick_adjust_page()
-        self.stacked_widget.addWidget(self.quick_adjust_page)
+        self.tab_widget.addTab(self.quick_adjust_page, "Quick Adjust")
 
-        content_layout.addWidget(self.tab_list)
-        content_layout.addWidget(self.stacked_widget, 1)
+        # Create and add popup config page
+        self.popup_page = self.create_popup_page()
+        self.tab_widget.addTab(self.popup_page, "Popup")
 
-        main_layout.addLayout(content_layout)
+        main_layout.addWidget(self.tab_widget)
 
         # Add info message
         self.info_label = QLabel("Some changes require Krita restart to take effect")
@@ -106,6 +101,23 @@ class CommonConfigDialog(QDialog):
         scroll_widget = QWidget()
         self.quick_adjust_page_layout = QVBoxLayout()
         scroll_widget.setLayout(self.quick_adjust_page_layout)
+        scroll.setWidget(scroll_widget)
+
+        layout.addWidget(scroll)
+        return page
+
+    def create_popup_page(self):
+        """Create the popup shortcuts configuration page"""
+        page = QWidget()
+        layout = QVBoxLayout()
+        page.setLayout(layout)
+
+        # Create scroll area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_widget = QWidget()
+        self.popup_page_layout = QVBoxLayout()
+        scroll_widget.setLayout(self.popup_page_layout)
         scroll.setWidget(scroll_widget)
 
         layout.addWidget(scroll)
@@ -333,11 +345,80 @@ class CommonConfigDialog(QDialog):
 
         layout.addStretch()
 
+    def load_popup_config(self):
+        """Load popup shortcuts configuration"""
+        layout = self.popup_page_layout
+
+        layout.addWidget(QLabel("[Popup Shortcuts]"))
+        layout.addWidget(
+            QLabel(
+                "Configure keyboard shortcuts for popup windows.\n"
+                "Note: Changes require Krita restart to take effect."
+            )
+        )
+
+        # Actions Popup Shortcut
+        hlayout = QHBoxLayout()
+        label = QLabel("Actions Popup Shortcut")
+        label.setAlignment(Qt.AlignLeft)
+        edit = QKeySequenceEdit()
+        edit.setKeySequence(self.popup_loader.get_actions_popup_shortcut_string())
+        edit.setMaximumWidth(150)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(edit)
+        layout.addLayout(hlayout)
+        self.popup_fields["actions_popup_shortcut"] = edit
+
+        # Brush Sets Popup Shortcut
+        hlayout = QHBoxLayout()
+        label = QLabel("Brush Sets Popup Shortcut")
+        label.setAlignment(Qt.AlignLeft)
+        edit = QKeySequenceEdit()
+        edit.setKeySequence(self.popup_loader.get_brush_sets_popup_shortcut_string())
+        edit.setMaximumWidth(150)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(edit)
+        layout.addLayout(hlayout)
+        self.popup_fields["brush_sets_popup_shortcut"] = edit
+
+        layout.addWidget(QLabel(""))
+        layout.addWidget(QLabel("[Popup Appearance]"))
+
+        # Brush Icon Size
+        hlayout = QHBoxLayout()
+        label = QLabel("Brush Icon Size")
+        label.setAlignment(Qt.AlignLeft)
+        edit = QLineEdit(str(self.popup_loader.get_brush_icon_size()))
+        edit.setFixedWidth(80)
+        edit.setAlignment(Qt.AlignRight)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(edit)
+        layout.addLayout(hlayout)
+        self.popup_fields["brush_icon_size"] = edit
+
+        # Grid Label Width
+        hlayout = QHBoxLayout()
+        label = QLabel("Grid Label Width")
+        label.setAlignment(Qt.AlignLeft)
+        edit = QLineEdit(str(self.popup_loader.get_grid_label_width()))
+        edit.setFixedWidth(80)
+        edit.setAlignment(Qt.AlignRight)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(edit)
+        layout.addLayout(hlayout)
+        self.popup_fields["grid_label_width"] = edit
+
+        layout.addStretch()
+
     def setup_connections(self):
         """Setup button connections"""
         self.save_btn.clicked.connect(self.save_and_close)
         self.cancel_btn.clicked.connect(self.reject)
-        self.tab_list.currentRowChanged.connect(self.stacked_widget.setCurrentIndex)
+        # QTabWidget handles tab switching automatically, no connection needed
 
     def save_and_close(self):
         """Save configuration and close dialog"""
@@ -369,7 +450,11 @@ class CommonConfigDialog(QDialog):
                         modes_str = edit.toPlainText().strip()
                         if modes_str:
                             # Split by newline and strip whitespace from each mode
-                            modes_list = [mode.strip() for mode in modes_str.split("\n") if mode.strip()]
+                            modes_list = [
+                                mode.strip()
+                                for mode in modes_str.split("\n")
+                                if mode.strip()
+                            ]
                             self.quick_adjust_config[key] = modes_list
                         else:
                             self.quick_adjust_config[key] = []
@@ -403,5 +488,27 @@ class CommonConfigDialog(QDialog):
             # Write quick adjust config to file
             with open(self.quick_adjust_path, "w", encoding="utf-8") as f:
                 json.dump(self.quick_adjust_config, f, indent=4)
+
+        # Save popup config edits
+        if self.popup_fields:
+            for key, edit in self.popup_fields.items():
+                if key == "actions_popup_shortcut":
+                    shortcut_str = edit.keySequence().toString()
+                    self.popup_loader.set_actions_popup_shortcut(shortcut_str)
+                elif key == "brush_sets_popup_shortcut":
+                    shortcut_str = edit.keySequence().toString()
+                    self.popup_loader.set_brush_sets_popup_shortcut(shortcut_str)
+                elif key == "brush_icon_size":
+                    try:
+                        size = int(edit.text())
+                        self.popup_loader.set_brush_icon_size(size)
+                    except ValueError:
+                        pass
+                elif key == "grid_label_width":
+                    try:
+                        width = int(edit.text())
+                        self.popup_loader.set_grid_label_width(width)
+                    except ValueError:
+                        pass
 
         self.accept()
