@@ -569,14 +569,25 @@ Example:
                     self.gesture_alias = self.gesture_settings.get("alias", {})
             else:
                 # Default settings
-                self.gesture_settings = {"enabled": True, "minimum_pixels_to_move": 20}
+                self.gesture_settings = {
+                    "enabled": True,
+                    "minimum_pixels_to_move": 20,
+                    "show_preview": True,
+                    "alias": {}
+                }
+                # Create the file with default settings
+                with open(self.gesture_settings_path, "w", encoding="utf-8") as f:
+                    json.dump(self.gesture_settings, f, indent=4)
+                self.gesture_alias = {}
         except Exception as e:
             print(f"Error loading gesture settings: {e}")
             self.gesture_settings = {
                 "enabled": True,
                 "minimum_pixels_to_move": 20,
                 "show_preview": True,
+                "alias": {}
             }
+            self.gesture_alias = {}
 
     def save_gesture_settings(self):
         """Save gesture system settings"""
