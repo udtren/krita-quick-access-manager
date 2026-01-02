@@ -33,14 +33,13 @@ If you find this tool helpful, you can support its development:
 - [Global Config](#global-config)
 - [Shortcut Button Config](#shortcut-button-config)
 - [Sort/Remove](#sortremove)
-- [Config File](#config-file)
 
 ## How to Add a Brush Preset
 1. In the "Quick Brush Sets" section, activate the grid you want to add to.
 2. Select the brush preset you want to add from Krita's brush preset.
 3. Click the "AddBrush" button in the docker.
 4. The selected preset will be added to the active grid.
-![How to Add a Brush Preset](./quick_access_manager/image/image1.png)
+![How to Add a Brush Preset](./quick_access_manager/image/qam_add_brush.gif)
 
 ## How to Add a Shortcut. 
 1. In the "Quick Actions" section, activate the grid you want to add to.
@@ -48,23 +47,18 @@ If you find this tool helpful, you can support its development:
 3. Select the action you want to add from the table.
 4. Click the "AddAction" button.
 5. The selected shortcut will be added to the active grid.
-![How to Add a Shortcut](./quick_access_manager/image/image2.png)
+![How to Add a Shortcut](./quick_access_manager/image/qam_add_action.gif)
  
 ## Popup Window
 ![Popup Demo](./quick_access_manager/image/popup_demo.gif)
 ![Popup](./quick_access_manager/image/popup.png)
 
-### How to Use
-1. **Brush Sets Popup**: Press `W` to show/hide the brush sets popup
-2. **Actions Popup**: Press `Tab` to show/hide the actions popup
+### How to change shortcut and icon size
+![Popup Demo](./quick_access_manager/image/qam_popup_config.gif)
 
-### Change Shortcut and icon size
-Edit the following value to change shortcut key:
-- `quick_access_manager\popup\brush_sets.py`
-    - `BrushSetsPopupShortcut`
-    - `BrushIconSize`
-- `quick_access_manager\popup\actions.py`
-    - `ActionsPopupShortcut`
+**The default key for both popup are `W` and `Tab`.**
+
+**Krita uses `Tab` for `Show canvas only` action, so you need to remove the shortcut first.**
 
 ## Gesture System
 ![Gesture Demo2](./quick_access_manager/image/gesture_demo2.gif)
@@ -81,7 +75,7 @@ A gesture-based control system that allows you to trigger actions using keyboard
 - **Visual Configuration**: Intuitive UI with arrow icons and action previews
 
 ### How to Use
-
+![Gesture Config](./quick_access_manager/image/qam_gesture_config.gif)
 > **First-time setup**: When opening the gesture configuration dialog for the first time, you may see an empty "1" tab. Ignore it and simply click the "+" button to create your first gesture page.
 
 1. **Open Configuration**: Click the "Gesture" button in the Quick Access Manager docker to open the gesture configuration dialog
@@ -122,8 +116,7 @@ There is a Krita shortcut `Toggle Gesture Recognition` that can be used to disab
 
 ### Preview Overlay
 By default, a visual preview overlay appears when you press and hold the gesture key, showing all configured actions for each direction. 
-
-You can disable the preview overlay in the gesture settings (top-right corner of the gesture config dialog).
+You can disable the preview overlay in the gesture settings.
 
 #### Tips
 - The dialog is modeless, allowing you to continue working in Krita while it's open
@@ -252,6 +245,8 @@ The buttons at the bottom of the docker provide quick show/hide toggles for othe
 To modify the docker's appearance and behavior, see "Global Config".
 
 ## Global Config
+![Global Config](./quick_access_manager/image/qam_global_setting.gif)
+
 The global configuration allows you to customize the default appearance and behavior for all shortcut buttons and UI elements.
 
 **How to Access:**
@@ -265,15 +260,15 @@ The global configuration allows you to customize the default appearance and beha
 - **Spacing Between Buttons/Grids**: Adjusts the spacing between UI elements
 - **Quick Brush Adjustments Docker Settings**: Customize font sizes, history sizes, and other docker-specific options
 
-![Setting](./quick_access_manager/image/image3.png)
-
 **Note:** Individual buttons can override these global settings. See "Shortcut Button Config" below.
 
 ## Shortcut Button Config
 Each shortcut button can be individually customized with its own appearance settings.
+![Shortcut Button Config](./quick_access_manager/image/qam_shortcut_button_config.gif)
 
 **How to Access:**
 - Hold <kbd>Alt</kbd> and right-click any shortcut button
+![Shortcut Button Config](./quick_access_manager/image/image4.png)
 
 **Available Options:**
 - **Button Name**: Custom display name for the button
@@ -283,7 +278,6 @@ Each shortcut button can be individually customized with its own appearance sett
 - **Icon Name**: PNG filename to display as an icon instead of text
 - **Use Global Settings**: When checked, the button uses colors from the global config
 
-![Shortcut Button Config](./quick_access_manager/image/image4.png)
 
 **Icon Support:**
 To display a button as an icon instead of text:
@@ -335,16 +329,4 @@ Each grid can have its own configuration parameters that override global setting
 
 **Activate Grid:**  
 To activate a grid, simply left-click the grid name.
-
-## Config file
-
-The configuration files for grids and shortcuts are stored in `./quick_access_manager/config`.
-
-- `grids_data.json`: Stores the brush preset grids.
-- `shortcut_grid_data.json`: Stores the shortcut grids.
-- `common.json`: Stores UI and layout settings.
-
-**Note:**  
-There is no profile management function, but you can manually edit these files while Krita is closed.  
-If you want to reset or backup your settings, you can copy or edit these files directly.
 

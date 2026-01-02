@@ -13,11 +13,9 @@ from PyQt5.QtGui import QCursor, QKeySequence, QIcon, QPixmap
 from krita import Krita  # type: ignore
 from ..utils.action_manager import ActionManager
 from ..utils.logs import write_log
+from ..config.popup_loader import PopupConfigLoader
 import json
 import os
-
-ActionsPopupShortcut = QKeySequence(Qt.Key_Tab)
-GridLabelWidth = 60
 
 
 class ActionsPopup:
@@ -27,6 +25,7 @@ class ActionsPopup:
         self.parent_docker = parent_docker
         self.popup_window = None
         self.popup_shortcut = None
+        self.popup_loader = PopupConfigLoader()
         self.shortcut_grid_data = self.load_shortcut_grid_data()
 
     def load_shortcut_grid_data(self):
@@ -164,7 +163,9 @@ class ActionsPopup:
             # If we can't get the main window, use parent docker as parent
             parent = main_window if main_window else self.parent_docker
 
-            self.popup_shortcut = QShortcut(ActionsPopupShortcut, parent)
+            # Get shortcut from config
+            shortcut_key = self.popup_loader.get_actions_popup_shortcut()
+            self.popup_shortcut = QShortcut(shortcut_key, parent)
             self.popup_shortcut.activated.connect(self.show_popup_at_cursor)
 
             # Enable the shortcut for application-wide use
@@ -175,7 +176,6 @@ class ActionsPopup:
 
     def show_popup_at_cursor(self):
         """Show popup window at cursor position"""
-        print("Actions popup shortcut activated!")  # Debug message
         try:
             if self.popup_window and self.popup_window.isVisible():
                 print("Hiding existing actions popup")
@@ -196,9 +196,6 @@ class ActionsPopup:
             )
             self.popup_window.show()
             self.popup_window.raise_()
-
-            # Auto-hide after 10 seconds (optional)
-            # QTimer.singleShot(10000, self.popup_window.hide)
 
         except Exception as e:
             print(f"Error showing actions popup: {e}")
@@ -244,7 +241,7 @@ class ActionsPopup:
             write_log(f"Processing action grid: {grid_data}")
             grid_name = grid_data.get("name", "Unnamed Grid")
             grid_label = QLabel(grid_name)
-            grid_label.setFixedWidth(GridLabelWidth)
+            grid_label.setFixedWidth(self.popup_loader.get_grid_label_width())
             grid_label.setWordWrap(True)
             grid_label.setAlignment(Qt.AlignCenter)
             grid_label.setStyleSheet(

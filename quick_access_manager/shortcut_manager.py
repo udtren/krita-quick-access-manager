@@ -1,5 +1,6 @@
 import os
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -13,7 +14,6 @@ from .widgets.shortcut_popup import ShortcutPopup
 from .widgets.shortcut_grid_widget import SingleShortcutGridWidget
 from .utils.shortcut_utils import get_spacing_between_grids
 from .utils.action_manager import ActionManager
-from .utils.styles import docker_btn_style
 from .popup import ActionsPopup
 
 
@@ -66,20 +66,46 @@ class ShortcutAccessDockerWidget(QDockWidget):
         """Create the top button row"""
         button_layout = QHBoxLayout()
 
-        button_layout.addStretch()
+        # Common button style with icon size and background color
+        icon_size = QSize(18, 18)
+        button_style = """
+            QPushButton {
+                background-color: #828282;
+                border: none;
+                border-radius: 2px;
+            }
+            QPushButton:hover {
+                background-color: #9a9a9a;
+            }
+            QPushButton:pressed {
+                background-color: #6a6a6a;
+            }
+        """
+
+        # Get icon directory path
+        icon_dir = os.path.join(self.config_dir, "system_icon")
 
         # Actions button
-        self.show_all_btn = QPushButton("Actions")
-        self.show_all_btn.setFixedWidth(70)
-        self.show_all_btn.setStyleSheet(docker_btn_style())
+        self.show_all_btn = QPushButton()
+        actions_icon = QIcon(os.path.join(icon_dir, "actions.png"))
+        self.show_all_btn.setIcon(actions_icon)
+        self.show_all_btn.setIconSize(icon_size)
+        self.show_all_btn.setStyleSheet(button_style)
+        self.show_all_btn.setFixedSize(22, 22)
+        self.show_all_btn.setToolTip("Show All Actions")
 
         # Add Grid button
-        self.add_grid_btn = QPushButton("AddGrid")
-        self.add_grid_btn.setFixedWidth(70)
-        self.add_grid_btn.setStyleSheet(docker_btn_style())
+        self.add_grid_btn = QPushButton()
+        add_grid_icon = QIcon(os.path.join(icon_dir, "add_grid.png"))
+        self.add_grid_btn.setIcon(add_grid_icon)
+        self.add_grid_btn.setIconSize(icon_size)
+        self.add_grid_btn.setStyleSheet(button_style)
+        self.add_grid_btn.setFixedSize(22, 22)
+        self.add_grid_btn.setToolTip("Add New Grid")
 
         button_layout.addWidget(self.show_all_btn)
         button_layout.addWidget(self.add_grid_btn)
+        button_layout.addStretch()
 
         self.main_layout.addLayout(button_layout)
 
