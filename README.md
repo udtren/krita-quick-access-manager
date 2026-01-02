@@ -246,6 +246,7 @@ To modify the docker's appearance and behavior, see "Global Config".
 
 ## Global Config
 ![Global Config](./quick_access_manager/image/qam_global_setting.gif)
+
 The global configuration allows you to customize the default appearance and behavior for all shortcut buttons and UI elements.
 
 **How to Access:**
