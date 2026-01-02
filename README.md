@@ -57,7 +57,8 @@ If you find this tool helpful, you can support its development:
 ![Popup Demo](./quick_access_manager/image/qam_popup_config.gif)
 
 **The default key for both popup are `W` and `Tab`.**
-**Krita uses `W` for `Show canvas only` action, so you need to remove the shortcut first.**
+
+**Krita uses `Tab` for `Show canvas only` action, so you need to remove the shortcut first.**
 
 ## Gesture System
 ![Gesture Demo2](./quick_access_manager/image/gesture_demo2.gif)
