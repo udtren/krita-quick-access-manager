@@ -3,6 +3,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-01-11
+### Added
+- Pin functionality for popup windows
+  - Pin button in toolbar allows keeping popups open
+  - When pinned, popups remain visible when selecting brushes/actions
+  - When pinned, popups remain visible when pressing shortcut key again
+  - Pin status indicated by icon toggle (pin_pinned.png / pin_unpinned.png)
+- Close button in popup toolbar
+  - Closes popup window and resets pin status
+  - Uses circle-xmark.png icon
+- Popup window drag-to-move functionality
+  - Left-click drag anywhere on popup to reposition
+  - Works for both Brush Sets Popup and Actions Popup
+- Toolbar in popup windows
+  - Pin and close buttons (16×16px) aligned to the right
+  - Consistent styling with application theme (#828282 background)
+  - Buttons have hover and pressed states
+
+### Changed
+- Popup windows now have toolbar at the top with control buttons
+- Both Brush Sets Popup and Actions Popup support pin/close/drag functionality
+
 ## 2026-01-02
 ### Added
 - Popup configuration system (`popup.json`)

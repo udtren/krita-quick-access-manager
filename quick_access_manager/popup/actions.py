@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QShortcut,
     QFrame,
 )
-from PyQt5.QtCore import Qt, QTimer, QSize
+from PyQt5.QtCore import Qt, QTimer, QSize, QPoint
 from PyQt5.QtGui import QCursor, QKeySequence, QIcon, QPixmap
 from krita import Krita  # type: ignore
 from ..utils.action_manager import ActionManager
@@ -27,6 +27,9 @@ class ActionsPopup:
         self.popup_shortcut = None
         self.popup_loader = PopupConfigLoader()
         self.shortcut_grid_data = self.load_shortcut_grid_data()
+        self.is_pinned = False
+        self.drag_position = None
+        self.pin_button = None
 
     def load_shortcut_grid_data(self):
         """Load shortcut grid data to check for custom names"""
@@ -178,8 +181,9 @@ class ActionsPopup:
         """Show popup window at cursor position"""
         try:
             if self.popup_window and self.popup_window.isVisible():
-                print("Hiding existing actions popup")
-                self.popup_window.hide()
+                if not self.is_pinned:
+                    print("Hiding existing actions popup")
+                    self.popup_window.hide()
                 return
 
             self.shortcut_grid_data = self.load_shortcut_grid_data()
@@ -210,15 +214,143 @@ class ActionsPopup:
             Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
         )
 
+        # Override mouse events for dragging
+        self.popup_window.mousePressEvent = self.popup_mouse_press
+        self.popup_window.mouseMoveEvent = self.popup_mouse_move
+        self.popup_window.mouseReleaseEvent = self.popup_mouse_release
+
         popup_layout = QVBoxLayout()
         popup_layout.setContentsMargins(5, 5, 5, 5)
         popup_layout.setSpacing(2)
+
+        # Add toolbar at the top
+        self.create_toolbar(popup_layout)
 
         # Add popup content - action shortcuts
         self.create_popup_content(popup_layout)
         self.popup_window.setLayout(popup_layout)
         # Auto-fit content size
         self.popup_window.adjustSize()
+
+    def create_toolbar(self, popup_layout):
+        """Create toolbar with pin and close buttons"""
+        toolbar_layout = QHBoxLayout()
+        toolbar_layout.setContentsMargins(0, 0, 0, 5)
+        toolbar_layout.setSpacing(5)
+
+        # Get the base path for icons
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        close_icon = os.path.join(
+            base_path, "config", "system_icon", "circle-xmark.png"
+        )
+
+        # Pin button
+        self.pin_button = QPushButton()
+        self.pin_button.setFixedSize(16, 16)
+        self.pin_button.setToolTip("Pin window")
+        self.pin_button.clicked.connect(self.toggle_pin)
+        self.update_pin_icon()
+        self.pin_button.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #828282;
+                border: none;
+                border-radius: 2px;
+            }
+            QPushButton:hover {
+                background-color: #9a9a9a;
+            }
+            QPushButton:pressed {
+                background-color: #6a6a6a;
+            }
+        """
+        )
+
+        # Close button
+        close_button = QPushButton()
+        close_button.setFixedSize(16, 16)
+        close_button.setToolTip("Close")
+        close_button.clicked.connect(self.close_popup)
+        if os.path.exists(close_icon):
+            close_button.setIcon(QIcon(close_icon))
+            close_button.setIconSize(close_button.size())
+        else:
+            close_button.setText("X")
+        close_button.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #828282;
+                border: none;
+                border-radius: 2px;
+                color: #fff;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #9a9a9a;
+            }
+            QPushButton:pressed {
+                background-color: #6a6a6a;
+            }
+        """
+        )
+
+        # Add buttons to toolbar (align right)
+        toolbar_layout.addStretch()
+        toolbar_layout.addWidget(self.pin_button)
+        toolbar_layout.addWidget(close_button)
+
+        popup_layout.addLayout(toolbar_layout)
+
+    def update_pin_icon(self):
+        """Update pin button icon based on pin status"""
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        if self.is_pinned:
+            pin_icon = os.path.join(
+                base_path, "config", "system_icon", "pin_pinned.png"
+            )
+            tooltip = "Unpin window"
+        else:
+            pin_icon = os.path.join(
+                base_path, "config", "system_icon", "pin_unpinned.png"
+            )
+            tooltip = "Pin window"
+
+        if self.pin_button and os.path.exists(pin_icon):
+            self.pin_button.setIcon(QIcon(pin_icon))
+            self.pin_button.setIconSize(self.pin_button.size())
+            self.pin_button.setToolTip(tooltip)
+
+    def toggle_pin(self):
+        """Toggle pin status"""
+        self.is_pinned = not self.is_pinned
+        self.update_pin_icon()
+
+    def close_popup(self):
+        """Close popup and reset pin status"""
+        self.is_pinned = False
+        if self.popup_window:
+            self.popup_window.hide()
+
+    def popup_mouse_press(self, event):
+        """Handle mouse press for dragging"""
+        if event.button() == Qt.LeftButton:
+            self.drag_position = (
+                event.globalPos() - self.popup_window.frameGeometry().topLeft()
+            )
+            event.accept()
+
+    def popup_mouse_move(self, event):
+        """Handle mouse move for dragging"""
+        if event.buttons() == Qt.LeftButton and self.drag_position is not None:
+            self.popup_window.move(event.globalPos() - self.drag_position)
+            event.accept()
+
+    def popup_mouse_release(self, event):
+        """Handle mouse release"""
+        if event.button() == Qt.LeftButton:
+            self.drag_position = None
+            event.accept()
 
     def create_popup_content(self, popup_layout):
         """Create action shortcuts content for popup"""
@@ -459,5 +591,5 @@ class ActionsPopup:
 
             traceback.print_exc()
 
-        if self.popup_window:
+        if self.popup_window and not self.is_pinned:
             self.popup_window.hide()
