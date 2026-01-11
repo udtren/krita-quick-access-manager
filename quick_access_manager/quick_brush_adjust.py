@@ -1012,7 +1012,7 @@ class BrushAdjustDockerWidget(QDockWidget):
         self.setWidget(self.brush_adjustment_section)
 
         # Set minimum size to ensure usability
-        self.setMinimumWidth(300)
+        self.setMinimumWidth(100)
         self.setMinimumHeight(100)
 
     def refresh_styles(self):
