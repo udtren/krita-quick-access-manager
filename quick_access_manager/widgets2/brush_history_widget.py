@@ -84,10 +84,13 @@ class BrushHistoryWidget(QWidget):
 
     def eventFilter(self, obj, event):
         """Filter events to detect mouse button press"""
-        # Check if this is a mouse button press event
+        # Check if this is a pure mouse button press event (no modifiers like Ctrl)
         if event.type() == QEvent.MouseButtonPress:
-            # Mouse button was pressed, check the current brush
-            self.check_brush_change()
+            # Only check if there are no keyboard modifiers pressed
+            from PyQt5.QtCore import Qt
+            if event.modifiers() == Qt.NoModifier:
+                # Pure mouse button press, check the current brush
+                self.check_brush_change()
         return super().eventFilter(obj, event)
 
     def generate_brush_thumbnail(self, brush_preset, size=None):
