@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QApplication
+from PyQt5.QtCore import QEvent
 from PyQt5.QtGui import QColor
 from krita import Krita, ManagedColor  # type: ignore
 
@@ -17,10 +17,8 @@ class ColorHistoryWidget(QWidget):
         self.color_buttons = []
         self.init_ui()
 
-        # Timer to periodically check for color changes
-        self.color_check_timer = QTimer()
-        self.color_check_timer.timeout.connect(self.check_color_change)
-        self.color_check_timer.start(200)  # Check every 200ms for better responsiveness
+        # Install event filter on QApplication to monitor mouse clicks
+        self.install_event_filter()
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -63,6 +61,24 @@ class ColorHistoryWidget(QWidget):
         layout.addLayout(row2_layout)
         layout.addStretch()
         self.setLayout(layout)
+
+    def install_event_filter(self):
+        """Install event filter on QApplication to monitor mouse clicks"""
+        try:
+            app = QApplication.instance()
+            if app:
+                app.installEventFilter(self)
+                print("Event filter installed on QApplication")
+        except Exception as e:
+            print(f"Error installing event filter: {e}")
+
+    def eventFilter(self, obj, event):
+        """Filter events to detect mouse button press"""
+        # Check if this is a mouse button press event
+        if event.type() == QEvent.MouseButtonPress:
+            # Mouse button was pressed, check the current color
+            self.check_color_change()
+        return super().eventFilter(obj, event)
 
     def check_color_change(self):
         """Check if the current foreground color has changed"""
@@ -186,7 +202,12 @@ class ColorHistoryWidget(QWidget):
         print(f"Added test color: RGB{test_color}")
 
     def closeEvent(self, event):
-        """Clean up timer when widget is closed"""
-        if hasattr(self, "color_check_timer"):
-            self.color_check_timer.stop()
+        """Clean up event filter when widget is closed"""
+        try:
+            app = QApplication.instance()
+            if app:
+                app.removeEventFilter(self)
+                print("Event filter removed from QApplication")
+        except Exception as e:
+            print(f"Error removing event filter: {e}")
         super().closeEvent(event)

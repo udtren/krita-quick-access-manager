@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton
-from PyQt5.QtCore import QTimer, QSize
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QApplication
+from PyQt5.QtCore import QSize, QEvent
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QColor
 from krita import Krita  # type: ignore
 
@@ -24,10 +24,8 @@ class BrushHistoryWidget(QWidget):
             f"BrushHistoryWidget initialized with {self.BRUSHES_PER_ROW} brushes per row (2 rows, {self.TOTAL_BRUSHES} total), icon size: {icon_size}"
         )  # Debug output
 
-        # Timer to periodically check for brush changes
-        self.brush_check_timer = QTimer()
-        self.brush_check_timer.timeout.connect(self.check_brush_change)
-        self.brush_check_timer.start(500)  # Check every 500ms for better responsiveness
+        # Install event filter on QApplication to monitor mouse clicks
+        self.install_event_filter()
 
         # Force an immediate check to populate the current brush
         self.force_brush_update()
@@ -73,6 +71,24 @@ class BrushHistoryWidget(QWidget):
         layout.addLayout(row2_layout)
         layout.addStretch()
         self.setLayout(layout)
+
+    def install_event_filter(self):
+        """Install event filter on QApplication to monitor mouse clicks"""
+        try:
+            app = QApplication.instance()
+            if app:
+                app.installEventFilter(self)
+                print("Event filter installed on QApplication for brush history")
+        except Exception as e:
+            print(f"Error installing event filter: {e}")
+
+    def eventFilter(self, obj, event):
+        """Filter events to detect mouse button press"""
+        # Check if this is a mouse button press event
+        if event.type() == QEvent.MouseButtonPress:
+            # Mouse button was pressed, check the current brush
+            self.check_brush_change()
+        return super().eventFilter(obj, event)
 
     def generate_brush_thumbnail(self, brush_preset, size=None):
         """Generate a thumbnail for the brush preset"""
@@ -249,7 +265,12 @@ class BrushHistoryWidget(QWidget):
             print("No active window or view available")
 
     def closeEvent(self, event):
-        """Clean up timer when widget is closed"""
-        if hasattr(self, "brush_check_timer"):
-            self.brush_check_timer.stop()
+        """Clean up event filter when widget is closed"""
+        try:
+            app = QApplication.instance()
+            if app:
+                app.removeEventFilter(self)
+                print("Event filter removed from QApplication for brush history")
+        except Exception as e:
+            print(f"Error removing event filter: {e}")
         super().closeEvent(event)
