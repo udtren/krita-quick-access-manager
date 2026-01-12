@@ -8,12 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Color History Widget now uses event-based color detection
   - Switched from timer polling (200ms intervals) to QEvent.MouseButtonPress detection
   - Event filter installed on QApplication for application-wide monitoring
-  - Only checks foreground color when mouse button is pressed
+  - Only checks foreground color when pure mouse button is pressed (no modifier keys)
+  - Ignores Ctrl+Click, Shift+Click, and other modified clicks
   - Significantly improved performance by eliminating continuous polling
 - Brush History Widget now uses event-based brush detection
   - Switched from timer polling (500ms intervals) to QEvent.MouseButtonPress detection
   - Event filter installed on QApplication for application-wide monitoring
-  - Only checks current brush when mouse button is pressed
+  - Only checks current brush when pure mouse button is pressed (no modifier keys)
+  - Ignores Ctrl+Click, Shift+Click, and other modified clicks
   - Significantly improved performance by eliminating continuous polling
 
 ## 2026-01-11
