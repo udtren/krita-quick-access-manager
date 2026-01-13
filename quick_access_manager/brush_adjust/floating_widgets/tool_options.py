@@ -3,7 +3,7 @@ from .base_tools.adjust_to_subwindow_filter import ntAdjustToSubwindowFilter
 from .base_tools.widget_pad import ntWidgetPad, WidgetPadPosition
 
 
-class ntToolOptions:
+class FloatToolOptions:
 
     def __init__(self, window):
         qWin = window.qwindow()
@@ -45,7 +45,6 @@ class ntToolOptions:
         if subWin:
             subWin.installEventFilter(self.adjustFilter)
             self.pad.adjustToView()
-            self.updateStyleSheet()
 
     def findDockerAction(self, window, text):
         dockerMenu = None
@@ -57,13 +56,7 @@ class ntToolOptions:
                 for a in dockerMenu.menu().actions():
                     if a.text().replace("&", "") == text:
                         return a
-
         return False
-
-    def updateStyleSheet(self):
-        # variables.setColors()
-        # self.pad.setStyleSheet(variables.nu_tool_options_style)
-        return
 
     def close(self):
         self.dockerAction.setEnabled(True)

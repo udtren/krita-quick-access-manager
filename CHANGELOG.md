@@ -33,10 +33,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Split positioning logic into `_calculateDockerRelativePosition()` and `_calculateCanvasEdgePosition()`
   - Updated event filter to work with any reference docker (renamed `quickBrushDocker` to `referenceDocker`)
   - Backward compatible: defaults to left canvas edge if no configuration provided
-- Updated `ntToolOptions` to use new `WidgetPadPosition` configuration
+- Updated `float_tool_options` to use new `WidgetPadPosition` configuration
 - Moved widget_pad.py, adjust_to_subwindow_filter.py, scrollarea_container.py, and togglevisible_button.py to widgets3/base_tools/ package
 - Created widgets3/__init__.py and widgets3/base_tools/__init__.py for proper package structure
-- Integrated ntToolOptions class from krita-redesign project
+- Integrated float_tool_options class from krita-redesign project
 - Updated widget_pad.py to use centralized utils/logs.py logging system
 
 ## 2026-01-12

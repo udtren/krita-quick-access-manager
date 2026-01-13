@@ -2,13 +2,13 @@ import os
 from krita import *
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QPushButton
 from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from ...gesture.gesture_main import (
     pause_gesture_event_filter,
     resume_gesture_event_filter,
     is_gesture_filter_paused,
 )
-from ..floating_widgets.tool_options import ntToolOptions
+from ..floating_widgets.tool_options import FloatToolOptions
 
 
 class ControlButtonWidget(QWidget):
@@ -34,45 +34,30 @@ class ControlButtonWidget(QWidget):
 
     def init_ui(self):
 
-        # Setup tool options extension initialization
-        application = Krita.instance()
-        appNotifier = application.notifier()
-        appNotifier.windowCreated.connect(self.enableToolOptionsExtension)
-
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 5, 0, 5)
         layout.setSpacing(3)
         layout.setAlignment(Qt.AlignTop)
 
+        # ============================================
+        # Setup tool options extension initialization
+        application = Krita.instance()
+        appNotifier = application.notifier()
+        appNotifier.windowCreated.connect(self.enableToolOptionsExtension)
+
         # Add Tool Options toggle button
         self.tool_options_toggle_btn = QPushButton()
         self.tool_options_toggle_btn.setFixedSize(16, 16)
         self.tool_options_toggle_btn.setToolTip("Toggle Tool Options")
-        self.tool_options_toggle_btn.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #4a4a4a;
-                border: 1px solid #666666;
-                border-radius: 2px;
-            }
-            QPushButton:hover {
-                background-color: #5a5a5a;
-                border: 1px solid #888888;
-            }
-            QPushButton:pressed {
-                background-color: #3a3a3a;
-            }
-            QPushButton:checked {
-                background-color: #6a9fb5;
-                border: 1px solid #4a7f95;
-            }
-            """
+        self.tool_options_toggle_btn.setIcon(
+            (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
         )
         self.tool_options_toggle_btn.setCheckable(True)
         self.tool_options_toggle_btn.setChecked(False)  # Start hidden
         self.tool_options_toggle_btn.clicked.connect(
             self.toggle_tool_options_visibility
         )
+        # ============================================
 
         # Create labels with fixed size for icons
         self.selection_info_label = QLabel()
@@ -163,16 +148,22 @@ class ControlButtonWidget(QWidget):
     def enableToolOptionsExtension(self):
         """Enable the floating Tool Options extension if not already enabled"""
         window = Krita.instance().activeWindow()
-        self.ntTO = ntToolOptions(window)
+        self.float_tool_options = FloatToolOptions(window)
 
-        self.ntTO.pad.show()
+        self.float_tool_options.pad.show()
         self.tool_options_toggle_btn.setChecked(True)
 
     def toggle_tool_options_visibility(self):
         """Toggle the visibility of the Tool Options floating widget"""
-        if hasattr(self, "ntTO") and self.ntTO:
+        if hasattr(self, "float_tool_options") and self.float_tool_options:
             is_checked = self.tool_options_toggle_btn.isChecked()
             if is_checked:
-                self.ntTO.pad.show()
+                self.float_tool_options.pad.show()
+                self.tool_options_toggle_btn.setIcon(
+                    (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
+                )
             else:
-                self.ntTO.pad.hide()
+                self.float_tool_options.pad.hide()
+                self.tool_options_toggle_btn.setIcon(
+                    (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
+                )
