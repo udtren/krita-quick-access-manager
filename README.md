@@ -30,6 +30,7 @@ If you find this tool helpful, you can support its development:
   - [Alias](#alias)
   - [External API](#external-api)
 - [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker)
+  - [Floating Widget](#floating-widget)
 - [Global Config](#global-config)
 - [Shortcut Button Config](#shortcut-button-config)
 - [Sort/Remove](#sortremove)
@@ -265,7 +266,7 @@ The Quick Brush Adjust docker includes a companion floating Tool Options widget 
 
 **Features:**
 - Automatically positions itself to the left of the Quick Brush Adjust docker
-- Follows the docker when moved or resized
+- Follows the docker when moved
 
 **Configuration:**
 The floating widget behavior can be customized in the Settings dialog under "Quick Adjust" tab:
