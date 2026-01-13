@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
     QTextEdit,
     QKeySequenceEdit,
     QTabWidget,
+    QGroupBox,
 )
 from PyQt5.QtCore import Qt
 from ..config.popup_loader import PopupConfigLoader
@@ -30,6 +31,7 @@ class CommonConfigDialog(QDialog):
         self.fields = {}
         self.quick_adjust_fields = {}
         self.popup_fields = {}
+        self.docker_buttons_fields = []  # List to store docker button field groups
         self.popup_loader = PopupConfigLoader()
 
         self.setup_ui()
@@ -169,7 +171,7 @@ class CommonConfigDialog(QDialog):
         # Add fields for brush_section
         brush_section = self.quick_adjust_config.get("brush_section", {})
         layout.addWidget(QLabel("[brush_section]"))
-        for slider_name in ["size_slider", "opacity_slider", "rotation_slider"]:
+        for slider_name in ["size_slider", "opacity_slider"]:
             slider = brush_section.get(slider_name, {})
             layout.addWidget(QLabel(f"  {slider_name}:"))
 
@@ -311,6 +313,54 @@ class CommonConfigDialog(QDialog):
 
             layout.addLayout(hlayout)
 
+        # Add fields for floating_widgets section
+        floating_widgets = self.quick_adjust_config.get("floating_widgets", {})
+        # Ensure section exists with defaults
+        if "floating_widgets" not in self.quick_adjust_config:
+            self.quick_adjust_config["floating_widgets"] = {
+                "tool_options": {"enabled": True, "start_visible": True}
+            }
+            floating_widgets = self.quick_adjust_config["floating_widgets"]
+
+        layout.addWidget(QLabel("[floating_widgets]"))
+
+        for widget_name in ["tool_options"]:
+            widget_config = floating_widgets.get(widget_name, {"enabled": True, "start_visible": True})
+            # Ensure widget config exists with both keys
+            if widget_name not in floating_widgets:
+                floating_widgets[widget_name] = {"enabled": True, "start_visible": True}
+                widget_config = floating_widgets[widget_name]
+            else:
+                # Ensure start_visible key exists if missing
+                if "start_visible" not in widget_config:
+                    widget_config["start_visible"] = True
+                    floating_widgets[widget_name]["start_visible"] = True
+
+            layout.addWidget(QLabel(f"  {widget_name}:"))
+
+            for key, value in widget_config.items():
+                hlayout = QHBoxLayout()
+                label = QLabel(f"    {key}")
+                label.setAlignment(Qt.AlignLeft)
+
+                if isinstance(value, bool):
+                    edit = QCheckBox()
+                    edit.setChecked(value)
+                    hlayout.addWidget(label)
+                    hlayout.addStretch()
+                    hlayout.addWidget(edit)
+                    self.quick_adjust_fields[("floating_widgets", widget_name, key)] = edit
+                else:
+                    edit = QLineEdit(str(value))
+                    edit.setFixedWidth(80)
+                    edit.setAlignment(Qt.AlignRight)
+                    hlayout.addWidget(label)
+                    hlayout.addStretch()
+                    hlayout.addWidget(edit)
+                    self.quick_adjust_fields[("floating_widgets", widget_name, key)] = edit
+
+                layout.addLayout(hlayout)
+
         # Add font_size field
         font_size = self.quick_adjust_config.get("font_size", "12px")
         layout.addWidget(QLabel("[General]"))
@@ -343,7 +393,153 @@ class CommonConfigDialog(QDialog):
         layout.addLayout(vlayout)
         self.quick_adjust_fields[("blender_mode_list",)] = edit
 
+        # Add docker buttons configuration section
+        self.load_docker_buttons_config(layout)
+
         layout.addStretch()
+
+    def load_docker_buttons_config(self, layout):
+        """Load and create UI for docker buttons configuration"""
+        # Get the docker_buttons.json path
+        config_dir = os.path.dirname(self.config_path)
+        docker_buttons_path = os.path.join(config_dir, "docker_buttons.json")
+
+        if not os.path.exists(docker_buttons_path):
+            # Create default config
+            from ..config.quick_adjust_docker_loader import ensure_docker_buttons_config_exists
+            ensure_docker_buttons_config_exists()
+
+        # Load docker buttons config
+        with open(docker_buttons_path, "r", encoding="utf-8") as f:
+            self.docker_buttons_config = json.load(f)
+
+        self.docker_buttons_path = docker_buttons_path
+
+        # Add docker buttons section
+        layout.addWidget(QLabel(""))
+        layout.addWidget(QLabel("[Docker Toggle Buttons]"))
+        layout.addWidget(
+            QLabel(
+                "Configure buttons to toggle visibility of docker panels.\n"
+                "Each button can have: name, width, icon, keywords, and description."
+            )
+        )
+
+        docker_buttons = self.docker_buttons_config.get("docker_buttons", [])
+
+        # Create buttons to add/remove docker button configs
+        btn_layout = QHBoxLayout()
+        self.add_docker_btn = QPushButton("Add Button")
+        self.add_docker_btn.clicked.connect(self.add_docker_button_ui)
+        btn_layout.addWidget(self.add_docker_btn)
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+
+        # Create a container for docker button configurations
+        self.docker_buttons_container = QVBoxLayout()
+        layout.addLayout(self.docker_buttons_container)
+
+        # Add UI for each existing docker button
+        for button_config in docker_buttons:
+            self.add_docker_button_ui(button_config)
+
+    def add_docker_button_ui(self, button_config=None):
+        """Add UI elements for a single docker button configuration"""
+        # Handle case where this is called from a signal (passes bool) or with None
+        if not isinstance(button_config, dict):
+            button_config = {
+                "button_name": "",
+                "button_width": 50,
+                "button_icon": "",
+                "docker_keywords": [],
+                "description": "",
+            }
+
+        # Create a group box for this button
+        group_box = QGroupBox(f"Docker Button: {button_config.get('button_name', 'New Button')}")
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        fields = {}
+
+        # Button Name
+        hlayout = QHBoxLayout()
+        label = QLabel("Button Name:")
+        edit = QLineEdit(button_config.get("button_name", ""))
+        edit.setPlaceholderText("e.g., Tool, Layers, Brush")
+        hlayout.addWidget(label)
+        hlayout.addWidget(edit)
+        group_layout.addLayout(hlayout)
+        fields["button_name"] = edit
+        # Connect text changed to update group box title
+        edit.textChanged.connect(lambda text, gb=group_box: gb.setTitle(f"Docker Button: {text or 'New Button'}"))
+
+        # Button Width
+        hlayout = QHBoxLayout()
+        label = QLabel("Button Width:")
+        edit = QLineEdit(str(button_config.get("button_width", 50)))
+        edit.setFixedWidth(80)
+        edit.setPlaceholderText("50")
+        hlayout.addWidget(label)
+        hlayout.addWidget(edit)
+        hlayout.addStretch()
+        group_layout.addLayout(hlayout)
+        fields["button_width"] = edit
+
+        # Button Icon
+        hlayout = QHBoxLayout()
+        label = QLabel("Button Icon:")
+        edit = QLineEdit(button_config.get("button_icon", ""))
+        edit.setPlaceholderText("e.g., brush_sets.png (optional)")
+        hlayout.addWidget(label)
+        hlayout.addWidget(edit)
+        group_layout.addLayout(hlayout)
+        fields["button_icon"] = edit
+
+        # Docker Keywords
+        hlayout = QHBoxLayout()
+        label = QLabel("Docker Keywords:")
+        keywords_list = button_config.get("docker_keywords", [])
+        keywords_str = ", ".join(keywords_list) if isinstance(keywords_list, list) else ""
+        edit = QLineEdit(keywords_str)
+        edit.setPlaceholderText("e.g., tool, option (comma-separated)")
+        hlayout.addWidget(label)
+        hlayout.addWidget(edit)
+        group_layout.addLayout(hlayout)
+        fields["docker_keywords"] = edit
+
+        # Description
+        hlayout = QHBoxLayout()
+        label = QLabel("Description:")
+        edit = QLineEdit(button_config.get("description", ""))
+        edit.setPlaceholderText("e.g., Tool Options Docker")
+        hlayout.addWidget(label)
+        hlayout.addWidget(edit)
+        group_layout.addLayout(hlayout)
+        fields["description"] = edit
+
+        # Remove button
+        remove_btn = QPushButton("Remove This Button")
+        remove_btn.clicked.connect(lambda: self.remove_docker_button_ui(group_box, fields))
+        group_layout.addWidget(remove_btn)
+
+        # Store fields and group box
+        self.docker_buttons_fields.append({"group_box": group_box, "fields": fields})
+
+        # Add to container
+        self.docker_buttons_container.addWidget(group_box)
+
+    def remove_docker_button_ui(self, group_box, fields):
+        """Remove a docker button configuration from UI"""
+        # Find and remove from fields list
+        for item in self.docker_buttons_fields:
+            if item["group_box"] == group_box:
+                self.docker_buttons_fields.remove(item)
+                break
+
+        # Remove from UI
+        group_box.setParent(None)
+        group_box.deleteLater()
 
     def load_popup_config(self):
         """Load popup shortcuts configuration"""
@@ -510,5 +706,38 @@ class CommonConfigDialog(QDialog):
                         self.popup_loader.set_grid_label_width(width)
                     except ValueError:
                         pass
+
+        # Save docker buttons config
+        if hasattr(self, "docker_buttons_path") and self.docker_buttons_fields:
+            docker_buttons_list = []
+            for item in self.docker_buttons_fields:
+                fields = item["fields"]
+                button_config = {
+                    "button_name": fields["button_name"].text(),
+                    "button_icon": fields["button_icon"].text(),
+                    "description": fields["description"].text(),
+                }
+
+                # Parse button_width as int
+                try:
+                    button_config["button_width"] = int(fields["button_width"].text())
+                except ValueError:
+                    button_config["button_width"] = 50  # default
+
+                # Parse docker_keywords as list
+                keywords_str = fields["docker_keywords"].text().strip()
+                if keywords_str:
+                    # Split by comma and strip whitespace
+                    keywords_list = [kw.strip() for kw in keywords_str.split(",") if kw.strip()]
+                    button_config["docker_keywords"] = keywords_list
+                else:
+                    button_config["docker_keywords"] = []
+
+                docker_buttons_list.append(button_config)
+
+            # Save to file
+            docker_buttons_config = {"docker_buttons": docker_buttons_list}
+            with open(self.docker_buttons_path, "w", encoding="utf-8") as f:
+                json.dump(docker_buttons_config, f, indent=4)
 
         self.accept()

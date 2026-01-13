@@ -202,8 +202,8 @@ finally:
 ![Quick Brush Adjustments](./quick_access_manager/image/004.png)
 
 A dedicated docker for quick brush and layer adjustments, providing instant access to commonly used painting settings. 
-The docker also includes a status bar at the bottom that displays real-time indicators for active selection, alpha lock, inherit alpha, and gesture system states.
-**Click the gesture icon will toggle on/off the gesture system.**
+The docker also includes a control bar at the right side that has toggle button for floating `Tool Options` Docker and brush rotation widget.
+It also displays real-time indicators for active selection and gesture system states. Click the gesture icon will toggle on/off the gesture system.
 
 ### Features
 
@@ -225,10 +225,24 @@ The docker also includes a status bar at the bottom that displays real-time indi
 ### Docker Toggle Buttons
 The buttons at the bottom of the docker provide quick show/hide toggles for other Krita dockers (e.g., Tool Options, Layers, Brush Presets).
 
-**Configuration:**
+**Configuration via Settings UI:**
+1. Click the "Setting" button in the docker
+2. Go to the "Quick Adjust" tab
+3. Scroll down to the "[Docker Toggle Buttons]" section
+4. Use the "Add Button" button to create new docker toggles
+5. Configure each button's properties:
+   - **Button Name**: Display text on the button
+   - **Button Width**: Width in pixels
+   - **Button Icon**: Optional PNG filename from `quick_access_manager\config\icon\` (24×24px recommended)
+   - **Docker Keywords**: Comma-separated keywords to match docker names (e.g., "tool, option" matches "Tool Options")
+   - **Description**: Tooltip text shown on hover
+6. Click "Remove This Button" to delete unwanted buttons
+7. Click "Save" to apply changes
+
+**Configuration File:**
 - Settings are stored in `quick_access_manager\config\docker_buttons.json`
 - The file is auto-created with default buttons on first launch if it doesn't exist
-- To use custom icons, place PNG files in `quick_access_manager\config\icon` (24×24px recommended)
+- You can manually edit the JSON file if preferred
 
 **Button Configuration Format:**
 ```json
@@ -240,6 +254,26 @@ The buttons at the bottom of the docker provide quick show/hide toggles for othe
   "description": "Tooltip text"
 }
 ```
+
+### Floating Widget
+![Floating Widget](./quick_access_manager/image/qam_floating_docker.gif)
+
+The Quick Brush Adjust docker includes a companion floating Tool Options widget that can be positioned relative to the docker.
+
+**Features:**
+- Automatically positions itself to the left of the Quick Brush Adjust docker
+- Follows the docker when moved or resized
+- Hides when the docker is hidden
+- Toggle visibility with the small button at the bottom-left of the docker
+- Can be configured to start visible or hidden on Krita launch
+
+**Configuration:**
+The floating widget behavior can be customized in the Settings dialog under "Quick Adjust" tab:
+- **enabled**: Enable/disable the floating Tool Options widget
+- **start_visible**: Set whether the widget appears automatically on startup
+
+**Credits:**
+The floating widget system is based on the work from [Krita-UI-Redesign](https://github.com/veryprofessionaldodo/Krita-UI-Redesign) by veryprofessionaldodo.
 
 ### Customization
 To modify the docker's appearance and behavior, see "Global Config".

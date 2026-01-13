@@ -1,7 +1,7 @@
-from krita import Krita, Extension  # type: ignore
+from krita import *  # type: ignore
 from PyQt5.QtWidgets import QMessageBox
 from .quick_access_manager import QuickAccessDockerFactory
-from .quick_brush_adjust import BrushAdjustDockerFactory
+from .brush_adjust import BrushAdjustDockerFactory
 from .shortcut_manager import ShortcutAccessDockerFactory
 from .gesture import (
     initialize_gesture_system,

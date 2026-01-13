@@ -3,6 +3,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-01-13
+### Added
+- Docker buttons configuration system (`docker_buttons.json`)
+  - Configure docker toggle buttons via Settings dialog under "Quick Adjust" tab
+  - Add/remove docker buttons dynamically through UI
+  - Customize button properties: name, width, icon, keywords, and description
+  - Docker keywords used to match and toggle corresponding Krita docker panels
+  - Default configuration auto-created if file doesn't exist
+  - Changes saved to `config/docker_buttons.json` file
+- Docker buttons UI editor in Settings dialog
+  - Add new docker button configurations with "Add Button" button
+  - Remove existing configurations with "Remove This Button" button
+  - Group box for each button with all editable fields
+  - Real-time group box title update when button name changes
+  - Validation and parsing for button width (integer) and keywords (comma-separated list)
+- Flexible widget positioning system for floating widgets
+  - New `WidgetPadPosition` configuration class for positioning widgets relative to any Krita docker
+  - Support for all four sides (LEFT, RIGHT, TOP, BOTTOM) relative to reference docker
+  - Alignment options: ALIGN_TOP/ALIGN_BOTTOM for vertical sides, ALIGN_LEFT/ALIGN_RIGHT for horizontal sides
+  - Configurable gap between widgets
+  - Optional fallback to canvas edge positioning when reference docker not found/visible
+  - Comprehensive usage examples and documentation in USAGE_EXAMPLES.md
+- Floating Tool Options widget positioned relative to Quick Brush Adjust docker
+  - Tool Options widget now appears to the left of the Brush Adjust docker
+  - Dynamic positioning with 5px gap between widgets
+  - Event filter system tracks docker movement, resize, and visibility changes
+
 ## 2026-01-12
 ### Changed
 - Color History Widget now uses event-based color detection
