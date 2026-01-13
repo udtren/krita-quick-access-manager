@@ -183,12 +183,16 @@ class ntWidgetPad(QWidget):
                     )
                     # Install event filter on docker if not already installed
                     self.installDockerEventFilter(reference_docker)
-                elif not self.position_config.fallback_to_canvas_edge:
-                    # No fallback, stay at current position
+                    # Show the pad if it was hidden
+                    if not self.isVisible():
+                        self.show()
+                else:
+                    # Reference docker is not visible - just hide the pad (keep docker borrowed)
                     if DEBUG_POSITIONING:
                         write_log(
-                            f"[ntWidgetPad] Docker not found/visible and fallback disabled"
+                            f"[ntWidgetPad] Reference docker not visible, hiding pad"
                         )
+                    self.hide()
                     return
 
             # Fallback to canvas edge positioning if no docker position calculated
@@ -325,6 +329,9 @@ class ntWidgetPad(QWidget):
                 self.widget = docker.widget()
 
             self.layout().addWidget(self.widget)
+            # Force layout to recalculate
+            self.layout().invalidate()
+            self.layout().activate()
             self.adjustToView()
             self.widgetDocker.hide()
 
@@ -377,8 +384,11 @@ class ntWidgetPad(QWidget):
     def returnDocker(self):
         """
         Return the borrowed docker to it's original QDockWidget"""
-        # Ensure there's a widget to return
-        if self.widget:
+        # Ensure there's a widget and docker to return
+        if self.widget and self.widgetDocker:
+            # Remove the widget from the pad's layout first
+            self.layout().removeWidget(self.widget)
+
             if isinstance(self.widget, ntScrollAreaContainer):
                 self.widgetDocker.setWidget(self.widget.scrollArea())
             else:
