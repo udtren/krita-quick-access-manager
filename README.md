@@ -226,6 +226,7 @@ It also displays real-time indicators for active selection and gesture system st
 The buttons at the bottom of the docker provide quick show/hide toggles for other Krita dockers (e.g., Tool Options, Layers, Brush Presets).
 
 **Configuration via Settings UI:**
+
 ![docker button config](docker_button_config.png)
 
 1. Click the "Setting" button in the docker
