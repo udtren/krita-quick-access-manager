@@ -31,12 +31,6 @@ class ntToolOptions:
         mdiArea.subWindowActivated.connect(self.ensureFilterIsInstalled)
         qWin.installEventFilter(self.adjustFilter)
 
-        # Create visibility toggle action
-        action = window.createAction("showToolOptions", "Show Tool Options", "settings")
-        action.toggled.connect(self.pad.toggleWidgetVisible)
-        action.setCheckable(True)
-        action.setChecked(True)
-
         # Disable the related QDockWidget
         self.dockerAction = (
             window.qwindow()

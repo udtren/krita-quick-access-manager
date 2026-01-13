@@ -87,6 +87,12 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
 
     def init_ui(self):
         """Build the complete UI"""
+        # Create wrapper layout to hold main content and control buttons
+        wrapper_layout = QHBoxLayout()
+        wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        wrapper_layout.setSpacing(5)
+
+        # Create main content layout
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(6)
@@ -349,7 +355,53 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             )
             layout.addLayout(docker_buttons_layout)
 
-        self.setLayout(layout)
+        # Add main content layout to wrapper
+        wrapper_layout.addLayout(layout)
+
+        # Create control buttons layout on the right side (vertical)
+        control_buttons_layout = QVBoxLayout()
+        control_buttons_layout.setSpacing(4)
+        control_buttons_layout.setContentsMargins(0, 5, 0, 5)
+        control_buttons_layout.setAlignment(Qt.AlignTop)
+
+        # Add Tool Options toggle button
+        self.tool_options_toggle_btn = QPushButton()
+        self.tool_options_toggle_btn.setFixedSize(16, 16)
+        self.tool_options_toggle_btn.setToolTip("Toggle Tool Options")
+        self.tool_options_toggle_btn.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #4a4a4a;
+                border: 1px solid #666666;
+                border-radius: 2px;
+            }
+            QPushButton:hover {
+                background-color: #5a5a5a;
+                border: 1px solid #888888;
+            }
+            QPushButton:pressed {
+                background-color: #3a3a3a;
+            }
+            QPushButton:checked {
+                background-color: #6a9fb5;
+                border: 1px solid #4a7f95;
+            }
+            """
+        )
+        self.tool_options_toggle_btn.setCheckable(True)
+        self.tool_options_toggle_btn.setChecked(False)  # Start hidden
+        self.tool_options_toggle_btn.clicked.connect(
+            self.toggle_tool_options_visibility
+        )
+        control_buttons_layout.addWidget(self.tool_options_toggle_btn)
+
+        # Add stretch to push buttons to the top
+        control_buttons_layout.addStretch()
+
+        # Add control buttons layout to wrapper
+        wrapper_layout.addLayout(control_buttons_layout)
+
+        self.setLayout(wrapper_layout)
 
         # Load current brush settings
         self.update_from_current_brush()
@@ -406,4 +458,15 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         """Enable the floating Tool Options extension if not already enabled"""
         window = Krita.instance().activeWindow()
         self.ntTO = ntToolOptions(window)
+
         self.ntTO.pad.show()
+        self.tool_options_toggle_btn.setChecked(True)
+
+    def toggle_tool_options_visibility(self):
+        """Toggle the visibility of the Tool Options floating widget"""
+        if hasattr(self, "ntTO") and self.ntTO:
+            is_checked = self.tool_options_toggle_btn.isChecked()
+            if is_checked:
+                self.ntTO.pad.show()
+            else:
+                self.ntTO.pad.hide()

@@ -19,6 +19,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Fallback positioning to canvas right edge when docker is hidden
   - Initialization via windowCreated signal ensures proper docker detection timing
   - Centralized debug logging with conditional DEBUG_POSITIONING flag
+- Control buttons layout at the bottom of Brush Adjust docker
+  - New QHBoxLayout for control buttons below docker toggle buttons
+  - 16x16 toggle button for Tool Options visibility control
+  - Button with checkable state (checked = visible, unchecked = hidden)
+  - Styled with hover and pressed states for better UX
+  - Built-in btnHide button now hidden when controlled from docker
 
 ### Changed
 - Refactored `ntWidgetPad` class to support flexible positioning configuration

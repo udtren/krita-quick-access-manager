@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, QSize, QPoint, QEvent
 from .scrollarea_container import ntScrollAreaContainer
-from .togglevisible_button import ntToggleVisibleButton
 from krita import Krita
 import sys
 import os
@@ -150,11 +149,6 @@ class ntWidgetPad(QWidget):
         # Track the reference docker for positioning
         self.referenceDocker = None
         self.dockerEventFilter = None
-
-        # Visibility toggle
-        self.btnHide = ntToggleVisibleButton()
-        self.btnHide.clicked.connect(self.toggleWidgetVisible)
-        self.layout().addWidget(self.btnHide)
 
     def activeView(self):
         """
@@ -364,24 +358,11 @@ class ntWidgetPad(QWidget):
         view = self.activeView()
 
         if view:
-
-            ### GOAL: REMOVE THIS IF-STATEMENT
             if isinstance(self.widget, ntScrollAreaContainer):
                 containerSize = self.widget.sizeHint()
 
-                if (
-                    view.height()
-                    < containerSize.height()
-                    + self.btnHide.height()
-                    + 14
-                    + self.scrollBarMargin()
-                ):
-                    containerSize.setHeight(
-                        view.height()
-                        - self.btnHide.height()
-                        - 14
-                        - self.scrollBarMargin()
-                    )
+                if view.height() < containerSize.height() + 14 + self.scrollBarMargin():
+                    containerSize.setHeight(view.height() - 14 - self.scrollBarMargin())
 
                 if view.width() < containerSize.width() + 8 + self.scrollBarMargin():
                     containerSize.setWidth(view.width() - 8 - self.scrollBarMargin())
@@ -421,42 +402,6 @@ class ntWidgetPad(QWidget):
             return 0
 
         return 14  # Canvas crollbar pixel width/height on Windows
-
-    def setViewAlignment(self, newAlignment):
-        """
-        Set the Pad's alignment to the view to either 'left' or 'right'.
-        Returns False if the argument is an invalid value."""
-        if isinstance(newAlignment, str):
-            if newAlignment.lower() == "left" or newAlignment.lower() == "right":
-                self.alignment = newAlignment.lower()
-
-                self.btnHide.setArrow(self.alignment)
-
-                return True
-
-        return False
-
-    def toggleWidgetVisible(self, value=None):
-        if not value:
-            value = not self.widget.isVisible()
-
-        self.widget.setVisible(value)
-        self.adjustToView()
-        self.updateHideButtonIcon(value)
-
-    def updateHideButtonIcon(self, isVisible):
-        """
-        Flip the direction of the arrow to fit the Pads current visibility"""
-        if self.alignment == "left":
-            if isVisible:
-                self.btnHide.setArrowType(Qt.ArrowType.LeftArrow)
-            else:
-                self.btnHide.setArrowType(Qt.ArrowType.RightArrow)
-        elif self.alignment == "right":
-            if isVisible:
-                self.btnHide.setArrowType(Qt.ArrowType.RightArrow)
-            else:
-                self.btnHide.setArrowType(Qt.ArrowType.LeftArrow)
 
     def getViewAlignment(self):
         return self.alignment
