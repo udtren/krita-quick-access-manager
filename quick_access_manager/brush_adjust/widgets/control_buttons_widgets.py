@@ -9,6 +9,7 @@ from ...gesture.gesture_main import (
     is_gesture_filter_paused,
 )
 from ..floating_widgets.tool_options import FloatToolOptions
+from ..floating_widgets.floating_rotation import FloatRotation
 
 
 class ControlButtonWidget(QWidget):
@@ -23,6 +24,7 @@ class ControlButtonWidget(QWidget):
         self.is_alphalock = False
         self.is_inherit_alpha = False
         self.is_gesture_paused = False
+        self.float_rotation = None
 
         self.init_ui()
         self.update_status()
@@ -57,6 +59,21 @@ class ControlButtonWidget(QWidget):
         self.tool_options_toggle_btn.clicked.connect(
             self.toggle_tool_options_visibility
         )
+
+        # Add Rotation Widget toggle button
+        self.rotation_toggle_btn = QPushButton()
+        self.rotation_toggle_btn.setFixedSize(16, 16)
+        self.rotation_toggle_btn.setToolTip("Toggle Floating Rotation Widget")
+        self.rotation_toggle_btn.setIcon(
+            (
+                QIcon(os.path.join(self.icon_dir, "tool_options_on.png"))
+            )  # Reuse icon for now
+        )
+        self.rotation_toggle_btn.setCheckable(True)
+        self.rotation_toggle_btn.setChecked(
+            False
+        )  # Will be enabled after window creation
+        self.rotation_toggle_btn.clicked.connect(self.toggle_rotation_visibility)
         # ============================================
 
         # Create labels with fixed size for icons
@@ -79,6 +96,8 @@ class ControlButtonWidget(QWidget):
         self.gesture_status_label.mousePressEvent = self.toggle_gesture_status
 
         layout.addWidget(self.tool_options_toggle_btn)
+        layout.addWidget(self._create_separator())
+        layout.addWidget(self.rotation_toggle_btn)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.selection_info_label)
         layout.addWidget(self._create_separator())
@@ -153,6 +172,9 @@ class ControlButtonWidget(QWidget):
         self.float_tool_options.pad.show()
         self.tool_options_toggle_btn.setChecked(True)
 
+        # Also enable floating rotation widget by default
+        self.enableRotationExtension()
+
     def toggle_tool_options_visibility(self):
         """Toggle the visibility of the Tool Options floating widget"""
         if hasattr(self, "float_tool_options") and self.float_tool_options:
@@ -167,3 +189,56 @@ class ControlButtonWidget(QWidget):
                 self.tool_options_toggle_btn.setIcon(
                     (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
                 )
+
+    def toggle_rotation_visibility(self):
+        """Toggle the visibility of the floating rotation widget"""
+        if not hasattr(self, "float_rotation") or not self.float_rotation:
+            return
+
+        is_checked = self.rotation_toggle_btn.isChecked()
+
+        if is_checked:
+            self.float_rotation.pad.show()
+            self.rotation_toggle_btn.setIcon(
+                (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
+            )
+        else:
+            self.float_rotation.pad.hide()
+            self.rotation_toggle_btn.setIcon(
+                (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
+            )
+
+    def enableRotationExtension(self):
+        """Enable the floating rotation widget extension"""
+        window = Krita.instance().activeWindow()
+        if not window:
+            return
+
+        # Get rotation widget and label from parent adjustment widget
+        adjustment_widget = self.parent()
+        if (
+            hasattr(adjustment_widget, "rotation_widget")
+            and adjustment_widget.rotation_widget
+        ):
+            rotation_widget = adjustment_widget.rotation_widget
+            rotation_label = adjustment_widget.rotation_value_label
+
+            # Create floating widget first
+            self.float_rotation = FloatRotation(window, rotation_widget, rotation_label)
+
+            # Reparent widgets to the floating container
+            rotation_widget.setParent(self.float_rotation.container)
+            rotation_label.setParent(self.float_rotation.container)
+
+            # Show widgets
+            rotation_widget.show()
+            rotation_label.show()
+
+            # Show the floating pad
+            self.float_rotation.pad.show()
+            self.float_rotation.pad.adjustToView()
+
+            self.rotation_toggle_btn.setChecked(True)
+            self.rotation_toggle_btn.setIcon(
+                (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
+            )
