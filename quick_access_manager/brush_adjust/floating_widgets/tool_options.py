@@ -46,18 +46,6 @@ class FloatToolOptions:
             subWin.installEventFilter(self.adjustFilter)
             self.pad.adjustToView()
 
-    def findDockerAction(self, window, text):
-        dockerMenu = None
-
-        for m in window.qwindow().actions():
-            if m.objectName() == "settings_dockers_menu":
-                dockerMenu = m
-
-                for a in dockerMenu.menu().actions():
-                    if a.text().replace("&", "") == text:
-                        return a
-        return False
-
     def close(self):
         self.dockerAction.setEnabled(True)
         return self.pad.close()
