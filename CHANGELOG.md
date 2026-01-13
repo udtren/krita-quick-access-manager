@@ -3,6 +3,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-01-13
+### Added
+- Floating Tool Options widget positioned relative to Quick Brush Adjust docker
+  - Tool Options widget now appears to the left of the Brush Adjust docker
+  - Dynamic positioning with 5px gap between widgets
+  - Event filter system tracks docker movement, resize, and visibility changes
+  - Fallback positioning to canvas right edge when docker is hidden
+  - Initialization via windowCreated signal ensures proper docker detection timing
+  - Centralized debug logging with conditional DEBUG_POSITIONING flag
+
+### Changed
+- Moved widget_pad.py, adjust_to_subwindow_filter.py, scrollarea_container.py, and togglevisible_button.py to widgets3/base_tools/ package
+- Created widgets3/__init__.py and widgets3/base_tools/__init__.py for proper package structure
+- Integrated ntToolOptions class from krita-redesign project
+- Updated widget_pad.py to use centralized utils/logs.py logging system
+
 ## 2026-01-12
 ### Changed
 - Color History Widget now uses event-based color detection

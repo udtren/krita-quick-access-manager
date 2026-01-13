@@ -38,6 +38,7 @@ from .config.quick_adjust_docker_loader import (
     get_brush_history_total,
     get_brush_history_icon_size,
 )
+from .widgets3.tool_options import ntToolOptions
 
 
 class BrushAdjustmentWidget(QWidget):
@@ -67,6 +68,10 @@ class BrushAdjustmentWidget(QWidget):
         self.blender_modes = get_blender_mode_list()
 
         self.init_ui()
+
+        application = Krita.instance()
+        appNotifier = application.notifier()
+        appNotifier.windowCreated.connect(self.enableToolOptionsExtension)
 
         # Timer to periodically check for brush changes
         self.brush_check_timer = QTimer()
@@ -986,6 +991,12 @@ class BrushAdjustmentWidget(QWidget):
         ):
             self.brush_history_widget.closeEvent(event)
         super().closeEvent(event)
+
+    def enableToolOptionsExtension(self):
+        """Enable the floating Tool Options extension if not already enabled"""
+        window = Krita.instance().activeWindow()
+        self.ntTO = ntToolOptions(window)
+        self.ntTO.pad.show()
 
 
 class BrushAdjustDockerFactory(DockWidgetFactoryBase):
