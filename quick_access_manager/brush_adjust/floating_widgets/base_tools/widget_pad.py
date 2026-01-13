@@ -107,10 +107,6 @@ class WidgetPadPosition:
 
 
 class ntWidgetPad(QWidget):
-    """
-    An on-canvas toolbox widget. I'm dubbing widgets that 'float'
-    on top of the canvas '(lily) pads' for the time being :)"""
-
     def __init__(self, parent, position_config=None):
         """
         Initialize the widget pad.

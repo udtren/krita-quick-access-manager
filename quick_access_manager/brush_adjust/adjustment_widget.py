@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
     QSlider,
     QPushButton,
     QComboBox,
+    QDockWidget,
 )
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon, QPixmap
@@ -22,6 +23,7 @@ from .widgets import (
     CircularRotationWidget,
     BrushHistoryWidget,
     StatusBarWidget,
+    ControlButtonWidget,
 )
 
 # Import configuration loader
@@ -41,7 +43,6 @@ from ..config.quick_adjust_docker_loader import (
     get_brush_history_icon_size,
 )
 
-from .floating_widgets.tool_options import ntToolOptions
 
 # Import local modules
 from .docker_buttons import (
@@ -80,10 +81,9 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         # Build UI
         self.init_ui()
 
-        # Setup tool options extension initialization
-        application = Krita.instance()
-        appNotifier = application.notifier()
-        appNotifier.windowCreated.connect(self.enableToolOptionsExtension)
+        self.update_timer = QTimer(self)
+        self.update_timer.timeout.connect(self.update_docker_size)
+        self.update_timer.start(2000)  # 1000 ms = 1 second
 
     def init_ui(self):
         """Build the complete UI"""
@@ -335,13 +335,6 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         else:
             self.brush_history_widget = None
 
-        # Add status bar widget (conditionally created)
-        if self.status_bar_config.get("enabled", True):
-            self.status_bar_widget = StatusBarWidget(self)
-            layout.addWidget(self.status_bar_widget)
-        else:
-            self.status_bar_widget = None
-
         # Add dynamic docker buttons below the brush history widget (conditionally created)
         if self.docker_toggle_config.get("enabled", True):
             docker_buttons_layout = QHBoxLayout()
@@ -358,48 +351,9 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         # Add main content layout to wrapper
         wrapper_layout.addLayout(layout)
 
-        # Create control buttons layout on the right side (vertical)
-        control_buttons_layout = QVBoxLayout()
-        control_buttons_layout.setSpacing(4)
-        control_buttons_layout.setContentsMargins(0, 5, 0, 5)
-        control_buttons_layout.setAlignment(Qt.AlignTop)
-
-        # Add Tool Options toggle button
-        self.tool_options_toggle_btn = QPushButton()
-        self.tool_options_toggle_btn.setFixedSize(16, 16)
-        self.tool_options_toggle_btn.setToolTip("Toggle Tool Options")
-        self.tool_options_toggle_btn.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #4a4a4a;
-                border: 1px solid #666666;
-                border-radius: 2px;
-            }
-            QPushButton:hover {
-                background-color: #5a5a5a;
-                border: 1px solid #888888;
-            }
-            QPushButton:pressed {
-                background-color: #3a3a3a;
-            }
-            QPushButton:checked {
-                background-color: #6a9fb5;
-                border: 1px solid #4a7f95;
-            }
-            """
-        )
-        self.tool_options_toggle_btn.setCheckable(True)
-        self.tool_options_toggle_btn.setChecked(False)  # Start hidden
-        self.tool_options_toggle_btn.clicked.connect(
-            self.toggle_tool_options_visibility
-        )
-        control_buttons_layout.addWidget(self.tool_options_toggle_btn)
-
-        # Add stretch to push buttons to the top
-        control_buttons_layout.addStretch()
-
         # Add control buttons layout to wrapper
-        wrapper_layout.addLayout(control_buttons_layout)
+        self.control_buttons_layout = ControlButtonWidget(self)
+        wrapper_layout.addWidget(self.control_buttons_layout)
 
         self.setLayout(wrapper_layout)
 
@@ -429,6 +383,32 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             # Add a test brush to verify functionality
             self.brush_history_widget.add_test_brush()
 
+    def update_docker_size(self):
+        # Force immediate size recalculation
+        self.updateGeometry()
+        self.adjustSize()
+
+        # Find and update parent docker size more aggressively
+        parent_widget = self.parent()
+        while parent_widget:
+            parent_widget.updateGeometry()
+            if hasattr(parent_widget, "layout") and parent_widget.layout():
+                parent_widget.layout().invalidate()
+                parent_widget.layout().activate()
+
+            if isinstance(parent_widget, QDockWidget):
+                # Force the docker to resize by setting size policies and hints
+                parent_widget.updateGeometry()
+                parent_widget.adjustSize()
+
+                # Get the main widget and force it to recalculate
+                main_widget = parent_widget.widget()
+                if main_widget:
+                    main_widget.updateGeometry()
+                    main_widget.adjustSize()
+                break
+            parent_widget = parent_widget.parent()
+
     def refresh_styles(self):
         """Refresh styles when settings change"""
         style = f"font-size: {get_font_size()};"
@@ -453,20 +433,3 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         ):
             self.brush_history_widget.closeEvent(event)
         super().closeEvent(event)
-
-    def enableToolOptionsExtension(self):
-        """Enable the floating Tool Options extension if not already enabled"""
-        window = Krita.instance().activeWindow()
-        self.ntTO = ntToolOptions(window)
-
-        self.ntTO.pad.show()
-        self.tool_options_toggle_btn.setChecked(True)
-
-    def toggle_tool_options_visibility(self):
-        """Toggle the visibility of the Tool Options floating widget"""
-        if hasattr(self, "ntTO") and self.ntTO:
-            is_checked = self.tool_options_toggle_btn.isChecked()
-            if is_checked:
-                self.ntTO.pad.show()
-            else:
-                self.ntTO.pad.hide()
