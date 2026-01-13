@@ -8,7 +8,7 @@ class FloatToolOptions:
     def __init__(self, window):
         qWin = window.qwindow()
         mdiArea = qWin.findChild(QMdiArea)
-        toolOptions = qWin.findChild(QDockWidget, "sharedtooldocker")
+        self.toolOptions = qWin.findChild(QDockWidget, "sharedtooldocker")
 
         # Create position configuration: Position to the LEFT of the brush_adjust_docker,
         # aligned to the TOP
@@ -23,7 +23,7 @@ class FloatToolOptions:
         # Create "pad" with the position configuration
         self.pad = ntWidgetPad(mdiArea, position_config)
         self.pad.setObjectName("toolOptionsPad")
-        self.pad.borrowDocker(toolOptions)
+        self.pad.borrowDocker(self.toolOptions)
 
         # Create and install event filter
         self.adjustFilter = ntAdjustToSubwindowFilter(mdiArea)
@@ -44,6 +44,17 @@ class FloatToolOptions:
         and immediately move the Toolbox to current View."""
         if subWin:
             subWin.installEventFilter(self.adjustFilter)
+            self.pad.adjustToView()
+
+    def returnDocker(self):
+        """Return the borrowed docker to its original location"""
+        self.pad.returnDocker()
+        self.pad.hide()
+
+    def reborrowDocker(self):
+        """Reborrow the docker and show the pad"""
+        if self.pad.borrowDocker(self.toolOptions):
+            self.pad.show()
             self.pad.adjustToView()
 
     def close(self):

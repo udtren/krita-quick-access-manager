@@ -421,4 +421,12 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             and self.brush_history_widget is not None
         ):
             self.brush_history_widget.closeEvent(event)
+        # Close floating widget if it exists
+        if (
+            hasattr(self, "control_buttons_layout")
+            and self.control_buttons_layout is not None
+            and hasattr(self.control_buttons_layout, "float_tool_options")
+            and self.control_buttons_layout.float_tool_options is not None
+        ):
+            self.control_buttons_layout.float_tool_options.close()
         super().closeEvent(event)

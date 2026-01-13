@@ -183,6 +183,7 @@ class ControlButtonWidget(QWidget):
                     (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
                 )
             else:
+                # Hide the pad if not starting visible
                 self.float_tool_options.pad.hide()
                 self.tool_options_toggle_btn.setChecked(False)
                 self.tool_options_toggle_btn.setIcon(
@@ -200,11 +201,14 @@ class ControlButtonWidget(QWidget):
         if hasattr(self, "float_tool_options") and self.float_tool_options:
             is_checked = self.tool_options_toggle_btn.isChecked()
             if is_checked:
+                # Show the pad
                 self.float_tool_options.pad.show()
+                self.float_tool_options.pad.adjustToView()
                 self.tool_options_toggle_btn.setIcon(
                     (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
                 )
             else:
+                # Hide the pad
                 self.float_tool_options.pad.hide()
                 self.tool_options_toggle_btn.setIcon(
                     (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
@@ -218,12 +222,22 @@ class ControlButtonWidget(QWidget):
         is_checked = self.rotation_toggle_btn.isChecked()
 
         if is_checked:
+            # Show container, pad, and child widgets
+            self.float_rotation.container.show()
+            self.float_rotation.rotation_widget.show()
+            self.float_rotation.rotation_label.show()
             self.float_rotation.pad.show()
+            # Force position update immediately
+            self.float_rotation.pad.adjustToView()
             self.rotation_toggle_btn.setIcon(
                 (QIcon(os.path.join(self.icon_dir, "rotate-on.png")))
             )
         else:
+            # Hide pad, container, and child widgets
             self.float_rotation.pad.hide()
+            self.float_rotation.container.hide()
+            self.float_rotation.rotation_widget.hide()
+            self.float_rotation.rotation_label.hide()
             self.rotation_toggle_btn.setIcon(
                 (QIcon(os.path.join(self.icon_dir, "rotate-off.png")))
             )
@@ -250,12 +264,11 @@ class ControlButtonWidget(QWidget):
             rotation_widget.setParent(self.float_rotation.container)
             rotation_label.setParent(self.float_rotation.container)
 
-            # Show widgets (they need to be shown for the container to size correctly)
-            rotation_widget.show()
-            rotation_label.show()
-
-            # Start with rotation widget hidden
+            # Start with rotation widget hidden (including pad, container, and child widgets)
             self.float_rotation.pad.hide()
+            self.float_rotation.container.hide()
+            rotation_widget.hide()
+            rotation_label.hide()
             self.rotation_toggle_btn.setChecked(False)
             self.rotation_toggle_btn.setIcon(
                 (QIcon(os.path.join(self.icon_dir, "rotate-off.png")))
