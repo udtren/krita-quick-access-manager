@@ -266,9 +266,6 @@ The Quick Brush Adjust docker includes a companion floating Tool Options widget 
 **Features:**
 - Automatically positions itself to the left of the Quick Brush Adjust docker
 - Follows the docker when moved or resized
-- Hides when the docker is hidden
-- Toggle visibility with the small button at the bottom-left of the docker
-- Can be configured to start visible or hidden on Krita launch
 
 **Configuration:**
 The floating widget behavior can be customized in the Settings dialog under "Quick Adjust" tab:
