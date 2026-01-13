@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2026-01-13
 ### Added
+- Flexible widget positioning system for floating widgets
+  - New `WidgetPadPosition` configuration class for positioning widgets relative to any Krita docker
+  - Support for all four sides (LEFT, RIGHT, TOP, BOTTOM) relative to reference docker
+  - Alignment options: ALIGN_TOP/ALIGN_BOTTOM for vertical sides, ALIGN_LEFT/ALIGN_RIGHT for horizontal sides
+  - Configurable gap between widgets
+  - Optional fallback to canvas edge positioning when reference docker not found/visible
+  - Comprehensive usage examples and documentation in USAGE_EXAMPLES.md
 - Floating Tool Options widget positioned relative to Quick Brush Adjust docker
   - Tool Options widget now appears to the left of the Brush Adjust docker
   - Dynamic positioning with 5px gap between widgets
@@ -14,6 +21,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Centralized debug logging with conditional DEBUG_POSITIONING flag
 
 ### Changed
+- Refactored `ntWidgetPad` class to support flexible positioning configuration
+  - Constructor now accepts optional `WidgetPadPosition` parameter
+  - Renamed `findQuickBrushDocker()` to generic `findReferenceDocker()`
+  - Split positioning logic into `_calculateDockerRelativePosition()` and `_calculateCanvasEdgePosition()`
+  - Updated event filter to work with any reference docker (renamed `quickBrushDocker` to `referenceDocker`)
+  - Backward compatible: defaults to left canvas edge if no configuration provided
+- Updated `ntToolOptions` to use new `WidgetPadPosition` configuration
 - Moved widget_pad.py, adjust_to_subwindow_filter.py, scrollarea_container.py, and togglevisible_button.py to widgets3/base_tools/ package
 - Created widgets3/__init__.py and widgets3/base_tools/__init__.py for proper package structure
 - Integrated ntToolOptions class from krita-redesign project

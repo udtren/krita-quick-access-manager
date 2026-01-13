@@ -3,7 +3,7 @@ from krita import *
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QFrame
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QPixmap
-from ..gesture.gesture_main import (
+from ...gesture.gesture_main import (
     pause_gesture_event_filter,
     resume_gesture_event_filter,
     is_gesture_filter_paused,
@@ -147,12 +147,8 @@ class StatusBarWidget(QWidget):
         gesture_paused = is_gesture_filter_paused()
         if gesture_paused != self.is_gesture_paused:
             self.is_gesture_paused = gesture_paused
-            gesture_icon = (
-                "gesture_off.png" if gesture_paused else "gesture_on.png"
-            )
-            gesture_tooltip = (
-                "Gesture: Off" if gesture_paused else "Gesture: On"
-            )
+            gesture_icon = "gesture_off.png" if gesture_paused else "gesture_on.png"
+            gesture_tooltip = "Gesture: Off" if gesture_paused else "Gesture: On"
             self.gesture_status_label.setToolTip(gesture_tooltip)
             self.gesture_status_label.setPixmap(
                 QPixmap(os.path.join(self.icon_dir, gesture_icon))
