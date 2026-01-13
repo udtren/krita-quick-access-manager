@@ -10,6 +10,10 @@ from ...gesture.gesture_main import (
 )
 from ..floating_widgets.tool_options import FloatToolOptions
 from ..floating_widgets.floating_rotation import FloatRotation
+from ...config.quick_adjust_docker_loader import (
+    is_tool_options_enabled,
+    is_tool_options_start_visible,
+)
 
 
 class ControlButtonWidget(QWidget):
@@ -65,9 +69,7 @@ class ControlButtonWidget(QWidget):
         self.rotation_toggle_btn.setFixedSize(16, 16)
         self.rotation_toggle_btn.setToolTip("Toggle Floating Rotation Widget")
         self.rotation_toggle_btn.setIcon(
-            (
-                QIcon(os.path.join(self.icon_dir, "tool_options_on.png"))
-            )  # Reuse icon for now
+            (QIcon(os.path.join(self.icon_dir, "rotate-on.png")))  # Reuse icon for now
         )
         self.rotation_toggle_btn.setCheckable(True)
         self.rotation_toggle_btn.setChecked(
@@ -167,12 +169,30 @@ class ControlButtonWidget(QWidget):
     def enableToolOptionsExtension(self):
         """Enable the floating Tool Options extension if not already enabled"""
         window = Krita.instance().activeWindow()
-        self.float_tool_options = FloatToolOptions(window)
 
-        self.float_tool_options.pad.show()
-        self.tool_options_toggle_btn.setChecked(True)
+        # Check if tool options floating widget is enabled in config
+        if is_tool_options_enabled():
+            self.float_tool_options = FloatToolOptions(window)
 
-        # Also enable floating rotation widget by default
+            # Check if Tool Options should start visible
+            start_visible = is_tool_options_start_visible()
+            if start_visible:
+                self.float_tool_options.pad.show()
+                self.tool_options_toggle_btn.setChecked(True)
+                self.tool_options_toggle_btn.setIcon(
+                    (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
+                )
+            else:
+                self.float_tool_options.pad.hide()
+                self.tool_options_toggle_btn.setChecked(False)
+                self.tool_options_toggle_btn.setIcon(
+                    (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
+                )
+        else:
+            # Hide the tool options button if disabled in config
+            self.tool_options_toggle_btn.hide()
+
+        # Enable floating rotation widget (always enabled, start hidden)
         self.enableRotationExtension()
 
     def toggle_tool_options_visibility(self):
@@ -200,12 +220,12 @@ class ControlButtonWidget(QWidget):
         if is_checked:
             self.float_rotation.pad.show()
             self.rotation_toggle_btn.setIcon(
-                (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
+                (QIcon(os.path.join(self.icon_dir, "rotate-on.png")))
             )
         else:
             self.float_rotation.pad.hide()
             self.rotation_toggle_btn.setIcon(
-                (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
+                (QIcon(os.path.join(self.icon_dir, "rotate-off.png")))
             )
 
     def enableRotationExtension(self):
@@ -230,15 +250,13 @@ class ControlButtonWidget(QWidget):
             rotation_widget.setParent(self.float_rotation.container)
             rotation_label.setParent(self.float_rotation.container)
 
-            # Show widgets
+            # Show widgets (they need to be shown for the container to size correctly)
             rotation_widget.show()
             rotation_label.show()
 
-            # Show the floating pad
-            self.float_rotation.pad.show()
-            self.float_rotation.pad.adjustToView()
-
-            self.rotation_toggle_btn.setChecked(True)
+            # Start with rotation widget hidden
+            self.float_rotation.pad.hide()
+            self.rotation_toggle_btn.setChecked(False)
             self.rotation_toggle_btn.setIcon(
-                (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
+                (QIcon(os.path.join(self.icon_dir, "rotate-off.png")))
             )

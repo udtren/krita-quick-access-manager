@@ -22,7 +22,6 @@ from .widgets import (
     ColorHistoryWidget,
     CircularRotationWidget,
     BrushHistoryWidget,
-    StatusBarWidget,
     ControlButtonWidget,
 )
 
@@ -33,7 +32,6 @@ from ..config.quick_adjust_docker_loader import (
     get_brush_history_section,
     get_color_history_section,
     get_blender_mode_list,
-    get_status_bar_section,
     get_docker_toggle_section,
     get_font_size,
     get_number_size,
@@ -70,7 +68,6 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         self.layer_config = get_layer_section()
         self.brush_history_config = get_brush_history_section()
         self.color_history_config = get_color_history_section()
-        self.status_bar_config = get_status_bar_section()
         self.docker_toggle_config = get_docker_toggle_section()
         self.blender_modes = get_blender_mode_list()
 
@@ -272,35 +269,27 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         left_layout.addStretch()
 
         # ============================================
-        # Rotation widget on the right side (conditionally created)
+        # Rotation widget - always enabled as floating widget (not added to docker layout)
         # ============================================
-        right_layout = QHBoxLayout()
-        right_layout.setSpacing(6)
-        right_layout.setAlignment(Qt.AlignCenter)
-
         rotation_config = self.brush_config.get("rotation_slider", {})
-        if rotation_config.get("enabled", True):
-            self.rotation_widget = CircularRotationWidget()
-            self.rotation_widget.setValue(0)
-            self.rotation_widget.valueChanged.connect(self.on_rotation_changed)
+        # Always create rotation widget for floating display
+        self.rotation_widget = CircularRotationWidget()
+        self.rotation_widget.setValue(0)
+        self.rotation_widget.valueChanged.connect(self.on_rotation_changed)
 
-            number_size = rotation_config.get("number_size", get_number_size())
-            self.rotation_value_label = QLabel("0°")
-            self.rotation_value_label.setStyleSheet(f"font-size: {number_size};")
-            self.rotation_value_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-            self.rotation_value_label.setFixedWidth(35)
+        number_size = rotation_config.get("number_size", get_number_size())
+        self.rotation_value_label = QLabel("0°")
+        self.rotation_value_label.setStyleSheet(f"font-size: {number_size};")
+        self.rotation_value_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+        self.rotation_value_label.setFixedWidth(35)
 
-            right_layout.addWidget(self.rotation_widget)
-            right_layout.addWidget(self.rotation_value_label)
-        else:
-            self.rotation_widget = None
-            self.rotation_value_label = None
+        # Note: rotation_widget and rotation_value_label are NOT added to any layout here
+        # They will be used by the floating rotation widget instead
 
         # ============================================
-        # Add left and right layouts to main layout
+        # Add left layout to main layout (no right layout needed)
         # ============================================
         main_layout.addLayout(left_layout, 1)
-        main_layout.addLayout(right_layout)
 
         # Add main layout to the widget
         layout.addLayout(main_layout)

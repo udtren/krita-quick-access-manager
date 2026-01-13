@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2026-01-13
 ### Added
+- Docker buttons configuration system (`docker_buttons.json`)
+  - Configure docker toggle buttons via Settings dialog under "Quick Adjust" tab
+  - Add/remove docker buttons dynamically through UI
+  - Customize button properties: name, width, icon, keywords, and description
+  - Docker keywords used to match and toggle corresponding Krita docker panels
+  - Default configuration auto-created if file doesn't exist
+  - Changes saved to `config/docker_buttons.json` file
+- Docker buttons UI editor in Settings dialog
+  - Add new docker button configurations with "Add Button" button
+  - Remove existing configurations with "Remove This Button" button
+  - Group box for each button with all editable fields
+  - Real-time group box title update when button name changes
+  - Validation and parsing for button width (integer) and keywords (comma-separated list)
 - Flexible widget positioning system for floating widgets
   - New `WidgetPadPosition` configuration class for positioning widgets relative to any Krita docker
   - Support for all four sides (LEFT, RIGHT, TOP, BOTTOM) relative to reference docker
@@ -16,28 +29,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Tool Options widget now appears to the left of the Brush Adjust docker
   - Dynamic positioning with 5px gap between widgets
   - Event filter system tracks docker movement, resize, and visibility changes
-  - Fallback positioning to canvas right edge when docker is hidden
-  - Initialization via windowCreated signal ensures proper docker detection timing
-  - Centralized debug logging with conditional DEBUG_POSITIONING flag
-- Control buttons layout at the bottom of Brush Adjust docker
-  - New QHBoxLayout for control buttons below docker toggle buttons
-  - 16x16 toggle button for Tool Options visibility control
-  - Button with checkable state (checked = visible, unchecked = hidden)
-  - Styled with hover and pressed states for better UX
-  - Built-in btnHide button now hidden when controlled from docker
-
-### Changed
-- Refactored `ntWidgetPad` class to support flexible positioning configuration
-  - Constructor now accepts optional `WidgetPadPosition` parameter
-  - Renamed `findQuickBrushDocker()` to generic `findReferenceDocker()`
-  - Split positioning logic into `_calculateDockerRelativePosition()` and `_calculateCanvasEdgePosition()`
-  - Updated event filter to work with any reference docker (renamed `quickBrushDocker` to `referenceDocker`)
-  - Backward compatible: defaults to left canvas edge if no configuration provided
-- Updated `float_tool_options` to use new `WidgetPadPosition` configuration
-- Moved widget_pad.py, adjust_to_subwindow_filter.py, scrollarea_container.py, and togglevisible_button.py to widgets3/base_tools/ package
-- Created widgets3/__init__.py and widgets3/base_tools/__init__.py for proper package structure
-- Integrated float_tool_options class from krita-redesign project
-- Updated widget_pad.py to use centralized utils/logs.py logging system
 
 ## 2026-01-12
 ### Changed

@@ -105,20 +105,21 @@ def create_docker_buttons(layout, docker_buttons_config, toggle_callback):
             # Create button with icon
             button = QPushButton()
             icon_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), "config", "icon", button_icon
+                os.path.dirname(os.path.dirname(__file__)),
+                "config",
+                "icon",
+                button_icon,
             )
 
             if os.path.exists(icon_path):
                 icon = QIcon(icon_path)
                 button.setIcon(icon)
-                button.setFixedSize(24, 24)
+                button.setFixedSize(18, 18)
             else:
                 # Fallback to text if icon not found
                 print(f"Icon not found: {icon_path}, using text instead")
                 button.setText(button_config["button_name"])
-                button.setStyleSheet(
-                    f"font-size: {get_font_size()}; padding: 2px 8px;"
-                )
+                button.setStyleSheet(f"font-size: {get_font_size()}; padding: 2px 8px;")
                 button.setFixedWidth(button_config["button_width"])
 
         button.setToolTip(button_config["description"])
@@ -126,9 +127,7 @@ def create_docker_buttons(layout, docker_buttons_config, toggle_callback):
         # Create a closure to capture the button configuration
         def make_docker_toggle_handler(config):
             def toggle_docker():
-                toggle_callback(
-                    config["docker_keywords"], config["description"]
-                )
+                toggle_callback(config["docker_keywords"], config["description"])
 
             return toggle_docker
 

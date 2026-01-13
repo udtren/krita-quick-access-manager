@@ -5,42 +5,17 @@ import os
 def _get_default_config():
     """Return the default configuration structure."""
     return {
+        "floating_widgets": {
+            "tool_options": {"enabled": True, "start_visible": True},
+        },
         "brush_section": {
-            "size_slider": {
-                "enabled": True,
-                "number_size": "12px"
-            },
-            "opacity_slider": {
-                "enabled": True,
-                "number_size": "12px"
-            },
-            "rotation_slider": {
-                "enabled": True,
-                "number_size": "12px"
-            }
+            "size_slider": {"enabled": True, "number_size": "12px"},
+            "opacity_slider": {"enabled": True, "number_size": "12px"},
         },
-        "layer_section": {
-            "opacity_slider": {
-                "enabled": True,
-                "number_size": "12px"
-            }
-        },
-        "brush_history_section": {
-            "enabled": True,
-            "total_items": 20,
-            "icon_size": 34
-        },
-        "color_history_section": {
-            "enabled": True,
-            "total_items": 20,
-            "icon_size": 30
-        },
-        "status_bar_section": {
-            "enabled": True
-        },
-        "docker_toggle_section": {
-            "enabled": True
-        },
+        "layer_section": {"opacity_slider": {"enabled": True, "number_size": "12px"}},
+        "brush_history_section": {"enabled": True, "total_items": 14, "icon_size": 34},
+        "color_history_section": {"enabled": True, "total_items": 14, "icon_size": 30},
+        "docker_toggle_section": {"enabled": True},
         "blender_mode_list": [
             "normal",
             "multiply",
@@ -51,9 +26,9 @@ def _get_default_config():
             "hard_light",
             "darken",
             "lighten",
-            "greater"
+            "greater",
         ],
-        "font_size": "12px"
+        "font_size": "12px",
     }
 
 
@@ -68,7 +43,7 @@ def ensure_config_exists():
     if not os.path.exists(config_path):
         # Create the config file with default values
         default_config = _get_default_config()
-        with open(config_path, 'w', encoding='utf-8') as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             json.dump(default_config, f, indent=4)
         return True
 
@@ -81,7 +56,7 @@ def _load_config():
     ensure_config_exists()
 
     config_path = os.path.join(os.path.dirname(__file__), "quick_adjust_docker.json")
-    with open(config_path, 'r', encoding='utf-8') as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -135,16 +110,6 @@ def get_blender_mode_list():
     return config.get("blender_mode_list", [])
 
 
-def get_status_bar_section():
-    """Return the status_bar_section configuration.
-
-    Returns:
-        dict: Configuration for status bar (enabled)
-    """
-    config = _load_config()
-    return config.get("status_bar_section", {})
-
-
 def get_docker_toggle_section():
     """Return the docker_toggle_section configuration.
 
@@ -153,6 +118,37 @@ def get_docker_toggle_section():
     """
     config = _load_config()
     return config.get("docker_toggle_section", {})
+
+
+def get_floating_widgets_section():
+    """Return the floating_widgets section configuration.
+
+    Returns:
+        dict: Configuration for floating widgets (tool_options)
+    """
+    config = _load_config()
+    default_floating = _get_default_config().get("floating_widgets", {})
+    return config.get("floating_widgets", default_floating)
+
+
+def is_tool_options_enabled():
+    """Check if the floating tool options widget is enabled.
+
+    Returns:
+        bool: True if tool options should be enabled (default: True)
+    """
+    floating_config = get_floating_widgets_section()
+    return floating_config.get("tool_options", {}).get("enabled", True)
+
+
+def is_tool_options_start_visible():
+    """Check if the floating tool options widget should start visible.
+
+    Returns:
+        bool: True if tool options should start visible (default: True)
+    """
+    floating_config = get_floating_widgets_section()
+    return floating_config.get("tool_options", {}).get("start_visible", True)
 
 
 def get_font_size():
@@ -170,7 +166,7 @@ def get_font_size():
     brush_section = config.get("brush_section", {})
     if brush_section:
         # Get from any slider config, they should all be the same
-        for key in ["size_slider", "opacity_slider", "rotation_slider"]:
+        for key in ["size_slider", "opacity_slider"]:
             slider = brush_section.get(key, {})
             if slider and "number_size" in slider:
                 return slider["number_size"]
@@ -234,3 +230,78 @@ def get_all_config():
         dict: Complete configuration from quick_adjust_docker.json
     """
     return _load_config()
+
+
+def _get_docker_buttons_config_path():
+    """Get the path to docker_buttons.json configuration file.
+
+    Returns:
+        str: Path to docker_buttons.json
+    """
+    return os.path.join(os.path.dirname(__file__), "docker_buttons.json")
+
+
+def _get_default_docker_buttons():
+    """Return the default docker buttons configuration.
+
+    Returns:
+        dict: Default docker buttons configuration
+    """
+    return {
+        "docker_buttons": [
+            {
+                "button_name": "Tool",
+                "button_width": 40,
+                "button_icon": "",
+                "docker_keywords": ["tool", "option"],
+                "description": "Tool Options Docker",
+            },
+            {
+                "button_name": "Layers",
+                "button_width": 50,
+                "button_icon": "",
+                "docker_keywords": ["layer"],
+                "description": "Layers Docker",
+            },
+            {
+                "button_name": "Brush",
+                "button_width": 50,
+                "button_icon": "",
+                "docker_keywords": ["brush", "preset"],
+                "description": "Brush Presets Docker",
+            },
+        ]
+    }
+
+
+def ensure_docker_buttons_config_exists():
+    """Check if docker_buttons.json exists, create it with defaults if it doesn't.
+
+    Returns:
+        bool: True if config was created, False if it already existed
+    """
+    config_path = _get_docker_buttons_config_path()
+
+    if not os.path.exists(config_path):
+        # Create the config file with default values
+        default_config = _get_default_docker_buttons()
+        with open(config_path, "w", encoding="utf-8") as f:
+            json.dump(default_config, f, indent=4)
+        return True
+
+    return False
+
+
+def get_docker_buttons():
+    """Load and return the docker_buttons configuration.
+
+    Returns:
+        list: List of docker button configurations
+    """
+    ensure_docker_buttons_config_exists()
+
+    config_path = _get_docker_buttons_config_path()
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    return config.get("docker_buttons", [])
