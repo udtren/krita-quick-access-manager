@@ -170,27 +170,39 @@ class ControlButtonWidget(QWidget):
         """Enable the floating Tool Options extension if not already enabled"""
         window = Krita.instance().activeWindow()
 
-        # Check if tool options floating widget is enabled in config
-        if is_tool_options_enabled():
-            self.float_tool_options = FloatToolOptions(window)
+        # Check if ToolOptionsInDocker is True (tool options is in docker)
+        # The floating widget only works when Tool Options is in Docker mode, not in Toolbar
+        application = Krita.instance()
+        tool_options_in_docker = application.readSetting(
+            "", "ToolOptionsInDocker", "false"
+        )
 
-            # Check if Tool Options should start visible
-            start_visible = is_tool_options_start_visible()
-            if start_visible:
-                self.float_tool_options.pad.show()
-                self.tool_options_toggle_btn.setChecked(True)
-                self.tool_options_toggle_btn.setIcon(
-                    (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
-                )
+        # Only enable floating tool options if it IS in docker mode (not in toolbar)
+        if tool_options_in_docker.lower() == "true":
+            # Check if tool options floating widget is enabled in config
+            if is_tool_options_enabled():
+                self.float_tool_options = FloatToolOptions(window)
+
+                # Check if Tool Options should start visible
+                start_visible = is_tool_options_start_visible()
+                if start_visible:
+                    self.float_tool_options.pad.show()
+                    self.tool_options_toggle_btn.setChecked(True)
+                    self.tool_options_toggle_btn.setIcon(
+                        (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
+                    )
+                else:
+                    # Hide the pad if not starting visible
+                    self.float_tool_options.pad.hide()
+                    self.tool_options_toggle_btn.setChecked(False)
+                    self.tool_options_toggle_btn.setIcon(
+                        (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
+                    )
             else:
-                # Hide the pad if not starting visible
-                self.float_tool_options.pad.hide()
-                self.tool_options_toggle_btn.setChecked(False)
-                self.tool_options_toggle_btn.setIcon(
-                    (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
-                )
+                # Hide the tool options button if disabled in config
+                self.tool_options_toggle_btn.hide()
         else:
-            # Hide the tool options button if disabled in config
+            # Tool options is in toolbar mode, hide the toggle button
             self.tool_options_toggle_btn.hide()
 
         # Enable floating rotation widget (always enabled, start hidden)
