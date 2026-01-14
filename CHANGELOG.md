@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-01-14
+### Changed
+- Floating Tool Options widget now checks Krita's `ToolOptionsInDocker` setting before initialization
+  - Only enables when Tool Options is set to "In Docker" mode (not "In Toolbar" mode)
+  - Prevents conflicts and ensures proper widget borrowing from docker
+  - Toggle button automatically hidden when Tool Options is in Toolbar mode
+
 ## 2026-01-13
 ### Added
 - Docker buttons configuration system (`docker_buttons.json`)

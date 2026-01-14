@@ -263,6 +263,9 @@ The buttons at the bottom of the docker provide quick show/hide toggles for othe
 ![Floating Widget](./quick_access_manager/image/qam_floating_docker.gif)
 
 The Quick Brush Adjust docker includes a companion floating Tool Options widget that can be positioned relative to the docker.
+For floating Tool Options widget, you need to set `Tool Options Location` to `In Docker`.
+
+![krita setting](quick_access_manager/image/tool_options.png)
 
 **Features:**
 - Automatically positions itself to the left of the Quick Brush Adjust docker
