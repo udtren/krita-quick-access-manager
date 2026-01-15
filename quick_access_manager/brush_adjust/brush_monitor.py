@@ -20,6 +20,7 @@ class BrushMonitorMixin:
         self.current_brush_name = None
         self.current_brush_size = None
         self.current_brush_opacity = None
+        self.current_brush_flow = None
         self.current_brush_rotation = None
         self.current_blend_mode = None
         self.updating_from_brush = False
@@ -33,9 +34,14 @@ class BrushMonitorMixin:
         self.size_debounce_timer.setSingleShot(True)
         self.size_debounce_timer.timeout.connect(self.apply_size_change)
 
+        self.flow_debounce_timer = QTimer()
+        self.flow_debounce_timer.setSingleShot(True)
+        self.flow_debounce_timer.timeout.connect(self.apply_flow_change)
+
         # Pending values
         self.pending_opacity_value = None
         self.pending_size_value = None
+        self.pending_flow_value = None
 
         # Periodic check timer
         self.brush_check_timer = QTimer()
@@ -55,6 +61,7 @@ class BrushMonitorMixin:
                     # Get current brush properties
                     current_size = None
                     current_opacity = None
+                    current_flow = None
                     current_rotation = None
                     current_blend_mode = None
 
@@ -65,6 +72,11 @@ class BrushMonitorMixin:
 
                     try:
                         current_opacity = view.paintingOpacity()
+                    except:
+                        pass
+
+                    try:
+                        current_flow = view.paintingFlow()
                     except:
                         pass
 
@@ -82,6 +94,7 @@ class BrushMonitorMixin:
                     brush_changed = brush_name != self.current_brush_name
                     size_changed = current_size != self.current_brush_size
                     opacity_changed = current_opacity != self.current_brush_opacity
+                    flow_changed = current_flow != self.current_brush_flow
                     rotation_changed = current_rotation != self.current_brush_rotation
                     blend_changed = current_blend_mode != self.current_blend_mode
 
@@ -89,12 +102,14 @@ class BrushMonitorMixin:
                         brush_changed
                         or size_changed
                         or opacity_changed
+                        or flow_changed
                         or rotation_changed
                         or blend_changed
                     ):
                         self.current_brush_name = brush_name
                         self.current_brush_size = current_size
                         self.current_brush_opacity = current_opacity
+                        self.current_brush_flow = current_flow
                         self.current_brush_rotation = current_rotation
                         self.current_blend_mode = current_blend_mode
                         self.update_from_current_brush()
@@ -138,6 +153,20 @@ class BrushMonitorMixin:
                     self.opacity_slider.setValue(100)
                     self.opacity_value_label.setText("100%")
                     self.current_brush_opacity = 1.0
+
+            # Get current flow
+            if self.flow_slider is not None:
+                try:
+                    flow = view.paintingFlow()
+                    flow_percent = int(flow * 100)  # Convert from 0-1 to 0-100
+                    self.flow_slider.setValue(flow_percent)
+                    self.flow_value_label.setText(f"{flow_percent}%")
+                    self.current_brush_flow = flow
+                except:
+                    # Fallback if flow method doesn't work
+                    self.flow_slider.setValue(100)
+                    self.flow_value_label.setText("100%")
+                    self.current_brush_flow = 1.0
 
             # Get brush rotation
             if self.rotation_widget is not None:
@@ -240,6 +269,37 @@ class BrushMonitorMixin:
             except Exception as e:
                 print(f"Error setting brush opacity: {e}")
 
+    def on_flow_changed_debounced(self, value):
+        """Handle flow slider with debouncing"""
+        if self.updating_from_brush or self.flow_slider is None:
+            return
+
+        # Update UI immediately for responsive feel
+        self.flow_value_label.setText(f"{value}%")
+
+        # Store the pending value
+        self.pending_flow_value = value
+
+        # Restart timer (300ms delay)
+        self.flow_debounce_timer.start(300)
+
+    def apply_flow_change(self):
+        """Apply the pending flow change to Krita"""
+        if self.pending_flow_value is None:
+            return
+
+        value = self.pending_flow_value
+        flow_float = value / 100.0
+        self.current_brush_flow = flow_float
+
+        app = Krita.instance()
+        if app.activeWindow() and app.activeWindow().activeView():
+            view = app.activeWindow().activeView()
+            try:
+                view.setPaintingFlow(flow_float)
+            except Exception as e:
+                print(f"Error setting brush flow: {e}")
+
     def on_rotation_changed(self, value):
         """Handle brush rotation change"""
         if self.updating_from_brush or self.rotation_widget is None:
@@ -289,6 +349,7 @@ class BrushMonitorMixin:
             self.current_brush_name = None
             self.current_brush_size = None
             self.current_brush_opacity = None
+            self.current_brush_flow = None
             self.current_brush_rotation = None
             self.current_blend_mode = None
 

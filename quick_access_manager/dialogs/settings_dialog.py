@@ -171,8 +171,14 @@ class CommonConfigDialog(QDialog):
         # Add fields for brush_section
         brush_section = self.quick_adjust_config.get("brush_section", {})
         layout.addWidget(QLabel("[brush_section]"))
-        for slider_name in ["size_slider", "opacity_slider"]:
+        for slider_name in ["size_slider", "opacity_slider", "flow_slider"]:
             slider = brush_section.get(slider_name, {})
+            # Ensure flow_slider exists with defaults if missing
+            if slider_name == "flow_slider" and not slider:
+                slider = {"enabled": True, "number_size": "12px"}
+                if "brush_section" not in self.quick_adjust_config:
+                    self.quick_adjust_config["brush_section"] = {}
+                self.quick_adjust_config["brush_section"]["flow_slider"] = slider
             layout.addWidget(QLabel(f"  {slider_name}:"))
 
             for key, value in slider.items():

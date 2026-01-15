@@ -129,7 +129,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             self.size_value_label = None
 
         # ============================================
-        # Brush Section: Opacity Slider, Blend Mode (conditionally created)
+        # Brush Section: Opacity Slider, Flow Slider, Blend Mode (conditionally created)
         # ============================================
         brush_and_layer_layout = QHBoxLayout()
         brush_section_layout = QVBoxLayout()
@@ -155,6 +155,29 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         else:
             self.opacity_slider = None
             self.opacity_value_label = None
+
+        # Flow slider (under opacity slider)
+        flow_config = self.brush_config.get("flow_slider", {})
+        if flow_config.get("enabled", True):
+            brush_flow_layout = QHBoxLayout()
+
+            self.flow_slider = QSlider(Qt.Horizontal)
+            self.flow_slider.setMinimum(0)
+            self.flow_slider.setMaximum(100)
+            self.flow_slider.setValue(100)
+            self.flow_slider.valueChanged.connect(self.on_flow_changed_debounced)
+
+            number_size = flow_config.get("number_size", get_number_size())
+            self.flow_value_label = QLabel("100%")
+            self.flow_value_label.setStyleSheet(f"font-size: {number_size};")
+            self.flow_value_label.setAlignment(Qt.AlignCenter)
+            self.flow_value_label.setFixedWidth(35)
+
+            brush_flow_layout.addWidget(self.flow_slider, 1)
+            brush_flow_layout.addWidget(self.flow_value_label)
+        else:
+            self.flow_slider = None
+            self.flow_value_label = None
 
         # Brush blend mode and reset button
         brush_blend_reset_layout = QHBoxLayout()
@@ -246,6 +269,8 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         # Assemble brush section
         if opacity_config.get("enabled", True):
             brush_section_layout.addLayout(brush_opacity_layout)
+        if flow_config.get("enabled", True):
+            brush_section_layout.addLayout(brush_flow_layout)
         if self.blend_combo is not None:
             brush_blend_reset_layout.addWidget(self.blend_combo)
             brush_blend_reset_layout.addWidget(self.reset_btn)
@@ -354,6 +379,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         self.current_brush_name = None
         self.current_brush_size = None
         self.current_brush_opacity = None
+        self.current_brush_flow = None
         self.current_brush_rotation = None
         self.current_blend_mode = None
         self.update_from_current_brush()
