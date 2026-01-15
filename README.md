@@ -205,12 +205,14 @@ finally:
 A dedicated docker for quick brush and layer adjustments, providing instant access to commonly used painting settings. 
 The docker also includes a control bar at the right side that has toggle button for floating `Tool Options` Docker and brush rotation widget.
 It also displays real-time indicators for active selection and gesture system states. Click the gesture icon will toggle on/off the gesture system.
+You can enable/disable each slider via settings.
 
 ### Features
 
 **Brush Controls:**
 - **Size Slider**: Adjusts brush size from 1 to 1000 pixels with non-linear scaling for precise control of small brushes
 - **Opacity Slider**: Controls brush opacity (0-100%)
+- **Flow Slider**: Controls brush flow (0-100%)
 - **Rotation Widget**: Circular dial for intuitive brush rotation adjustment (0-360°)
 - **Blend Mode Dropdown**: Quick access to change the current brush's blending mode
 - **Reset Button**: Instantly reloads the current brush preset to its default settings
