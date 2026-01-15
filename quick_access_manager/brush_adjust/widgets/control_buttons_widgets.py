@@ -28,6 +28,7 @@ class ControlButtonWidget(QWidget):
         self.is_alphalock = False
         self.is_inherit_alpha = False
         self.is_gesture_paused = False
+        self.is_preserve_alpha = False
         self.float_rotation = None
 
         self.init_ui()
@@ -79,6 +80,17 @@ class ControlButtonWidget(QWidget):
         # ============================================
 
         # Create labels with fixed size for icons
+        # Preserve Alpha status label
+        self.preserve_alpha_label = QLabel()
+        self.preserve_alpha_label.setFixedSize(16, 16)
+        self.preserve_alpha_label.setScaledContents(True)
+        self.preserve_alpha_label.setPixmap(
+            QPixmap(os.path.join(self.icon_dir, "preserve_alpha_off.png"))
+        )
+        self.preserve_alpha_label.setToolTip("Preserve Alpha: Off")
+        self.preserve_alpha_label.setCursor(Qt.PointingHandCursor)
+        self.preserve_alpha_label.mousePressEvent = self.toggle_preserve_alpha
+
         self.selection_info_label = QLabel()
         self.selection_info_label.setFixedSize(16, 16)
         self.selection_info_label.setScaledContents(True)
@@ -100,6 +112,8 @@ class ControlButtonWidget(QWidget):
         layout.addWidget(self.tool_options_toggle_btn)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.rotation_toggle_btn)
+        layout.addWidget(self._create_separator())
+        layout.addWidget(self.preserve_alpha_label)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.selection_info_label)
         layout.addWidget(self._create_separator())
@@ -124,6 +138,21 @@ class ControlButtonWidget(QWidget):
         return separator
 
     def update_status(self):
+        # Update preserve alpha icon only if status changed
+        preserve_alpha = self.get_preserve_alpha_status()
+        if preserve_alpha != self.is_preserve_alpha:
+            self.is_preserve_alpha = preserve_alpha
+            preserve_alpha_icon = (
+                "preserve_alpha_on.png" if preserve_alpha else "preserve_alpha_off.png"
+            )
+            preserve_alpha_tooltip = (
+                "Preserve Alpha: On" if preserve_alpha else "Preserve Alpha: Off"
+            )
+            self.preserve_alpha_label.setToolTip(preserve_alpha_tooltip)
+            self.preserve_alpha_label.setPixmap(
+                QPixmap(os.path.join(self.icon_dir, preserve_alpha_icon))
+            )
+
         # Update selection icon only if status changed
         selection_info = self.get_selection_status()
         if selection_info != self.is_selected:
@@ -156,6 +185,24 @@ class ControlButtonWidget(QWidget):
         if selection is None:
             return False
         return True
+
+    def get_preserve_alpha_status(self):
+        """Get the current preserve alpha status from Krita"""
+        app = Krita.instance()
+        action = app.action("preserve_alpha")
+        if action:
+            return action.isChecked()
+        return False
+
+    def toggle_preserve_alpha(self, _event):
+        """Toggle preserve alpha on/off when clicking the icon"""
+        app = Krita.instance()
+        action = app.action("preserve_alpha")
+        if action:
+            new_state = not action.isChecked()
+            action.setChecked(new_state)
+        # Force immediate update of the icon
+        self.update_status()
 
     def toggle_gesture_status(self, _event):
         """Toggle gesture system on/off when clicking the icon"""
