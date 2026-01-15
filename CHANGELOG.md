@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Preserve Alpha toggle button in Quick Adjust Docker control panel
   - Click to toggle Krita's preserve alpha mode on/off
   - Visual indicator shows current preserve alpha status
+- Brush Flow slider in Quick Adjust Docker
+  - Located under the opacity slider in the brush section
+  - Uses `paintingFlow()` to get current flow and `setPaintingFlow()` to update
+  - Configurable via Settings dialog (enabled/disabled, number_size)
+  - Debounced input for smooth performance
 
 ### Changed
 - Floating Tool Options widget now checks Krita's `ToolOptionsInDocker` setting before initialization

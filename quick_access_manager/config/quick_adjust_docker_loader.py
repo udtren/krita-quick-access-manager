@@ -11,6 +11,7 @@ def _get_default_config():
         "brush_section": {
             "size_slider": {"enabled": True, "number_size": "12px"},
             "opacity_slider": {"enabled": True, "number_size": "12px"},
+            "flow_slider": {"enabled": True, "number_size": "12px"},
         },
         "layer_section": {"opacity_slider": {"enabled": True, "number_size": "12px"}},
         "brush_history_section": {"enabled": True, "total_items": 14, "icon_size": 34},
