@@ -223,6 +223,12 @@ It also displays real-time indicators for active selection and gesture system st
 - **Color History**: Quick access to recently used colors
 - **Brush History**: Switch between recently used brush presets
 
+**Control Bar**
+- **Toggle Widget Visibility**: Show/Hide the `Tool Options`, `Rotation circle` widgets.
+- **Toggle Brush Preserve Alpha**: Enable/Disable the `Preserve Alpha` Setting.
+- **Active Selection Status**: If there is an active selection, the icon will turn green.
+- **Toggle Gesture System**: Pause/Unpause the gesture system.
+
 ### Docker Toggle Buttons
 The buttons at the bottom of the docker provide quick show/hide toggles for other Krita dockers (e.g., Tool Options, Layers, Brush Presets).
 

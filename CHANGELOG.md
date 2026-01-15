@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2026-01-14
+### Added
+- Preserve Alpha toggle button in Quick Adjust Docker control panel
+  - Click to toggle Krita's preserve alpha mode on/off
+  - Visual indicator shows current preserve alpha status
+
 ### Changed
 - Floating Tool Options widget now checks Krita's `ToolOptionsInDocker` setting before initialization
   - Only enables when Tool Options is set to "In Docker" mode (not "In Toolbar" mode)
