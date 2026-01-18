@@ -29,6 +29,7 @@ class ControlButtonWidget(QWidget):
         self.is_inherit_alpha = False
         self.is_gesture_paused = False
         self.is_preserve_alpha = False
+        self.is_erase_mode = False
         self.float_rotation = None
 
         self.init_ui()
@@ -91,6 +92,17 @@ class ControlButtonWidget(QWidget):
         self.preserve_alpha_label.setCursor(Qt.PointingHandCursor)
         self.preserve_alpha_label.mousePressEvent = self.toggle_preserve_alpha
 
+        # Erase Mode status label
+        self.erase_mode_label = QLabel()
+        self.erase_mode_label.setFixedSize(16, 16)
+        self.erase_mode_label.setScaledContents(True)
+        self.erase_mode_label.setPixmap(
+            QPixmap(os.path.join(self.icon_dir, "erase_mode_off.png"))
+        )
+        self.erase_mode_label.setToolTip("Erase Mode: Off")
+        self.erase_mode_label.setCursor(Qt.PointingHandCursor)
+        self.erase_mode_label.mousePressEvent = self.toggle_erase_mode
+
         self.selection_info_label = QLabel()
         self.selection_info_label.setFixedSize(16, 16)
         self.selection_info_label.setScaledContents(True)
@@ -112,6 +124,8 @@ class ControlButtonWidget(QWidget):
         layout.addWidget(self.tool_options_toggle_btn)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.rotation_toggle_btn)
+        layout.addWidget(self._create_separator())
+        layout.addWidget(self.erase_mode_label)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.preserve_alpha_label)
         layout.addWidget(self._create_separator())
@@ -151,6 +165,19 @@ class ControlButtonWidget(QWidget):
             self.preserve_alpha_label.setToolTip(preserve_alpha_tooltip)
             self.preserve_alpha_label.setPixmap(
                 QPixmap(os.path.join(self.icon_dir, preserve_alpha_icon))
+            )
+
+        # Update erase mode icon only if status changed
+        erase_mode = self.get_erase_mode_status()
+        if erase_mode != self.is_erase_mode:
+            self.is_erase_mode = erase_mode
+            erase_mode_icon = (
+                "erase_mode_on.png" if erase_mode else "erase_mode_off.png"
+            )
+            erase_mode_tooltip = "Erase Mode: On" if erase_mode else "Erase Mode: Off"
+            self.erase_mode_label.setToolTip(erase_mode_tooltip)
+            self.erase_mode_label.setPixmap(
+                QPixmap(os.path.join(self.icon_dir, erase_mode_icon))
             )
 
         # Update selection icon only if status changed
@@ -198,6 +225,24 @@ class ControlButtonWidget(QWidget):
         """Toggle preserve alpha on/off when clicking the icon"""
         app = Krita.instance()
         action = app.action("preserve_alpha")
+        if action:
+            new_state = not action.isChecked()
+            action.setChecked(new_state)
+        # Force immediate update of the icon
+        self.update_status()
+
+    def get_erase_mode_status(self):
+        """Get the current erase mode status from Krita"""
+        app = Krita.instance()
+        action = app.action("erase_action")
+        if action:
+            return action.isChecked()
+        return False
+
+    def toggle_erase_mode(self, _event):
+        """Toggle erase mode on/off when clicking the icon"""
+        app = Krita.instance()
+        action = app.action("erase_action")
         if action:
             new_state = not action.isChecked()
             action.setChecked(new_state)

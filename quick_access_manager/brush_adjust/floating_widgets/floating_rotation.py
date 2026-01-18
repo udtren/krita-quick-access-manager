@@ -36,7 +36,12 @@ class FloatRotation:
 
         # Create a container widget to hold the rotation widget and label
         self.container = QWidget()
-        self.container.setStyleSheet("background-color: #636363;")
+        self.container.setStyleSheet(
+            """
+            background-color: #323232;
+            font-weight: bold;
+            """
+        )
         container_layout = QHBoxLayout()
         container_layout.setContentsMargins(4, 4, 4, 4)
         container_layout.setSpacing(6)

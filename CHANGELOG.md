@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-01-18
+### Added
+- Erase Mode toggle button in Quick Adjust Docker control panel
+  - Click to toggle Krita's erase mode on/off
+  - Visual indicator shows current erase mode status
+  - Uses `erase_mode_on.png` / `erase_mode_off.png` icons
+
 ## 2026-01-14
 ### Added
 - Preserve Alpha toggle button in Quick Adjust Docker control panel
