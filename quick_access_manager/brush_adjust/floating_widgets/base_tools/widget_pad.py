@@ -146,6 +146,9 @@ class ntWidgetPad(QWidget):
         self.referenceDocker = None
         self.dockerEventFilter = None
 
+        # Track user's visibility preference (prevents auto-show when user hides)
+        self.user_visible = True
+
     def activeView(self):
         """
         Get the View widget of the active subwindow."""
@@ -183,8 +186,8 @@ class ntWidgetPad(QWidget):
                     )
                     # Install event filter on docker if not already installed
                     self.installDockerEventFilter(reference_docker)
-                    # Show the pad if it was hidden
-                    if not self.isVisible():
+                    # Show the pad if it was hidden and user wants it visible
+                    if not self.isVisible() and self.user_visible:
                         self.show()
                 else:
                     # Reference docker is not visible - just hide the pad (keep docker borrowed)
@@ -411,6 +414,15 @@ class ntWidgetPad(QWidget):
 
     def getViewAlignment(self):
         return self.alignment
+
+    def setUserVisible(self, visible):
+        """Set user's visibility preference and show/hide accordingly"""
+        self.user_visible = visible
+        if visible:
+            self.show()
+            self.adjustToView()
+        else:
+            self.hide()
 
     def findReferenceDocker(self):
         """Find the reference docker specified in position configuration"""

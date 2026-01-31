@@ -1,36 +1,36 @@
 from PyQt5.QtWidgets import QMdiArea, QDockWidget
+from PyQt5.QtGui import QPalette, QColor
 from .base_tools.adjust_to_subwindow_filter import ntAdjustToSubwindowFilter
 from .base_tools.widget_pad import ntWidgetPad, WidgetPadPosition
-from ...config.quick_adjust_docker_loader import get_tool_options_position
 
 
-class FloatToolOptions:
+class FloatSpecificColorSelector:
 
     def __init__(self, window):
         qWin = window.qwindow()
         mdiArea = qWin.findChild(QMdiArea)
-        self.toolOptions = qWin.findChild(QDockWidget, "sharedtooldocker")
+        self.colorSelector = qWin.findChild(QDockWidget, "SpecificColorSelector")
 
-        # Get position from config
-        position_setting = get_tool_options_position()
-        if position_setting == "right_align_top":
-            side = WidgetPadPosition.RIGHT
-        else:
-            side = WidgetPadPosition.LEFT
-
-        # Create position configuration
+        # Create position configuration - bottom align left
         position_config = WidgetPadPosition(
             reference_docker_name="brush_adjust_docker",
-            side=side,
-            alignment=WidgetPadPosition.ALIGN_TOP,
+            side=WidgetPadPosition.BOTTOM,
+            alignment=WidgetPadPosition.ALIGN_LEFT,
             gap=5,
             fallback_to_canvas_edge=True,
         )
 
         # Create "pad" with the position configuration
         self.pad = ntWidgetPad(mdiArea, position_config)
-        self.pad.setObjectName("toolOptionsPad")
-        self.pad.borrowDocker(self.toolOptions)
+        self.pad.setObjectName("SpecificColorSelectorPad")
+
+        # Set background color using palette
+        self.pad.setAutoFillBackground(True)
+        palette = self.pad.palette()
+        palette.setColor(QPalette.Window, QColor("#323232"))
+        self.pad.setPalette(palette)
+
+        self.pad.borrowDocker(self.colorSelector)
 
         # Create and install event filter
         self.adjustFilter = ntAdjustToSubwindowFilter(mdiArea)
@@ -39,11 +39,7 @@ class FloatToolOptions:
         qWin.installEventFilter(self.adjustFilter)
 
         # Disable the related QDockWidget
-        self.dockerAction = (
-            window.qwindow()
-            .findChild(QDockWidget, "sharedtooldocker")
-            .toggleViewAction()
-        )
+        self.dockerAction = self.colorSelector.toggleViewAction()
         self.dockerAction.setEnabled(False)
 
     def ensureFilterIsInstalled(self, subWin):
@@ -60,7 +56,7 @@ class FloatToolOptions:
 
     def reborrowDocker(self):
         """Reborrow the docker and show the pad"""
-        if self.pad.borrowDocker(self.toolOptions):
+        if self.pad.borrowDocker(self.colorSelector):
             self.pad.show()
             self.pad.adjustToView()
 

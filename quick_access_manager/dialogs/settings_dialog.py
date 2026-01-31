@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import (
     QKeySequenceEdit,
     QTabWidget,
     QGroupBox,
+    QComboBox,
 )
 from PyQt5.QtCore import Qt
 from ..config.popup_loader import PopupConfigLoader
@@ -324,23 +325,26 @@ class CommonConfigDialog(QDialog):
         # Ensure section exists with defaults
         if "floating_widgets" not in self.quick_adjust_config:
             self.quick_adjust_config["floating_widgets"] = {
-                "tool_options": {"enabled": True, "start_visible": True}
+                "tool_options": {"enabled": True, "start_visible": True},
+                "color_selector": {"enabled": True, "start_visible": False},
             }
             floating_widgets = self.quick_adjust_config["floating_widgets"]
 
         layout.addWidget(QLabel("[floating_widgets]"))
 
-        for widget_name in ["tool_options"]:
-            widget_config = floating_widgets.get(widget_name, {"enabled": True, "start_visible": True})
+        for widget_name in ["tool_options", "color_selector"]:
+            # Default values depend on widget type
+            default_start_visible = True if widget_name == "tool_options" else False
+            widget_config = floating_widgets.get(widget_name, {"enabled": True, "start_visible": default_start_visible})
             # Ensure widget config exists with both keys
             if widget_name not in floating_widgets:
-                floating_widgets[widget_name] = {"enabled": True, "start_visible": True}
+                floating_widgets[widget_name] = {"enabled": True, "start_visible": default_start_visible}
                 widget_config = floating_widgets[widget_name]
             else:
                 # Ensure start_visible key exists if missing
                 if "start_visible" not in widget_config:
-                    widget_config["start_visible"] = True
-                    floating_widgets[widget_name]["start_visible"] = True
+                    widget_config["start_visible"] = default_start_visible
+                    floating_widgets[widget_name]["start_visible"] = default_start_visible
 
             layout.addWidget(QLabel(f"  {widget_name}:"))
 
@@ -352,6 +356,16 @@ class CommonConfigDialog(QDialog):
                 if isinstance(value, bool):
                     edit = QCheckBox()
                     edit.setChecked(value)
+                    hlayout.addWidget(label)
+                    hlayout.addStretch()
+                    hlayout.addWidget(edit)
+                    self.quick_adjust_fields[("floating_widgets", widget_name, key)] = edit
+                elif key == "position":
+                    # Use QComboBox for position selection
+                    edit = QComboBox()
+                    edit.addItems(["left_align_top", "right_align_top"])
+                    edit.setCurrentText(str(value))
+                    edit.setFixedWidth(120)
                     hlayout.addWidget(label)
                     hlayout.addStretch()
                     hlayout.addWidget(edit)
@@ -677,12 +691,14 @@ class CommonConfigDialog(QDialog):
                             pass
                         self.quick_adjust_config[section][key] = val
                 elif len(key_tuple) == 3:
-                    # brush_section or layer_section
+                    # brush_section, layer_section, or floating_widgets
                     section, subsection, key = key_tuple
                     if isinstance(edit, QCheckBox):
                         self.quick_adjust_config[section][subsection][
                             key
                         ] = edit.isChecked()
+                    elif isinstance(edit, QComboBox):
+                        self.quick_adjust_config[section][subsection][key] = edit.currentText()
                     else:
                         val = edit.text()
                         self.quick_adjust_config[section][subsection][key] = val

@@ -334,12 +334,12 @@ class ShortcutDraggableButton(QPushButton):
                 "fontColor": (
                     DEFAULT_FONT_COLOR
                     if dialog.use_global_settings_flag.isChecked()
-                    else dialog.font_color_edit.text()
+                    else dialog.get_font_color_hex()
                 ),
                 "backgroundColor": (
                     DEFAULT_BG_COLOR
                     if dialog.use_global_settings_flag.isChecked()
-                    else dialog.bg_color_edit.text()
+                    else dialog.get_bg_color_hex()
                 ),
                 "icon_name": dialog.icon_name_edit.text().strip(),
                 "useGlobalSettings": dialog.use_global_settings_flag.isChecked(),

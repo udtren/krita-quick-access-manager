@@ -10,9 +10,12 @@ from ...gesture.gesture_main import (
 )
 from ..floating_widgets.tool_options import FloatToolOptions
 from ..floating_widgets.floating_rotation import FloatRotation
+from ..floating_widgets.specific_color_selector import FloatSpecificColorSelector
 from ...config.quick_adjust_docker_loader import (
     is_tool_options_enabled,
     is_tool_options_start_visible,
+    is_color_selector_enabled,
+    is_color_selector_start_visible,
 )
 
 
@@ -78,6 +81,20 @@ class ControlButtonWidget(QWidget):
             False
         )  # Will be enabled after window creation
         self.rotation_toggle_btn.clicked.connect(self.toggle_rotation_visibility)
+
+        # Add Specific Color Selector toggle button
+        self.color_selector_toggle_btn = QPushButton()
+        self.color_selector_toggle_btn.setFixedSize(16, 16)
+        self.color_selector_toggle_btn.setToolTip("Toggle Specific Color Selector")
+        self.color_selector_toggle_btn.setIcon(
+            QIcon(os.path.join(self.icon_dir, "tool_options_off.png"))
+        )
+        self.color_selector_toggle_btn.setCheckable(True)
+        self.color_selector_toggle_btn.setChecked(False)
+        self.color_selector_toggle_btn.clicked.connect(
+            self.toggle_color_selector_visibility
+        )
+        self.float_color_selector = None
         # ============================================
 
         # Create labels with fixed size for icons
@@ -122,6 +139,7 @@ class ControlButtonWidget(QWidget):
         self.gesture_status_label.mousePressEvent = self.toggle_gesture_status
 
         layout.addWidget(self.tool_options_toggle_btn)
+        layout.addWidget(self.color_selector_toggle_btn)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.rotation_toggle_btn)
         layout.addWidget(self._create_separator())
@@ -278,14 +296,14 @@ class ControlButtonWidget(QWidget):
                 # Check if Tool Options should start visible
                 start_visible = is_tool_options_start_visible()
                 if start_visible:
-                    self.float_tool_options.pad.show()
+                    self.float_tool_options.pad.setUserVisible(True)
                     self.tool_options_toggle_btn.setChecked(True)
                     self.tool_options_toggle_btn.setIcon(
                         (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
                     )
                 else:
                     # Hide the pad if not starting visible
-                    self.float_tool_options.pad.hide()
+                    self.float_tool_options.pad.setUserVisible(False)
                     self.tool_options_toggle_btn.setChecked(False)
                     self.tool_options_toggle_btn.setIcon(
                         (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
@@ -300,23 +318,76 @@ class ControlButtonWidget(QWidget):
         # Enable floating rotation widget (always enabled, start hidden)
         self.enableRotationExtension()
 
+        # Enable floating color selector widget (start hidden)
+        self.enableColorSelectorExtension()
+
     def toggle_tool_options_visibility(self):
         """Toggle the visibility of the Tool Options floating widget"""
         if hasattr(self, "float_tool_options") and self.float_tool_options:
             is_checked = self.tool_options_toggle_btn.isChecked()
             if is_checked:
-                # Show the pad
-                self.float_tool_options.pad.show()
-                self.float_tool_options.pad.adjustToView()
+                self.float_tool_options.pad.setUserVisible(True)
                 self.tool_options_toggle_btn.setIcon(
                     (QIcon(os.path.join(self.icon_dir, "tool_options_on.png")))
                 )
             else:
-                # Hide the pad
-                self.float_tool_options.pad.hide()
+                self.float_tool_options.pad.setUserVisible(False)
                 self.tool_options_toggle_btn.setIcon(
                     (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
                 )
+
+    def enableColorSelectorExtension(self):
+        """Enable the floating Specific Color Selector extension"""
+        window = Krita.instance().activeWindow()
+        if not window:
+            return
+
+        # Check if color selector floating widget is enabled in config
+        if not is_color_selector_enabled():
+            # Hide the color selector button if disabled in config
+            self.color_selector_toggle_btn.hide()
+            return
+
+        try:
+            self.float_color_selector = FloatSpecificColorSelector(window)
+
+            # Check if Color Selector should start visible
+            start_visible = is_color_selector_start_visible()
+            if start_visible:
+                self.float_color_selector.pad.setUserVisible(True)
+                self.color_selector_toggle_btn.setChecked(True)
+                self.color_selector_toggle_btn.setIcon(
+                    QIcon(os.path.join(self.icon_dir, "specific_color_selector_on.png"))
+                )
+            else:
+                # Hide the pad if not starting visible
+                self.float_color_selector.pad.setUserVisible(False)
+                self.color_selector_toggle_btn.setChecked(False)
+                self.color_selector_toggle_btn.setIcon(
+                    QIcon(
+                        os.path.join(self.icon_dir, "specific_color_selector_off.png")
+                    )
+                )
+        except Exception:
+            # Docker not found, hide the button
+            self.color_selector_toggle_btn.hide()
+
+    def toggle_color_selector_visibility(self):
+        """Toggle the visibility of the Specific Color Selector floating widget"""
+        if not self.float_color_selector:
+            return
+
+        is_checked = self.color_selector_toggle_btn.isChecked()
+        if is_checked:
+            self.float_color_selector.pad.setUserVisible(True)
+            self.color_selector_toggle_btn.setIcon(
+                QIcon(os.path.join(self.icon_dir, "specific_color_selector_on.png"))
+            )
+        else:
+            self.float_color_selector.pad.setUserVisible(False)
+            self.color_selector_toggle_btn.setIcon(
+                QIcon(os.path.join(self.icon_dir, "specific_color_selector_off.png"))
+            )
 
     def toggle_rotation_visibility(self):
         """Toggle the visibility of the floating rotation widget"""

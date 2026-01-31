@@ -7,6 +7,7 @@ def _get_default_config():
     return {
         "floating_widgets": {
             "tool_options": {"enabled": True, "start_visible": True},
+            "color_selector": {"enabled": True, "start_visible": False},
         },
         "brush_section": {
             "size_slider": {"enabled": True, "number_size": "12px"},
@@ -150,6 +151,36 @@ def is_tool_options_start_visible():
     """
     floating_config = get_floating_widgets_section()
     return floating_config.get("tool_options", {}).get("start_visible", True)
+
+
+def get_tool_options_position():
+    """Get the position setting for floating tool options.
+
+    Returns:
+        str: Position string, either "left_align_top" or "right_align_top" (default: "left_align_top")
+    """
+    floating_config = get_floating_widgets_section()
+    return floating_config.get("tool_options", {}).get("position", "left_align_top")
+
+
+def is_color_selector_enabled():
+    """Check if the floating color selector widget is enabled.
+
+    Returns:
+        bool: True if color selector should be enabled (default: True)
+    """
+    floating_config = get_floating_widgets_section()
+    return floating_config.get("color_selector", {}).get("enabled", True)
+
+
+def is_color_selector_start_visible():
+    """Check if the floating color selector widget should start visible.
+
+    Returns:
+        bool: True if color selector should start visible (default: False)
+    """
+    floating_config = get_floating_widgets_section()
+    return floating_config.get("color_selector", {}).get("start_visible", False)
 
 
 def get_font_size():
