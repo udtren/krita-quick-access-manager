@@ -7,7 +7,7 @@ def _get_default_config():
     return {
         "floating_widgets": {
             "tool_options": {"enabled": True, "start_visible": True},
-            "color_selector": {"enabled": True, "start_visible": False},
+            "color_selector": {"enabled": False, "start_visible": False},
         },
         "brush_section": {
             "size_slider": {"enabled": True, "number_size": "12px"},
