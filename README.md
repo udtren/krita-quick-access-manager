@@ -203,7 +203,7 @@ finally:
 ![Quick Brush Adjustments](./quick_access_manager/image/004.png)
 
 A dedicated docker for quick brush and layer adjustments, providing instant access to commonly used painting settings. 
-The docker also includes a control bar at the right side that has toggle button for floating `Tool Options` Docker and brush rotation widget.
+The docker also includes a control bar at the right side that has toggle button for floating widgets.
 It also displays real-time indicators for active selection and gesture system states. Click the gesture icon will toggle on/off the gesture system.
 You can enable/disable each slider via settings.
 
@@ -226,7 +226,7 @@ You can enable/disable each slider via settings.
 - **Brush History**: Switch between recently used brush presets
 
 **Control Bar**
-- **Toggle Widget Visibility**: Show/Hide the `Tool Options`, `Rotation circle` widgets.
+- **Toggle Widget Visibility**: Show/Hide the Floating widgets.
 - **Toggle Brush Preserve Alpha**: Enable/Disable the `Preserve Alpha` Setting.
 - **Active Selection Status**: If there is an active selection, the icon will turn green.
 - **Toggle Gesture System**: Pause/Unpause the gesture system.
@@ -270,7 +270,12 @@ The buttons at the bottom of the docker provide quick show/hide toggles for othe
 ### Floating Widget
 ![Floating Widget](./quick_access_manager/image/qam_floating_docker.gif)
 
-The Quick Brush Adjust docker includes a companion floating Tool Options widget that can be positioned relative to the docker.
+The Quick Brush Adjust docker includes companion floating widget that can be positioned relative to the docker.
+Currently support following widgets.
+- Tools Option Docker (position at left or right)
+- Specific Color Selector Docker (position at bottom)
+- Brush Rotation Widget (position at top align right)
+
 For floating Tool Options widget, you need to set `Tool Options Location` to `In Docker`.
 
 ![krita setting](quick_access_manager/image/tool_options.png)
