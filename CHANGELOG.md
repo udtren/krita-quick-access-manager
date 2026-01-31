@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Borrows Krita's SpecificColorSelector docker into floating pad
   - Uses QPalette for background color (#323232)
 - Configuration support for Floating Color Selector
-  - `color_selector.enabled` - Enable/disable the floating widget (default: true)
+  - `color_selector.enabled` - Enable/disable the floating widget (default: false)
   - `color_selector.start_visible` - Control initial visibility (default: false)
   - Settings accessible via Settings dialog under "floating_widgets" section
 - User visibility preference tracking for floating widgets (`user_visible` flag)
