@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-01-31
+### Added
+- Floating Specific Color Selector widget
+  - Positioned at bottom-left of brush_adjust_docker with 5px gap
+  - Borrows Krita's SpecificColorSelector docker into floating pad
+- Add position settings for Floating Tools Options widget
+
+### Fixed
+- User visibility preference tracking for floating widgets (`user_visible` flag)
+  - Prevents auto-show when user has explicitly hidden a widget
+
 ## 2026-01-18
 ### Added
 - Erase Mode toggle button in Quick Adjust Docker control panel

@@ -6,7 +6,9 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QPushButton,
     QCheckBox,
+    QColorDialog,
 )
+from PyQt5.QtGui import QColor
 
 
 class ShortcutButtonConfigDialog(QDialog):
@@ -38,13 +40,19 @@ class ShortcutButtonConfigDialog(QDialog):
 
         # Background color
         layout.addWidget(QLabel("Background Color:"))
-        self.bg_color_edit = QLineEdit()
-        layout.addWidget(self.bg_color_edit)
+        self.bg_color = QColor("#888888")
+        self.bg_color_button = QPushButton()
+        self.bg_color_button.setFixedHeight(24)
+        self.bg_color_button.clicked.connect(self.pick_bg_color)
+        layout.addWidget(self.bg_color_button)
 
         # Font color
         layout.addWidget(QLabel("Font Color:"))
-        self.font_color_edit = QLineEdit()
-        layout.addWidget(self.font_color_edit)
+        self.font_color = QColor("#000000")
+        self.font_color_button = QPushButton()
+        self.font_color_button.setFixedHeight(24)
+        self.font_color_button.clicked.connect(self.pick_font_color)
+        layout.addWidget(self.font_color_button)
 
         # Icon name
         layout.addWidget(QLabel("Icon Name:"))
@@ -92,12 +100,13 @@ class ShortcutButtonConfigDialog(QDialog):
         self.font_size_edit.setText(str(font_size))
 
         # Colors
-        self.bg_color_edit.setText(
+        self.bg_color = QColor(
             self.button.palette().color(self.button.backgroundRole()).name()
         )
-        self.font_color_edit.setText(
+        self.font_color = QColor(
             self.button.palette().color(self.button.foregroundRole()).name()
         )
+        self.update_color_buttons()
 
         # Icon name
         icon_name = config.get("icon_name", "") if config else ""
@@ -106,3 +115,36 @@ class ShortcutButtonConfigDialog(QDialog):
         # global settings flag
         if config.get("useGlobalSettings") is True:
             self.use_global_settings_flag.setChecked(True)
+
+    def update_color_buttons(self):
+        """Update color button backgrounds to show selected colors"""
+        self.bg_color_button.setStyleSheet(
+            f"background-color: {self.bg_color.name()}; border: 1px solid #888;"
+        )
+        self.bg_color_button.setText(self.bg_color.name())
+        self.font_color_button.setStyleSheet(
+            f"background-color: {self.font_color.name()}; border: 1px solid #888;"
+        )
+        self.font_color_button.setText(self.font_color.name())
+
+    def pick_bg_color(self):
+        """Open color picker for background color"""
+        color = QColorDialog.getColor(self.bg_color, self, "Select Background Color")
+        if color.isValid():
+            self.bg_color = color
+            self.update_color_buttons()
+
+    def pick_font_color(self):
+        """Open color picker for font color"""
+        color = QColorDialog.getColor(self.font_color, self, "Select Font Color")
+        if color.isValid():
+            self.font_color = color
+            self.update_color_buttons()
+
+    def get_bg_color_hex(self):
+        """Get background color as hex string"""
+        return self.bg_color.name()
+
+    def get_font_color_hex(self):
+        """Get font color as hex string"""
+        return self.font_color.name()
