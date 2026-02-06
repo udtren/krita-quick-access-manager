@@ -1,7 +1,7 @@
 import os
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -50,7 +50,7 @@ class ShortcutAccessDockerWidget(QDockWidget):
 
         self.main_layout = QVBoxLayout()
         self.main_layout.setSpacing(get_spacing_between_grids())
-        self.main_layout.setAlignment(Qt.AlignTop)  # Align main layout to top
+        self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)  # Align main layout to top
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         # Create button row
@@ -122,7 +122,7 @@ class ShortcutAccessDockerWidget(QDockWidget):
     def show_all_shortcut_popup(self):
         """Show the action selection popup"""
         self.shortcut_popup = ShortcutPopup(self)
-        self.shortcut_popup.exec_()
+        self.shortcut_popup.exec()
 
     def add_grid(self):
         """Add a new shortcut grid"""
@@ -209,7 +209,7 @@ class ShortcutAccessDockerWidget(QDockWidget):
     def run_krita_action(self, action_id):
         """Execute a Krita action"""
         if not ActionManager.run_action(action_id):
-            from PyQt5.QtWidgets import QMessageBox
+            from PyQt6.QtWidgets import QMessageBox
 
             QMessageBox.warning(
                 self, "Action Error", f"Action '{action_id}' not found."

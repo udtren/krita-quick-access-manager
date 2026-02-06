@@ -2,7 +2,7 @@
 Brush state monitoring and control functionality.
 """
 
-from PyQt5.QtCore import QTimer
+from PyQt6.QtCore import QTimer
 from krita import Krita  # type: ignore
 
 from .utils_adjust import slider_to_brush_size, brush_size_to_slider

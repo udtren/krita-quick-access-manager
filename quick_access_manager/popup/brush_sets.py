@@ -1,15 +1,14 @@
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QGridLayout,
     QPushButton,
     QLabel,
-    QShortcut,
     QFrame,
 )
-from PyQt5.QtCore import Qt, QTimer, QPoint
-from PyQt5.QtGui import QCursor, QKeySequence, QIcon, QPixmap
+from PyQt6.QtCore import Qt, QTimer, QPoint
+from PyQt6.QtGui import QCursor, QKeySequence, QIcon, QPixmap, QShortcut
 from krita import Krita  # type: ignore
 from ..utils.logs import write_log
 from ..config.popup_loader import PopupConfigLoader
@@ -45,7 +44,7 @@ class BrushSetsPopup:
             self.popup_shortcut.activated.connect(self.show_popup_at_cursor)
 
             # Enable the shortcut for application-wide use
-            self.popup_shortcut.setContext(Qt.ApplicationShortcut)
+            self.popup_shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
 
         except Exception as e:
             print(f"Error setting up popup shortcut: {e}")
@@ -81,7 +80,7 @@ class BrushSetsPopup:
         """Create the popup window with brush grid content"""
         self.popup_window = QFrame()
         self.popup_window.setWindowFlags(
-            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
         )
 
         # Override mouse events for dragging
@@ -209,21 +208,21 @@ class BrushSetsPopup:
 
     def popup_mouse_press(self, event):
         """Handle mouse press for dragging"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.drag_position = (
-                event.globalPos() - self.popup_window.frameGeometry().topLeft()
+                event.globalPosition().toPoint() - self.popup_window.frameGeometry().topLeft()
             )
             event.accept()
 
     def popup_mouse_move(self, event):
         """Handle mouse move for dragging"""
-        if event.buttons() == Qt.LeftButton and self.drag_position is not None:
-            self.popup_window.move(event.globalPos() - self.drag_position)
+        if event.buttons() == Qt.MouseButton.LeftButton and self.drag_position is not None:
+            self.popup_window.move(event.globalPosition().toPoint() - self.drag_position)
             event.accept()
 
     def popup_mouse_release(self, event):
         """Handle mouse release"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.drag_position = None
             event.accept()
 
@@ -239,7 +238,7 @@ class BrushSetsPopup:
         main_layout = QVBoxLayout()
         main_layout.setSpacing(8)
         main_layout.setContentsMargins(2, 2, 2, 2)
-        main_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         # Display all grids
         for grid_info in self.parent_docker.grids:
@@ -247,7 +246,7 @@ class BrushSetsPopup:
             grid_label = QLabel(grid_name)
             grid_label.setFixedWidth(self.popup_loader.get_grid_label_width())
             grid_label.setWordWrap(True)
-            grid_label.setAlignment(Qt.AlignCenter)
+            grid_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             grid_label.setStyleSheet(
                 """
                 color: #000000;
@@ -270,7 +269,7 @@ class BrushSetsPopup:
                 grid_layout.setContentsMargins(0, 0, 0, 0)
 
                 # Set alignment to left
-                grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+                grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
                 columns = self.parent_docker.get_dynamic_columns()
 
@@ -293,7 +292,7 @@ class BrushSetsPopup:
                         icon = preset.image()
                         if icon and not icon.isNull():
                             # Convert QImage to QPixmap and then to QIcon
-                            from PyQt5.QtGui import QPixmap, QIcon
+                            from PyQt6.QtGui import QPixmap, QIcon
 
                             pixmap = QPixmap.fromImage(icon)
                             if not pixmap.isNull():
@@ -301,8 +300,8 @@ class BrushSetsPopup:
                                 scaled_pixmap = pixmap.scaled(
                                     icon_size,
                                     icon_size,
-                                    Qt.KeepAspectRatio,
-                                    Qt.SmoothTransformation,
+                                    Qt.AspectRatioMode.KeepAspectRatio,
+                                    Qt.TransformationMode.SmoothTransformation,
                                 )
                                 brush_btn.setIcon(QIcon(scaled_pixmap))
                                 brush_btn.setIconSize(scaled_pixmap.size())

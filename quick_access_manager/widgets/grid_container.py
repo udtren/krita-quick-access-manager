@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QApplication
-from PyQt5.QtCore import Qt, QPoint, QMimeData
-from PyQt5.QtGui import QDrag
+from PyQt6.QtWidgets import QWidget, QApplication
+from PyQt6.QtCore import Qt, QPoint, QMimeData
+from PyQt6.QtGui import QDrag
 from ..utils.config_utils import get_brush_icon_size
 
 
@@ -16,17 +16,17 @@ class ClickableGridWidget(QWidget):
 
     def mousePressEvent(self, event):
         """Handle mouse press events"""
-        if event.button() == Qt.LeftButton:
-            self.drag_start_position = event.pos()
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.drag_start_position = event.position().toPoint()
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         """Handle mouse move events for grid dragging"""
-        if not (event.buttons() & Qt.LeftButton):
+        if not (event.buttons() & Qt.MouseButton.LeftButton):
             return
 
         if (
-            event.pos() - self.drag_start_position
+            event.position().toPoint() - self.drag_start_position
         ).manhattanLength() < QApplication.startDragDistance():
             return
 
@@ -44,7 +44,7 @@ class ClickableGridWidget(QWidget):
         mime_data.setText(f"grid:{self.grid_info['name']}")
         drag.setMimeData(mime_data)
 
-        drop_action = drag.exec_(Qt.MoveAction)
+        drop_action = drag.exec(Qt.DropAction.MoveAction)
 
     def dragEnterEvent(self, event):
         """Handle drag enter events"""

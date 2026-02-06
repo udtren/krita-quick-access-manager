@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QPushButton, QApplication
-from PyQt5.QtCore import Qt, QPoint, QMimeData, QSize
-from PyQt5.QtGui import QDrag, QIcon, QPixmap
+from PyQt6.QtWidgets import QPushButton, QApplication
+from PyQt6.QtCore import Qt, QPoint, QMimeData, QSize
+from PyQt6.QtGui import QDrag, QIcon, QPixmap
 import os
 from ..utils.shortcut_utils import get_font_px, get_shortcut_button_config
 from ..dialogs.button_config_dialog import ShortcutButtonConfigDialog
@@ -153,7 +153,7 @@ class ShortcutDraggableButton(QPushButton):
     def lighten_color(self, color_hex, amount):
         """Lighten a hex color"""
         try:
-            from PyQt5.QtGui import QColor
+            from PyQt6.QtGui import QColor
 
             color = QColor(color_hex)
             h, s, v, a = color.getHsv()
@@ -166,7 +166,7 @@ class ShortcutDraggableButton(QPushButton):
     def darken_color(self, color_hex, amount):
         """Darken a hex color"""
         try:
-            from PyQt5.QtGui import QColor
+            from PyQt6.QtGui import QColor
 
             color = QColor(color_hex)
             h, s, v, a = color.getHsv()
@@ -187,26 +187,26 @@ class ShortcutDraggableButton(QPushButton):
         modifiers = QApplication.keyboardModifiers()
 
         # Shift + Left click: Move up in order
-        if event.button() == Qt.LeftButton and modifiers == Qt.ShiftModifier:
+        if event.button() == Qt.MouseButton.LeftButton and modifiers == Qt.KeyboardModifier.ShiftModifier:
             self.move_button_up()
             return
 
         # Shift + Right click: Move down in order
-        elif event.button() == Qt.RightButton and modifiers == Qt.ShiftModifier:
+        elif event.button() == Qt.MouseButton.RightButton and modifiers == Qt.KeyboardModifier.ShiftModifier:
             self.move_button_down()
             return
 
         # Ctrl + Left click: Start drag operation
-        elif event.button() == Qt.LeftButton and modifiers == Qt.ControlModifier:
-            self.drag_start_position = event.pos()
+        elif event.button() == Qt.MouseButton.LeftButton and modifiers == Qt.KeyboardModifier.ControlModifier:
+            self.drag_start_position = event.position().toPoint()
 
         # Ctrl + Right click: Remove button
-        elif event.button() == Qt.RightButton and modifiers == Qt.ControlModifier:
+        elif event.button() == Qt.MouseButton.RightButton and modifiers == Qt.KeyboardModifier.ControlModifier:
             self.remove_button()
             return
 
         # Alt + Right click: Configure button
-        elif event.button() == Qt.RightButton and modifiers == Qt.AltModifier:
+        elif event.button() == Qt.MouseButton.RightButton and modifiers == Qt.KeyboardModifier.AltModifier:
             self.configure_button()
             return
 
@@ -214,14 +214,14 @@ class ShortcutDraggableButton(QPushButton):
 
     def mouseMoveEvent(self, event):
         """Handle mouse move events for dragging"""
-        if not (event.buttons() & Qt.LeftButton):
+        if not (event.buttons() & Qt.MouseButton.LeftButton):
             return
 
-        if QApplication.keyboardModifiers() != Qt.ControlModifier:
+        if QApplication.keyboardModifiers() != Qt.KeyboardModifier.ControlModifier:
             return
 
         if (
-            event.pos() - self.drag_start_position
+            event.position().toPoint() - self.drag_start_position
         ).manhattanLength() < QApplication.startDragDistance():
             return
 
@@ -234,7 +234,7 @@ class ShortcutDraggableButton(QPushButton):
         mime_data.setText(f"shortcut_action:{self.action.objectName()}")
         drag.setMimeData(mime_data)
         drag.setHotSpot(QPoint(16, 16))
-        drag.exec_(Qt.MoveAction)
+        drag.exec(Qt.DropAction.MoveAction)
 
     def move_button_up(self):
         """Move button up in the grid order"""
@@ -301,7 +301,7 @@ class ShortcutDraggableButton(QPushButton):
         if not gesture_filter_state:
             pause_gesture_event_filter()
         dialog = ShortcutButtonConfigDialog(self)
-        if dialog.exec_():
+        if dialog.exec():
             self.apply_configuration(dialog)
         if not gesture_filter_state:
             resume_gesture_event_filter()

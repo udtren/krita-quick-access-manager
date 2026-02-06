@@ -1,7 +1,7 @@
 import os
 import json
 from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QGridLayout,
@@ -12,8 +12,8 @@ from PyQt5.QtWidgets import (
     QInputDialog,
     QApplication,
 )
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QIcon
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
 from .dialogs.settings_dialog import CommonConfigDialog
 from .gesture.gesture_config_dialog import GestureConfigDialog
@@ -62,7 +62,7 @@ class QuickAccessDockerWidget(QDockWidget):
         # Create a central widget for the dock
         central_widget = QWidget()
         main_layout = QVBoxLayout()
-        main_layout.setAlignment(Qt.AlignTop)  # Align main layout to top
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)  # Align main layout to top
         main_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
 
         #####################################
@@ -144,7 +144,7 @@ class QuickAccessDockerWidget(QDockWidget):
 
         self.main_widget = QWidget()
         self.main_grid_layout = QVBoxLayout()
-        self.main_grid_layout.setAlignment(Qt.AlignTop)  # Align grid layout to top
+        self.main_grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)  # Align grid layout to top
         self.main_grid_layout.setSpacing(
             get_spacing_between_grids()
         )  # Minimize spacing between grids
@@ -172,11 +172,11 @@ class QuickAccessDockerWidget(QDockWidget):
         dialog = GestureConfigDialog()
         dialog.show()  # Non-blocking - use show() instead of exec_()
         # Store reference to keep dialog alive
-        dialog.setAttribute(Qt.WA_DeleteOnClose, False)
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
 
     def show_settings_dialog(self):
         dlg = CommonConfigDialog(self.common_config_path, self)
-        if dlg.exec_():
+        if dlg.exec():
             # 設定を再読み込みして即時反映
             global COMMON_CONFIG
             with open(self.common_config_path, "r", encoding="utf-8") as f:
@@ -225,7 +225,7 @@ class QuickAccessDockerWidget(QDockWidget):
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
         container_layout = QVBoxLayout()
-        container_layout.setAlignment(Qt.AlignTop)  # Align container to top
+        container_layout.setAlignment(Qt.AlignmentFlag.AlignTop)  # Align container to top
         container_layout.setSpacing(1)
         container_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -235,7 +235,7 @@ class QuickAccessDockerWidget(QDockWidget):
         header_layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(grid_info["name"])
         name_label.setStyleSheet("font-weight: bold; font-size: 12px;")
-        header_layout.addWidget(name_label, alignment=Qt.AlignLeft)
+        header_layout.addWidget(name_label, alignment=Qt.AlignmentFlag.AlignLeft)
         header_layout.addStretch()
         container_layout.addLayout(header_layout)
         grid_info["container"] = grid_container
@@ -244,21 +244,21 @@ class QuickAccessDockerWidget(QDockWidget):
         def name_label_mousePressEvent(event):
             mods = QApplication.keyboardModifiers()
             # Shift + 左クリックで↑
-            if event.button() == Qt.LeftButton and mods == Qt.ShiftModifier:
+            if event.button() == Qt.MouseButton.LeftButton and mods == Qt.KeyboardModifier.ShiftModifier:
                 self.move_grid(grid_info, -1)
             # Shift + 右クリックで↓
-            elif event.button() == Qt.RightButton and mods == Qt.ShiftModifier:
+            elif event.button() == Qt.MouseButton.RightButton and mods == Qt.KeyboardModifier.ShiftModifier:
                 self.move_grid(grid_info, 1)
             # 通常左クリックでActive
-            elif event.button() == Qt.LeftButton:
+            elif event.button() == Qt.MouseButton.LeftButton:
                 self.set_active_grid(grid_info)
             # Alt + 右クリックでRename
-            elif event.button() == Qt.RightButton and mods == Qt.AltModifier:
+            elif event.button() == Qt.MouseButton.RightButton and mods == Qt.KeyboardModifier.AltModifier:
                 self.rename_grid(grid_info)
             # Ctrl+Alt+Shift+右クリックでGrid削除
-            elif event.button() == Qt.RightButton and (
-                mods & (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier)
-            ) == (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier):
+            elif event.button() == Qt.MouseButton.RightButton and (
+                mods & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.ShiftModifier)
+            ) == (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.ShiftModifier):
                 self.remove_grid(grid_info)
 
         name_label.mousePressEvent = name_label_mousePressEvent
@@ -268,7 +268,7 @@ class QuickAccessDockerWidget(QDockWidget):
         grid_widget.setMinimumHeight(get_brush_icon_size() + 4)
 
         grid_layout = QGridLayout()
-        grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         grid_layout.setSpacing(get_spacing_between_buttons())
         grid_layout.setContentsMargins(0, 0, 0, 0)
         grid_widget.setLayout(grid_layout)

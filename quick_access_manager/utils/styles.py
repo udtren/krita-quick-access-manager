@@ -37,7 +37,7 @@ def shortcut_btn_style():
 def lighten_color(color_hex, amount):
     """Lighten a hex color by a percentage"""
     try:
-        from PyQt5.QtGui import QColor
+        from PyQt6.QtGui import QColor
         color = QColor(color_hex)
         h, s, v, a = color.getHsv()
         v = min(255, v + amount)
@@ -49,7 +49,7 @@ def lighten_color(color_hex, amount):
 def darken_color(color_hex, amount):
     """Darken a hex color by a percentage"""
     try:
-        from PyQt5.QtGui import QColor
+        from PyQt6.QtGui import QColor
         color = QColor(color_hex)
         h, s, v, a = color.getHsv()
         v = max(0, v - amount)

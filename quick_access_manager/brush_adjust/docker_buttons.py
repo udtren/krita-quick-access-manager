@@ -4,8 +4,8 @@ Docker button management for toggling Krita dockers.
 
 import json
 import os
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtGui import QIcon
+from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtGui import QIcon
 from krita import Krita  # type: ignore
 
 from ..config.quick_adjust_docker_loader import get_font_size

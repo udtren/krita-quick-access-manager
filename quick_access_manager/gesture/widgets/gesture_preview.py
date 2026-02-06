@@ -3,9 +3,9 @@ Gesture preview widget that displays available actions in a 3x3 grid.
 """
 
 import os
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout
-from PyQt5.QtGui import QPixmap
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QLabel, QGridLayout
+from PyQt6.QtGui import QPixmap
 from krita import Krita  # type: ignore
 from quick_access_manager.utils.logs import write_log
 
@@ -18,7 +18,7 @@ class GesturePreviewWidget(QWidget):
 
     def __init__(self, gesture_alias):
         super().__init__(
-            None, Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+            None, Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
         )
         self.setWindowTitle("Gesture Preview")
         self.gesture_alias = gesture_alias
@@ -57,7 +57,7 @@ class GesturePreviewWidget(QWidget):
 
         for direction, (row, col) in direction_positions.items():
             label = QLabel("none")
-            label.setAlignment(Qt.AlignCenter)
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             label.setMinimumSize(100, 40)
             self.layout.addWidget(label, row, col)
             self.direction_labels[direction] = label
@@ -112,7 +112,7 @@ class GesturePreviewWidget(QWidget):
                         try:
                             icon_path = os.path.join(self.icon_dir, icon_name)
                             pixmap = QPixmap(icon_path).scaled(
-                                32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
                             )
                             label.setPixmap(pixmap)
                             label.setText("")  # Clear text when showing pixmap
@@ -164,7 +164,7 @@ class GesturePreviewWidget(QWidget):
                             preset_image = preset.image()
                             if preset_image:
                                 pixmap = QPixmap.fromImage(preset_image).scaled(
-                                    64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                    64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
                                 )
                                 label.setPixmap(pixmap)
                                 label.setText("")  # Clear text when showing pixmap
@@ -213,7 +213,7 @@ class GesturePreviewWidget(QWidget):
                         try:
                             icon_path = os.path.join(self.icon_dir, icon_name)
                             pixmap = QPixmap(icon_path).scaled(
-                                32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
                             )
                             label.setPixmap(pixmap)
                             label.setText("")  # Clear text when showing pixmap

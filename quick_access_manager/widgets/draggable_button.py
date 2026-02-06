@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QPushButton, QApplication
-from PyQt5.QtCore import Qt, QPoint, QMimeData
-from PyQt5.QtGui import QDrag, QIcon, QPixmap
+from PyQt6.QtWidgets import QPushButton, QApplication
+from PyQt6.QtCore import Qt, QPoint, QMimeData
+from PyQt6.QtGui import QDrag, QIcon, QPixmap
 from ..utils.config_utils import get_brush_icon_size
 
 
@@ -41,15 +41,15 @@ class DraggableBrushButton(QPushButton):
     def mousePressEvent(self, event):
         """Handle mouse press events"""
         if (
-            event.button() == Qt.LeftButton
-            and QApplication.keyboardModifiers() == Qt.ControlModifier
+            event.button() == Qt.MouseButton.LeftButton
+            and QApplication.keyboardModifiers() == Qt.KeyboardModifier.ControlModifier
         ):
-            self.drag_start_position = event.pos()
+            self.drag_start_position = event.position().toPoint()
 
         # Ctrl+Right click to delete
         if (
-            event.button() == Qt.RightButton
-            and QApplication.keyboardModifiers() == Qt.ControlModifier
+            event.button() == Qt.MouseButton.RightButton
+            and QApplication.keyboardModifiers() == Qt.KeyboardModifier.ControlModifier
         ):
             self.remove_from_grid()
             return
@@ -58,14 +58,14 @@ class DraggableBrushButton(QPushButton):
 
     def mouseMoveEvent(self, event):
         """Handle mouse move events for dragging"""
-        if not (event.buttons() & Qt.LeftButton):
+        if not (event.buttons() & Qt.MouseButton.LeftButton):
             return
 
-        if QApplication.keyboardModifiers() != Qt.ControlModifier:
+        if QApplication.keyboardModifiers() != Qt.KeyboardModifier.ControlModifier:
             return
 
         if (
-            event.pos() - self.drag_start_position
+            event.position().toPoint() - self.drag_start_position
         ).manhattanLength() < QApplication.startDragDistance():
             return
 
@@ -81,16 +81,16 @@ class DraggableBrushButton(QPushButton):
         # Set drag pixmap
         if self.preset.image():
             pixmap = QPixmap.fromImage(self.preset.image()).scaled(
-                32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
             )
         else:
             pixmap = QPixmap(32, 32)
-            pixmap.fill(Qt.gray)
+            pixmap.fill(Qt.GlobalColor.gray)
 
         drag.setPixmap(self.icon().pixmap(32, 32))
         drag.setHotSpot(QPoint(16, 16))
 
-        drop_action = drag.exec_(Qt.MoveAction)
+        drop_action = drag.exec(Qt.DropAction.MoveAction)
 
     def remove_from_grid(self):
         """Remove this preset from the grid"""

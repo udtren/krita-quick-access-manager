@@ -2,7 +2,7 @@
 Docker factory and wrapper classes for the Brush Adjust Docker.
 """
 
-from PyQt5.QtWidgets import QDockWidget
+from PyQt6.QtWidgets import QDockWidget
 from krita import DockWidgetFactory, DockWidgetFactoryBase  # type: ignore
 
 from .adjustment_widget import BrushAdjustmentWidget

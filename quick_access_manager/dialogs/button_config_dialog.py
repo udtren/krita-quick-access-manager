@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QColorDialog,
 )
-from PyQt5.QtGui import QColor
+from PyQt6.QtGui import QColor
 
 
 class ShortcutButtonConfigDialog(QDialog):

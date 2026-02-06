@@ -1,15 +1,14 @@
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QGridLayout,
     QPushButton,
     QLabel,
-    QShortcut,
     QFrame,
 )
-from PyQt5.QtCore import Qt, QTimer, QSize, QPoint
-from PyQt5.QtGui import QCursor, QKeySequence, QIcon, QPixmap
+from PyQt6.QtCore import Qt, QTimer, QSize, QPoint
+from PyQt6.QtGui import QCursor, QKeySequence, QIcon, QPixmap, QShortcut
 from krita import Krita  # type: ignore
 from ..utils.action_manager import ActionManager
 from ..utils.logs import write_log
@@ -172,7 +171,7 @@ class ActionsPopup:
             self.popup_shortcut.activated.connect(self.show_popup_at_cursor)
 
             # Enable the shortcut for application-wide use
-            self.popup_shortcut.setContext(Qt.ApplicationShortcut)
+            self.popup_shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
 
         except Exception as e:
             print(f"Error setting up actions popup shortcut: {e}")
@@ -211,7 +210,7 @@ class ActionsPopup:
         """Create the popup window with action shortcuts content"""
         self.popup_window = QFrame()
         self.popup_window.setWindowFlags(
-            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool
         )
 
         # Override mouse events for dragging
@@ -334,21 +333,21 @@ class ActionsPopup:
 
     def popup_mouse_press(self, event):
         """Handle mouse press for dragging"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.drag_position = (
-                event.globalPos() - self.popup_window.frameGeometry().topLeft()
+                event.globalPosition().toPoint() - self.popup_window.frameGeometry().topLeft()
             )
             event.accept()
 
     def popup_mouse_move(self, event):
         """Handle mouse move for dragging"""
-        if event.buttons() == Qt.LeftButton and self.drag_position is not None:
-            self.popup_window.move(event.globalPos() - self.drag_position)
+        if event.buttons() == Qt.MouseButton.LeftButton and self.drag_position is not None:
+            self.popup_window.move(event.globalPosition().toPoint() - self.drag_position)
             event.accept()
 
     def popup_mouse_release(self, event):
         """Handle mouse release"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.drag_position = None
             event.accept()
 
@@ -366,7 +365,7 @@ class ActionsPopup:
         main_layout = QVBoxLayout()
         main_layout.setSpacing(8)
         main_layout.setContentsMargins(1, 1, 1, 1)
-        main_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         # Display all action grids from shortcut_grid_data.json ONLY
         for grid_data in self.shortcut_grid_data["grids"]:
@@ -375,7 +374,7 @@ class ActionsPopup:
             grid_label = QLabel(grid_name)
             grid_label.setFixedWidth(self.popup_loader.get_grid_label_width())
             grid_label.setWordWrap(True)
-            grid_label.setAlignment(Qt.AlignCenter)
+            grid_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             grid_label.setStyleSheet(
                 """
                 color: #000000;
@@ -397,7 +396,7 @@ class ActionsPopup:
                 grid_layout.setContentsMargins(0, 0, 0, 0)
 
                 # Set alignment to left
-                grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+                grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
                 # Get max_shortcut_per_row - use grid-specific if set, otherwise global config
                 grid_specific_columns = grid_data.get("max_shortcut_per_row", "")

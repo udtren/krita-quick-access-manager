@@ -1,5 +1,5 @@
 from krita import Krita
-from PyQt5.QtCore import QObject, QEvent, QPoint
+from PyQt6.QtCore import QObject, QEvent, QPoint
 
 
 class ntAdjustToSubwindowFilter(QObject):
@@ -14,9 +14,9 @@ class ntAdjustToSubwindowFilter(QObject):
         """Event filter: Update the Target's position to match to the current view
         if the (sub-)window has moved, changed in size or been activated."""
         if self.target and (
-            e.type() == QEvent.Move
-            or e.type() == QEvent.Resize
-            or e.type() == QEvent.WindowActivate
+            e.type() == QEvent.Type.Move
+            or e.type() == QEvent.Type.Resize
+            or e.type() == QEvent.Type.WindowActivate
         ):
             self.target.adjustToView()
 

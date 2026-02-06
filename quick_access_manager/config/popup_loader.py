@@ -1,7 +1,7 @@
 import json
 import os
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeySequence
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeySequence
 
 
 class PopupConfigLoader:
@@ -109,19 +109,19 @@ class PopupConfigLoader:
         try:
             # Handle special Qt key names
             key_map = {
-                "Tab": Qt.Key_Tab,
-                "W": Qt.Key_W,
-                "A": Qt.Key_A,
-                "S": Qt.Key_S,
-                "D": Qt.Key_D,
-                "Q": Qt.Key_Q,
-                "E": Qt.Key_E,
-                "R": Qt.Key_R,
-                "F": Qt.Key_F,
-                "Space": Qt.Key_Space,
-                "Shift": Qt.Key_Shift,
+                "Tab": Qt.Key.Key_Tab,
+                "W": Qt.Key.Key_W,
+                "A": Qt.Key.Key_A,
+                "S": Qt.Key.Key_S,
+                "D": Qt.Key.Key_D,
+                "Q": Qt.Key.Key_Q,
+                "E": Qt.Key.Key_E,
+                "R": Qt.Key.Key_R,
+                "F": Qt.Key.Key_F,
+                "Space": Qt.Key.Key_Space,
+                "Shift": Qt.Key.Key_Shift,
                 "Ctrl": Qt.Key_Control,
-                "Alt": Qt.Key_Alt,
+                "Alt": Qt.Key.Key_Alt,
             }
 
             # Try direct mapping first
@@ -133,7 +133,7 @@ class PopupConfigLoader:
         except Exception as e:
             print(f"Error parsing shortcut '{shortcut_str}': {e}")
             # Return default Tab key on error
-            return QKeySequence(Qt.Key_Tab)
+            return QKeySequence(Qt.Key.Key_Tab)
 
     def reload_config(self):
         """Reload configuration from file"""

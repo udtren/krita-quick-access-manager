@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMdiArea, QDockWidget
+from PyQt6.QtWidgets import QMdiArea, QDockWidget
 from .base_tools.adjust_to_subwindow_filter import ntAdjustToSubwindowFilter
 from .base_tools.widget_pad import ntWidgetPad, WidgetPadPosition
 from ...config.quick_adjust_docker_loader import get_tool_options_position

@@ -1,8 +1,8 @@
 import os
 from krita import *
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QPushButton
-from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QPushButton
+from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtGui import QPixmap, QIcon
 from ...gesture.gesture_main import (
     pause_gesture_event_filter,
     resume_gesture_event_filter,
@@ -48,7 +48,7 @@ class ControlButtonWidget(QWidget):
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 5, 0, 5)
         layout.setSpacing(3)
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # ============================================
         # Setup tool options extension initialization
@@ -106,7 +106,7 @@ class ControlButtonWidget(QWidget):
             QPixmap(os.path.join(self.icon_dir, "preserve_alpha_off.png"))
         )
         self.preserve_alpha_label.setToolTip("Preserve Alpha: Off")
-        self.preserve_alpha_label.setCursor(Qt.PointingHandCursor)
+        self.preserve_alpha_label.setCursor(Qt.CursorShape.PointingHandCursor)
         self.preserve_alpha_label.mousePressEvent = self.toggle_preserve_alpha
 
         # Erase Mode status label
@@ -117,7 +117,7 @@ class ControlButtonWidget(QWidget):
             QPixmap(os.path.join(self.icon_dir, "erase_mode_off.png"))
         )
         self.erase_mode_label.setToolTip("Erase Mode: Off")
-        self.erase_mode_label.setCursor(Qt.PointingHandCursor)
+        self.erase_mode_label.setCursor(Qt.CursorShape.PointingHandCursor)
         self.erase_mode_label.mousePressEvent = self.toggle_erase_mode
 
         self.selection_info_label = QLabel()
@@ -135,7 +135,7 @@ class ControlButtonWidget(QWidget):
             QPixmap(os.path.join(self.icon_dir, "gesture_on.png"))
         )
         self.gesture_status_label.setToolTip("Gesture: On")
-        self.gesture_status_label.setCursor(Qt.PointingHandCursor)
+        self.gesture_status_label.setCursor(Qt.CursorShape.PointingHandCursor)
         self.gesture_status_label.mousePressEvent = self.toggle_gesture_status
 
         layout.addWidget(self.tool_options_toggle_btn)
@@ -157,8 +157,8 @@ class ControlButtonWidget(QWidget):
     def _create_separator(self):
         """Create a vertical separator line"""
         separator = QFrame()
-        separator.setFrameShape(QFrame.VLine)
-        separator.setFrameShadow(QFrame.Sunken)
+        separator.setFrameShape(QFrame.Shape.VLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
         separator.setStyleSheet(
             """
             QFrame {

@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QPainter, QPen, QBrush, QColor
+from PyQt6.QtWidgets import QWidget
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QPainter, QPen, QBrush, QColor
 import math
 
 
@@ -28,7 +28,7 @@ class CircularRotationWidget(QWidget):
     def paintEvent(self, event):
         """Custom paint event to draw the circular control"""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         # Get widget center and radius
         center_x = self.width() // 2
@@ -57,18 +57,18 @@ class CircularRotationWidget(QWidget):
 
     def mousePressEvent(self, event):
         """Handle mouse press for dragging"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.dragging = True
-            self.updateValueFromMouse(event.pos())
+            self.updateValueFromMouse(event.position().toPoint())
 
     def mouseMoveEvent(self, event):
         """Handle mouse move for dragging"""
         if self.dragging:
-            self.updateValueFromMouse(event.pos())
+            self.updateValueFromMouse(event.position().toPoint())
 
     def mouseReleaseEvent(self, event):
         """Handle mouse release"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.dragging = False
 
     def updateValueFromMouse(self, pos):

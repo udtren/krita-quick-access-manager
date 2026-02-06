@@ -2,7 +2,7 @@
 Main brush adjustment widget with UI and coordination logic.
 """
 
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -12,8 +12,8 @@ from PyQt5.QtWidgets import (
     QComboBox,
     QDockWidget,
 )
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QIcon, QPixmap
 from krita import Krita  # type: ignore
 import os
 
@@ -110,7 +110,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             size_layout = QHBoxLayout()
             size_layout.setSpacing(6)
 
-            self.size_slider = QSlider(Qt.Horizontal)
+            self.size_slider = QSlider(Qt.Orientation.Horizontal)
             self.size_slider.setMinimum(0)
             self.size_slider.setMaximum(100)  # Use 0-100 range for internal scaling
             self.size_slider.setValue(brush_size_to_slider(10))
@@ -119,7 +119,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             number_size = size_config.get("number_size", get_number_size())
             self.size_value_label = QLabel("10")
             self.size_value_label.setStyleSheet(f"font-size: {number_size};")
-            self.size_value_label.setAlignment(Qt.AlignCenter)
+            self.size_value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.size_value_label.setFixedWidth(35)
 
             size_layout.addWidget(self.size_slider, 1)
@@ -138,7 +138,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         if opacity_config.get("enabled", True):
             brush_opacity_layout = QHBoxLayout()
 
-            self.opacity_slider = QSlider(Qt.Horizontal)
+            self.opacity_slider = QSlider(Qt.Orientation.Horizontal)
             self.opacity_slider.setMinimum(0)
             self.opacity_slider.setMaximum(100)
             self.opacity_slider.setValue(100)
@@ -147,7 +147,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             number_size = opacity_config.get("number_size", get_number_size())
             self.opacity_value_label = QLabel("100%")
             self.opacity_value_label.setStyleSheet(f"font-size: {number_size};")
-            self.opacity_value_label.setAlignment(Qt.AlignCenter)
+            self.opacity_value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.opacity_value_label.setFixedWidth(35)
 
             brush_opacity_layout.addWidget(self.opacity_slider, 1)
@@ -161,7 +161,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         if flow_config.get("enabled", True):
             brush_flow_layout = QHBoxLayout()
 
-            self.flow_slider = QSlider(Qt.Horizontal)
+            self.flow_slider = QSlider(Qt.Orientation.Horizontal)
             self.flow_slider.setMinimum(0)
             self.flow_slider.setMaximum(100)
             self.flow_slider.setValue(100)
@@ -170,7 +170,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             number_size = flow_config.get("number_size", get_number_size())
             self.flow_value_label = QLabel("100%")
             self.flow_value_label.setStyleSheet(f"font-size: {number_size};")
-            self.flow_value_label.setAlignment(Qt.AlignCenter)
+            self.flow_value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.flow_value_label.setFixedWidth(35)
 
             brush_flow_layout.addWidget(self.flow_slider, 1)
@@ -226,7 +226,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         if layer_opacity_config.get("enabled", True):
             layer_opacity_layout = QHBoxLayout()
 
-            self.layer_opacity_slider = QSlider(Qt.Horizontal)
+            self.layer_opacity_slider = QSlider(Qt.Orientation.Horizontal)
             self.layer_opacity_slider.setMinimum(0)
             self.layer_opacity_slider.setMaximum(100)
             self.layer_opacity_slider.setValue(100)
@@ -237,7 +237,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             number_size = layer_opacity_config.get("number_size", get_number_size())
             self.layer_opacity_value_label = QLabel("100%")
             self.layer_opacity_value_label.setStyleSheet(f"font-size: {number_size};")
-            self.layer_opacity_value_label.setAlignment(Qt.AlignCenter)
+            self.layer_opacity_value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.layer_opacity_value_label.setFixedWidth(35)
 
             layer_opacity_layout.addWidget(self.layer_opacity_slider, 1)
@@ -305,7 +305,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         number_size = rotation_config.get("number_size", get_number_size())
         self.rotation_value_label = QLabel("0°")
         self.rotation_value_label.setStyleSheet(f"font-size: {number_size};")
-        self.rotation_value_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+        self.rotation_value_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
         self.rotation_value_label.setFixedWidth(35)
 
         # Note: rotation_widget and rotation_value_label are NOT added to any layout here
@@ -354,7 +354,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             docker_buttons_layout = QHBoxLayout()
             docker_buttons_layout.setSpacing(4)
             docker_buttons_layout.setContentsMargins(0, 5, 0, 0)
-            docker_buttons_layout.setAlignment(Qt.AlignLeft)
+            docker_buttons_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
             create_docker_buttons(
                 docker_buttons_layout,
                 self.docker_buttons_config,

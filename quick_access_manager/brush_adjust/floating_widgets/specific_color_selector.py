@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QMdiArea, QDockWidget
-from PyQt5.QtGui import QPalette, QColor
+from PyQt6.QtWidgets import QMdiArea, QDockWidget
+from PyQt6.QtGui import QPalette, QColor
 from .base_tools.adjust_to_subwindow_filter import ntAdjustToSubwindowFilter
 from .base_tools.widget_pad import ntWidgetPad, WidgetPadPosition
 
@@ -27,7 +27,7 @@ class FloatSpecificColorSelector:
         # Set background color using palette
         self.pad.setAutoFillBackground(True)
         palette = self.pad.palette()
-        palette.setColor(QPalette.Window, QColor("#323232"))
+        palette.setColor(QPalette.ColorRole.Window, QColor("#323232"))
         self.pad.setPalette(palette)
 
         self.pad.borrowDocker(self.colorSelector)

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QToolButton,
     QDockWidget,
@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QSizePolicy,
     QScrollArea,
 )
-from PyQt5.QtCore import Qt, QSize, QPoint, QEvent
+from PyQt6.QtCore import Qt, QSize, QPoint, QEvent
 from .scrollarea_container import ntScrollAreaContainer
 from krita import Krita
 import sys
@@ -117,8 +117,8 @@ class ntWidgetPad(QWidget):
                            If None, defaults to left alignment on canvas edge.
         """
         super(ntWidgetPad, self).__init__(parent)
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.FramelessWindowHint)
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(4, 4, 4, 4)
 
@@ -499,12 +499,12 @@ class DockerEventFilter(QWidget):
     def eventFilter(self, obj, event):
         """Monitor docker events and adjust pad position accordingly"""
         if event.type() in [
-            QEvent.Move,
-            QEvent.Resize,
-            QEvent.Show,
-            QEvent.Hide,
-            QEvent.WindowActivate,
-            QEvent.WindowDeactivate,
+            QEvent.Type.Move,
+            QEvent.Type.Resize,
+            QEvent.Type.Show,
+            QEvent.Type.Hide,
+            QEvent.Type.WindowActivate,
+            QEvent.Type.WindowDeactivate,
         ]:
             # Adjust pad position when docker moves, resizes, or visibility changes
             if hasattr(self.pad, "adjustToView"):

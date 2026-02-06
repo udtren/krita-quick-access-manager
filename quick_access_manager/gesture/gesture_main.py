@@ -5,9 +5,9 @@ Handles key+mouse gesture detection and execution.
 
 import json
 import os
-from PyQt5.QtCore import Qt, QObject, QEvent
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QCursor
+from PyQt6.QtCore import Qt, QObject, QEvent
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QCursor
 from krita import Krita  # type: ignore
 from .gesture_actions import execute_gesture
 from .widgets.gesture_preview import GesturePreviewWidget
@@ -285,13 +285,13 @@ class GestureDetector(QObject):
             event_type = event.type()
 
             # Key press - check if it's a gesture key
-            if event_type == QEvent.KeyPress:
+            if event_type == QEvent.Type.KeyPress:
                 key_text = event.text().upper()
                 if not key_text:
                     # Handle special keys
                     key = event.key()
-                    if key >= Qt.Key_F1 and key <= Qt.Key_F12:
-                        key_text = f"F{key - Qt.Key_F1 + 1}"
+                    if key >= Qt.Key.Key_F1 and key <= Qt.Key.Key_F12:
+                        key_text = f"F{key - Qt.Key.Key_F1 + 1}"
 
                 if key_text and key_text in self.gesture_configs:
                     self.active_key = key_text
@@ -315,13 +315,13 @@ class GestureDetector(QObject):
                             self.preview_widget.show_preview(gesture_map, cursor_pos)
 
             # Key release - deactivate gesture
-            elif event_type == QEvent.KeyRelease:
+            elif event_type == QEvent.Type.KeyRelease:
                 key_text = event.text().upper()
                 if not key_text:
                     # Handle special keys
                     key = event.key()
-                    if key >= Qt.Key_F1 and key <= Qt.Key_F12:
-                        key_text = f"F{key - Qt.Key_F1 + 1}"
+                    if key >= Qt.Key.Key_F1 and key <= Qt.Key.Key_F12:
+                        key_text = f"F{key - Qt.Key.Key_F1 + 1}"
 
                 if key_text and key_text == self.active_key:
                     # Hide preview widget if it exists
@@ -335,9 +335,9 @@ class GestureDetector(QObject):
                         self.cancel_gesture()
 
             # Mouse/Pen move - track movement while gesture is active
-            elif event_type == QEvent.MouseMove:
+            elif event_type == QEvent.Type.MouseMove:
                 if self.gesture_active and self.active_key:
-                    self.update_gesture(event.globalPos())
+                    self.update_gesture(event.globalPosition().toPoint())
 
         except Exception as e:
             write_log(f"Error in eventFilter: {e}")

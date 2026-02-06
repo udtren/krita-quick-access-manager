@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QApplication
-from PyQt5.QtCore import QSize, QEvent
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QColor
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QApplication
+from PyQt6.QtCore import QSize, QEvent
+from PyQt6.QtGui import QIcon, QPixmap, QPainter, QBrush, QColor
 from krita import Krita  # type: ignore
 
 BRUSH_HISTORY_BACKGROUND_COLOR = "#b0b0b0"
@@ -85,10 +85,10 @@ class BrushHistoryWidget(QWidget):
     def eventFilter(self, obj, event):
         """Filter events to detect mouse button press"""
         # Check if this is a pure mouse button press event (no modifiers like Ctrl)
-        if event.type() == QEvent.MouseButtonPress:
+        if event.type() == QEvent.Type.MouseButtonPress:
             # Only check if there are no keyboard modifiers pressed
-            from PyQt5.QtCore import Qt
-            if event.modifiers() == Qt.NoModifier:
+            from PyQt6.QtCore import Qt
+            if event.modifiers() == Qt.KeyboardModifier.NoModifier:
                 # Pure mouse button press, check the current brush
                 self.check_brush_change()
         return super().eventFilter(obj, event)
@@ -116,7 +116,7 @@ class BrushHistoryWidget(QWidget):
             pixmap.fill(QColor(200, 200, 200))  # Light gray background
 
             painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
             # Draw a simple brush representation
             brush_color = QColor(80, 80, 80)

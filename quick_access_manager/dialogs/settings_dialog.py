@@ -1,6 +1,6 @@
 import json
 import os
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
     QGroupBox,
     QComboBox,
 )
-from PyQt5.QtCore import Qt
+from PyQt6.QtCore import Qt
 from ..config.popup_loader import PopupConfigLoader
 
 
@@ -141,10 +141,10 @@ class CommonConfigDialog(QDialog):
             for key, value in group.items():
                 hlayout = QHBoxLayout()
                 label = QLabel(key)
-                label.setAlignment(Qt.AlignLeft)
+                label.setAlignment(Qt.AlignmentFlag.AlignLeft)
                 edit = QLineEdit(str(value))
                 edit.setFixedWidth(80)
-                edit.setAlignment(Qt.AlignRight)
+                edit.setAlignment(Qt.AlignmentFlag.AlignRight)
                 hlayout.addWidget(label)
                 hlayout.addStretch()
                 hlayout.addWidget(edit)
@@ -185,7 +185,7 @@ class CommonConfigDialog(QDialog):
             for key, value in slider.items():
                 hlayout = QHBoxLayout()
                 label = QLabel(f"    {key}")
-                label.setAlignment(Qt.AlignLeft)
+                label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
                 if isinstance(value, bool):
                     edit = QCheckBox()
@@ -197,7 +197,7 @@ class CommonConfigDialog(QDialog):
                 else:
                     edit = QLineEdit(str(value))
                     edit.setFixedWidth(80)
-                    edit.setAlignment(Qt.AlignRight)
+                    edit.setAlignment(Qt.AlignmentFlag.AlignRight)
                     hlayout.addWidget(label)
                     hlayout.addStretch()
                     hlayout.addWidget(edit)
@@ -214,7 +214,7 @@ class CommonConfigDialog(QDialog):
         for key, value in opacity_slider.items():
             hlayout = QHBoxLayout()
             label = QLabel(f"    {key}")
-            label.setAlignment(Qt.AlignLeft)
+            label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
             if isinstance(value, bool):
                 edit = QCheckBox()
@@ -228,7 +228,7 @@ class CommonConfigDialog(QDialog):
             else:
                 edit = QLineEdit(str(value))
                 edit.setFixedWidth(80)
-                edit.setAlignment(Qt.AlignRight)
+                edit.setAlignment(Qt.AlignmentFlag.AlignRight)
                 hlayout.addWidget(label)
                 hlayout.addStretch()
                 hlayout.addWidget(edit)
@@ -246,7 +246,7 @@ class CommonConfigDialog(QDialog):
             for key, value in section.items():
                 hlayout = QHBoxLayout()
                 label = QLabel(f"  {key}")
-                label.setAlignment(Qt.AlignLeft)
+                label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
                 if isinstance(value, bool):
                     edit = QCheckBox()
@@ -258,7 +258,7 @@ class CommonConfigDialog(QDialog):
                 else:
                     edit = QLineEdit(str(value))
                     edit.setFixedWidth(80)
-                    edit.setAlignment(Qt.AlignRight)
+                    edit.setAlignment(Qt.AlignmentFlag.AlignRight)
                     hlayout.addWidget(label)
                     hlayout.addStretch()
                     hlayout.addWidget(edit)
@@ -273,7 +273,7 @@ class CommonConfigDialog(QDialog):
         for key, value in status_bar.items():
             hlayout = QHBoxLayout()
             label = QLabel(f"  {key}")
-            label.setAlignment(Qt.AlignLeft)
+            label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
             if isinstance(value, bool):
                 edit = QCheckBox()
@@ -285,7 +285,7 @@ class CommonConfigDialog(QDialog):
             else:
                 edit = QLineEdit(str(value))
                 edit.setFixedWidth(80)
-                edit.setAlignment(Qt.AlignRight)
+                edit.setAlignment(Qt.AlignmentFlag.AlignRight)
                 hlayout.addWidget(label)
                 hlayout.addStretch()
                 hlayout.addWidget(edit)
@@ -300,7 +300,7 @@ class CommonConfigDialog(QDialog):
         for key, value in docker_toggle.items():
             hlayout = QHBoxLayout()
             label = QLabel(f"  {key}")
-            label.setAlignment(Qt.AlignLeft)
+            label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
             if isinstance(value, bool):
                 edit = QCheckBox()
@@ -312,7 +312,7 @@ class CommonConfigDialog(QDialog):
             else:
                 edit = QLineEdit(str(value))
                 edit.setFixedWidth(80)
-                edit.setAlignment(Qt.AlignRight)
+                edit.setAlignment(Qt.AlignmentFlag.AlignRight)
                 hlayout.addWidget(label)
                 hlayout.addStretch()
                 hlayout.addWidget(edit)
@@ -351,7 +351,7 @@ class CommonConfigDialog(QDialog):
             for key, value in widget_config.items():
                 hlayout = QHBoxLayout()
                 label = QLabel(f"    {key}")
-                label.setAlignment(Qt.AlignLeft)
+                label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
                 if isinstance(value, bool):
                     edit = QCheckBox()
@@ -373,7 +373,7 @@ class CommonConfigDialog(QDialog):
                 else:
                     edit = QLineEdit(str(value))
                     edit.setFixedWidth(80)
-                    edit.setAlignment(Qt.AlignRight)
+                    edit.setAlignment(Qt.AlignmentFlag.AlignRight)
                     hlayout.addWidget(label)
                     hlayout.addStretch()
                     hlayout.addWidget(edit)
@@ -386,10 +386,10 @@ class CommonConfigDialog(QDialog):
         layout.addWidget(QLabel("[General]"))
         hlayout = QHBoxLayout()
         label = QLabel("  font_size")
-        label.setAlignment(Qt.AlignLeft)
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         edit = QLineEdit(str(font_size))
         edit.setFixedWidth(80)
-        edit.setAlignment(Qt.AlignRight)
+        edit.setAlignment(Qt.AlignmentFlag.AlignRight)
         hlayout.addWidget(label)
         hlayout.addStretch()
         hlayout.addWidget(edit)
@@ -400,7 +400,7 @@ class CommonConfigDialog(QDialog):
         blender_modes = self.quick_adjust_config.get("blender_mode_list", [])
         vlayout = QVBoxLayout()
         label = QLabel("  blender_mode_list (one per line)")
-        label.setAlignment(Qt.AlignLeft)
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         # Convert list to newline-separated string for editing
         blender_modes_str = "\n".join(blender_modes)
         edit = QTextEdit()
@@ -576,7 +576,7 @@ class CommonConfigDialog(QDialog):
         # Actions Popup Shortcut
         hlayout = QHBoxLayout()
         label = QLabel("Actions Popup Shortcut")
-        label.setAlignment(Qt.AlignLeft)
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         edit = QKeySequenceEdit()
         edit.setKeySequence(self.popup_loader.get_actions_popup_shortcut_string())
         edit.setMaximumWidth(150)
@@ -589,7 +589,7 @@ class CommonConfigDialog(QDialog):
         # Brush Sets Popup Shortcut
         hlayout = QHBoxLayout()
         label = QLabel("Brush Sets Popup Shortcut")
-        label.setAlignment(Qt.AlignLeft)
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         edit = QKeySequenceEdit()
         edit.setKeySequence(self.popup_loader.get_brush_sets_popup_shortcut_string())
         edit.setMaximumWidth(150)
@@ -605,10 +605,10 @@ class CommonConfigDialog(QDialog):
         # Brush Icon Size
         hlayout = QHBoxLayout()
         label = QLabel("Brush Icon Size")
-        label.setAlignment(Qt.AlignLeft)
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         edit = QLineEdit(str(self.popup_loader.get_brush_icon_size()))
         edit.setFixedWidth(80)
-        edit.setAlignment(Qt.AlignRight)
+        edit.setAlignment(Qt.AlignmentFlag.AlignRight)
         hlayout.addWidget(label)
         hlayout.addStretch()
         hlayout.addWidget(edit)
@@ -618,10 +618,10 @@ class CommonConfigDialog(QDialog):
         # Grid Label Width
         hlayout = QHBoxLayout()
         label = QLabel("Grid Label Width")
-        label.setAlignment(Qt.AlignLeft)
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         edit = QLineEdit(str(self.popup_loader.get_grid_label_width()))
         edit.setFixedWidth(80)
-        edit.setAlignment(Qt.AlignRight)
+        edit.setAlignment(Qt.AlignmentFlag.AlignRight)
         hlayout.addWidget(label)
         hlayout.addStretch()
         hlayout.addWidget(edit)

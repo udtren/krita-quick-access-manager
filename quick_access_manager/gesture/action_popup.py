@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QPushButton,
@@ -30,7 +30,8 @@ class GestureActionPopup(QDialog):
         layout = QVBoxLayout()
 
         # Apply dark mode styling
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QDialog {
                 background-color: #2b2b2b;
                 color: #e0e0e0;
@@ -73,7 +74,8 @@ class GestureActionPopup(QDialog):
                 background-color: #2a2a2a;
                 border: 1px solid #444;
             }
-        """)
+        """
+        )
 
         # Filter input
         self.filter_edit = QLineEdit()
@@ -88,7 +90,8 @@ class GestureActionPopup(QDialog):
         layout.addWidget(self.table)
 
         # Button layout
-        from PyQt5.QtWidgets import QHBoxLayout
+        from PyQt6.QtWidgets import QHBoxLayout
+
         btn_layout = QHBoxLayout()
         self.ok_btn = QPushButton("OK")
         self.cancel_btn = QPushButton("Cancel")

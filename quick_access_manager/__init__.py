@@ -1,5 +1,5 @@
 from krita import *  # type: ignore
-from PyQt5.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox
 from .quick_access_manager import QuickAccessDockerFactory
 from .brush_adjust import BrushAdjustDockerFactory
 from .shortcut_manager import ShortcutAccessDockerFactory

@@ -1,6 +1,6 @@
 import json
 import os
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
@@ -11,8 +11,8 @@ from PyQt5.QtWidgets import (
     QWidget,
     QTextEdit,
 )
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon, QPixmap, QKeyEvent
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QIcon, QPixmap, QKeyEvent
 from krita import Krita  # type: ignore
 from .arrow_config_popup import ArrowConfigPopup
 from .gesture_main import (
@@ -35,7 +35,7 @@ class GestureConfigDialog(QDialog):
 
         # Make the dialog modeless and stay on top
         self.setModal(False)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
 
         self.setWindowTitle("Gesture Configuration")
         self.resize(600, 500)
@@ -212,7 +212,7 @@ class GestureConfigDialog(QDialog):
         """Create the 3x3 grid of gesture arrows and labels"""
         grid_layout = QGridLayout()
         grid_layout.setSpacing(10)
-        grid_layout.setAlignment(Qt.AlignCenter)
+        grid_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Direction mappings: (row, col) -> direction_key
         direction_map = {
@@ -245,7 +245,7 @@ class GestureConfigDialog(QDialog):
                 gesture_config = config_data.get("center", {})
                 label_text = self.format_gesture_label(gesture_config)
                 center_label = QLabel(label_text)
-                center_label.setAlignment(Qt.AlignCenter)
+                center_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 center_label.setWordWrap(True)
                 center_label.setFixedSize(100, 60)
                 center_label.setProperty("direction", "center")
@@ -260,7 +260,7 @@ class GestureConfigDialog(QDialog):
                             preset_image = preset.image()
                             if preset_image:
                                 pixmap = QPixmap.fromImage(preset_image).scaled(
-                                    64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                    64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
                                 )
                                 center_label.setPixmap(pixmap)
                                 center_label.setText(
@@ -274,17 +274,17 @@ class GestureConfigDialog(QDialog):
                 self.label_widgets[label_key] = center_label
 
                 # Create vertical layout for center (button + label)
-                from PyQt5.QtWidgets import QVBoxLayout
+                from PyQt6.QtWidgets import QVBoxLayout
 
                 center_widget = QWidget()
                 center_layout = QVBoxLayout()
                 center_layout.setSpacing(5)
-                center_layout.addWidget(key_button, alignment=Qt.AlignCenter)
-                center_layout.addWidget(center_label, alignment=Qt.AlignCenter)
+                center_layout.addWidget(key_button, alignment=Qt.AlignmentFlag.AlignCenter)
+                center_layout.addWidget(center_label, alignment=Qt.AlignmentFlag.AlignCenter)
                 center_widget.setLayout(center_layout)
 
                 grid_layout.addWidget(
-                    center_widget, 2, 2, Qt.AlignCenter
+                    center_widget, 2, 2, Qt.AlignmentFlag.AlignCenter
                 )  # Center of 5x5 grid
             else:
                 # Create arrow button with image icon
@@ -309,7 +309,7 @@ class GestureConfigDialog(QDialog):
                 gesture_config = config_data.get(direction, {})
                 label_text = self.format_gesture_label(gesture_config)
                 config_label = QLabel(label_text)
-                config_label.setAlignment(Qt.AlignCenter)
+                config_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 config_label.setWordWrap(True)
                 config_label.setMinimumSize(100, 100)
                 config_label.setMaximumHeight(100)
@@ -325,7 +325,7 @@ class GestureConfigDialog(QDialog):
                             preset_image = preset.image()
                             if preset_image:
                                 pixmap = QPixmap.fromImage(preset_image).scaled(
-                                    64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                    64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
                                 )
                                 config_label.setPixmap(pixmap)
                                 config_label.setText(
@@ -343,18 +343,18 @@ class GestureConfigDialog(QDialog):
                 arrow_col = col + 1  # Arrow columns: 1, 2, 3
 
                 if row == 0:  # Top row
-                    grid_layout.addWidget(config_label, 0, label_col, Qt.AlignCenter)
-                    grid_layout.addWidget(arrow_btn, 1, arrow_col, Qt.AlignCenter)
+                    grid_layout.addWidget(config_label, 0, label_col, Qt.AlignmentFlag.AlignCenter)
+                    grid_layout.addWidget(arrow_btn, 1, arrow_col, Qt.AlignmentFlag.AlignCenter)
                 elif row == 1:  # Middle row
                     if col == 0:  # Left
-                        grid_layout.addWidget(config_label, 2, 0, Qt.AlignCenter)
-                        grid_layout.addWidget(arrow_btn, 2, 1, Qt.AlignCenter)
+                        grid_layout.addWidget(config_label, 2, 0, Qt.AlignmentFlag.AlignCenter)
+                        grid_layout.addWidget(arrow_btn, 2, 1, Qt.AlignmentFlag.AlignCenter)
                     else:  # Right (col == 2)
-                        grid_layout.addWidget(arrow_btn, 2, 3, Qt.AlignCenter)
-                        grid_layout.addWidget(config_label, 2, 4, Qt.AlignCenter)
+                        grid_layout.addWidget(arrow_btn, 2, 3, Qt.AlignmentFlag.AlignCenter)
+                        grid_layout.addWidget(config_label, 2, 4, Qt.AlignmentFlag.AlignCenter)
                 else:  # Bottom row (row == 2)
-                    grid_layout.addWidget(arrow_btn, 3, arrow_col, Qt.AlignCenter)
-                    grid_layout.addWidget(config_label, 4, label_col, Qt.AlignCenter)
+                    grid_layout.addWidget(arrow_btn, 3, arrow_col, Qt.AlignmentFlag.AlignCenter)
+                    grid_layout.addWidget(config_label, 4, label_col, Qt.AlignmentFlag.AlignCenter)
 
         return grid_layout
 
@@ -446,7 +446,7 @@ class GestureConfigDialog(QDialog):
     # ========================================================================
     def open_settings(self):
         """Open settings dialog"""
-        from PyQt5.QtWidgets import QCheckBox, QSpinBox, QFormLayout
+        from PyQt6.QtWidgets import QCheckBox, QSpinBox, QFormLayout
 
         settings_dialog = QDialog(self)
         settings_dialog.setWindowTitle("Gesture Settings")
@@ -556,7 +556,7 @@ Example:
         ok_btn.clicked.connect(save_settings)
         cancel_btn.clicked.connect(settings_dialog.reject)
 
-        settings_dialog.exec_()
+        settings_dialog.exec()
 
     # ========================================================================
 
@@ -654,7 +654,7 @@ Example:
 
         # Open arrow config popup
         dialog = ArrowConfigPopup(direction, config_name, self, self)
-        if dialog.exec_():
+        if dialog.exec():
             gesture_config = dialog.get_gesture_config()
             # Update the config data (including None to clear)
             if gesture_config is None:
@@ -688,7 +688,7 @@ Example:
                         preset_image = preset.image()
                         if preset_image:
                             pixmap = QPixmap.fromImage(preset_image).scaled(
-                                64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                                64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
                             )
                             label.setPixmap(pixmap)
                             label.setText("")  # Clear text when showing image
@@ -699,7 +699,7 @@ Example:
         """Open dialog to configure the gesture trigger key and center action"""
         # First, configure the key
         dialog = KeyCaptureDialog(config_name, self)
-        if dialog.exec_():
+        if dialog.exec():
             key = dialog.get_captured_key()
             if key:
                 # Save the key to config
@@ -707,7 +707,7 @@ Example:
                 # Update the button text if button reference is provided
                 if button:
                     button.setText(f"Key: {key}")
-            elif key is None and dialog.result() == QDialog.Accepted:
+            elif key is None and dialog.result() == QDialog.DialogCode.Accepted:
                 # User cleared the key
                 self.configs[config_name]["data"]["gesture_key"] = ""
                 if button:
@@ -715,7 +715,7 @@ Example:
 
             # Then, configure the center action (key press action)
             action_dialog = ArrowConfigPopup("center", config_name, self, self)
-            if action_dialog.exec_():
+            if action_dialog.exec():
                 gesture_config = action_dialog.get_gesture_config()
                 if gesture_config is None:
                     # Remove the direction from config to clear it
@@ -797,16 +797,16 @@ class KeyCaptureDialog(QDialog):
 
         # Instructions
         title_label = QLabel(f"Configure gesture key for: {self.config_name}")
-        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title_label)
 
         instruction_label = QLabel("Press any key (A-Z, 0-9, F1-F12, etc.)")
-        instruction_label.setAlignment(Qt.AlignCenter)
+        instruction_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(instruction_label)
 
         # Display captured key
         self.key_label = QLabel("No key captured")
-        self.key_label.setAlignment(Qt.AlignCenter)
+        self.key_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.key_label.setStyleSheet(
             """
             QLabel {
@@ -841,7 +841,7 @@ class KeyCaptureDialog(QDialog):
     def keyPressEvent(self, event: QKeyEvent):
         """Capture key press event"""
         # Ignore modifier-only keys
-        if event.key() in [Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_Meta]:
+        if event.key() in [Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Meta]:
             return
 
         # Get the key text
@@ -849,16 +849,16 @@ class KeyCaptureDialog(QDialog):
 
         # Handle special keys
         key = event.key()
-        if key == Qt.Key_Escape:
+        if key == Qt.Key.Key_Escape:
             self.reject()
             return
-        elif key >= Qt.Key_F1 and key <= Qt.Key_F12:
-            key_text = f"F{key - Qt.Key_F1 + 1}"
-        elif key == Qt.Key_Space:
+        elif key >= Qt.Key.Key_F1 and key <= Qt.Key.Key_F12:
+            key_text = f"F{key - Qt.Key.Key_F1 + 1}"
+        elif key == Qt.Key.Key_Space:
             key_text = "SPACE"
-        elif key == Qt.Key_Return or key == Qt.Key_Enter:
+        elif key == Qt.Key.Key_Return or key == Qt.Key.Key_Enter:
             key_text = "ENTER"
-        elif key == Qt.Key_QuoteLeft:
+        elif key == Qt.Key.Key_QuoteLeft:
             key_text = "`"
         elif not key_text or not key_text.isalnum():
             # Only accept alphanumeric keys and F-keys
