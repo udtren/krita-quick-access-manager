@@ -66,13 +66,17 @@ class SingleShortcutGridWidget(QWidget):
         self.grid_name_label.setStyleSheet(
             "font-weight: bold; font-size: 13px; background: none;"
         )
-        header_layout.addWidget(self.grid_name_label, alignment=Qt.AlignmentFlag.AlignLeft)
+        header_layout.addWidget(
+            self.grid_name_label, alignment=Qt.AlignmentFlag.AlignLeft
+        )
         header_layout.addStretch()
         main_layout.addLayout(header_layout)
 
         # Grid area for shortcut buttons
         self.shortcut_grid_layout = QGridLayout()
-        self.shortcut_grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)  # Align grid to top-left
+        self.shortcut_grid_layout.setAlignment(
+            Qt.AlignmentFlag.AlignTop
+        )  # Align grid to top-left
         self.shortcut_grid_layout.setSpacing(get_spacing_between_buttons())
         self.shortcut_grid_layout.setContentsMargins(1, 1, 1, 1)
 
@@ -90,11 +94,17 @@ class SingleShortcutGridWidget(QWidget):
             modifiers = QApplication.keyboardModifiers()
 
             # Shift + Left click: Move grid up
-            if event.button() == Qt.MouseButton.LeftButton and modifiers == Qt.KeyboardModifier.ShiftModifier:
+            if (
+                event.button() == Qt.MouseButton.LeftButton
+                and modifiers == Qt.KeyboardModifier.ShiftModifier
+            ):
                 self.parent_section.move_grid(self, -1)
 
             # Shift + Right click: Move grid down
-            elif event.button() == Qt.MouseButton.RightButton and modifiers == Qt.KeyboardModifier.ShiftModifier:
+            elif (
+                event.button() == Qt.MouseButton.RightButton
+                and modifiers == Qt.KeyboardModifier.ShiftModifier
+            ):
                 self.parent_section.move_grid(self, 1)
 
             # Normal left click: Activate grid
@@ -102,13 +112,25 @@ class SingleShortcutGridWidget(QWidget):
                 self.activate_grid()
 
             # Alt + Right click: Edit grid parameters
-            elif event.button() == Qt.MouseButton.RightButton and modifiers == Qt.KeyboardModifier.AltModifier:
+            elif (
+                event.button() == Qt.MouseButton.RightButton
+                and modifiers == Qt.KeyboardModifier.AltModifier
+            ):
                 self.edit_grid_parameter()
 
             # Ctrl+Alt+Shift+Right click: Delete grid
             elif event.button() == Qt.MouseButton.RightButton and (
-                modifiers & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.ShiftModifier)
-            ) == (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.ShiftModifier):
+                modifiers
+                & (
+                    Qt.KeyboardModifier.ControlModifier
+                    | Qt.KeyboardModifier.AltModifier
+                    | Qt.KeyboardModifier.ShiftModifier
+                )
+            ) == (
+                Qt.KeyboardModifier.ControlModifier
+                | Qt.KeyboardModifier.AltModifier
+                | Qt.KeyboardModifier.ShiftModifier
+            ):
                 self.remove_grid()
 
         self.grid_name_label.mousePressEvent = grid_name_label_mousePressEvent
@@ -146,7 +168,9 @@ class SingleShortcutGridWidget(QWidget):
 
         # Update spacing and alignment
         self.shortcut_grid_layout.setSpacing(get_spacing_between_buttons())
-        self.shortcut_grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)  # Ensure alignment
+        self.shortcut_grid_layout.setAlignment(
+            Qt.AlignmentFlag.AlignTop
+        )  # Ensure alignment
 
         # Get layout parameters
         max_columns = self.get_effective_max_shortcut_per_row()
@@ -326,7 +350,9 @@ class SingleShortcutGridWidget(QWidget):
         layout.addRow("Icon Size:", icon_size_input)
 
         # Add OK/Cancel buttons
-        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         button_box.accepted.connect(dialog.accept)
         button_box.rejected.connect(dialog.reject)
         layout.addRow(button_box)
@@ -390,7 +416,7 @@ class SingleShortcutGridWidget(QWidget):
         source_action, source_grid, source_index = self.find_source_action(action_id)
 
         if source_action and source_grid:
-            drop_pos = event.pos()
+            drop_pos = event.position().toPoint()
             target_index = self.calculate_drop_position(drop_pos)
 
             # Move configuration along with action
