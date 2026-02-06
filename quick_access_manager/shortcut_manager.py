@@ -50,7 +50,9 @@ class ShortcutAccessDockerWidget(QDockWidget):
 
         self.main_layout = QVBoxLayout()
         self.main_layout.setSpacing(get_spacing_between_grids())
-        self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)  # Align main layout to top
+        self.main_layout.setAlignment(
+            Qt.AlignmentFlag.AlignTop
+        )  # Align main layout to top
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         # Create button row
@@ -304,7 +306,9 @@ class ShortcutAccessDockerWidget(QDockWidget):
 
 class ShortcutAccessDockerFactory(DockWidgetFactoryBase):
     def __init__(self):
-        super().__init__("shortcut_access_docker", DockWidgetFactory.DockRight)
+        super().__init__(
+            "shortcut_access_docker", DockWidgetFactory.DockPosition.DockRight
+        )
 
     def createDockWidget(self):
         return ShortcutAccessDockerWidget()

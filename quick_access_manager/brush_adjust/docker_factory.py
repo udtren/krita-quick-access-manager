@@ -12,7 +12,9 @@ class BrushAdjustDockerFactory(DockWidgetFactoryBase):
     """Factory for creating the Brush Adjustments Docker"""
 
     def __init__(self):
-        super().__init__("brush_adjust_docker", DockWidgetFactory.DockRight)
+        super().__init__(
+            "brush_adjust_docker", DockWidgetFactory.DockPosition.DockRight
+        )
 
     def createDockWidget(self):
         """Create and return the brush adjustments dock widget"""

@@ -144,7 +144,9 @@ class QuickAccessDockerWidget(QDockWidget):
 
         self.main_widget = QWidget()
         self.main_grid_layout = QVBoxLayout()
-        self.main_grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)  # Align grid layout to top
+        self.main_grid_layout.setAlignment(
+            Qt.AlignmentFlag.AlignTop
+        )  # Align grid layout to top
         self.main_grid_layout.setSpacing(
             get_spacing_between_grids()
         )  # Minimize spacing between grids
@@ -225,7 +227,9 @@ class QuickAccessDockerWidget(QDockWidget):
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
         container_layout = QVBoxLayout()
-        container_layout.setAlignment(Qt.AlignmentFlag.AlignTop)  # Align container to top
+        container_layout.setAlignment(
+            Qt.AlignmentFlag.AlignTop
+        )  # Align container to top
         container_layout.setSpacing(1)
         container_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -244,21 +248,39 @@ class QuickAccessDockerWidget(QDockWidget):
         def name_label_mousePressEvent(event):
             mods = QApplication.keyboardModifiers()
             # Shift + 左クリックで↑
-            if event.button() == Qt.MouseButton.LeftButton and mods == Qt.KeyboardModifier.ShiftModifier:
+            if (
+                event.button() == Qt.MouseButton.LeftButton
+                and mods == Qt.KeyboardModifier.ShiftModifier
+            ):
                 self.move_grid(grid_info, -1)
             # Shift + 右クリックで↓
-            elif event.button() == Qt.MouseButton.RightButton and mods == Qt.KeyboardModifier.ShiftModifier:
+            elif (
+                event.button() == Qt.MouseButton.RightButton
+                and mods == Qt.KeyboardModifier.ShiftModifier
+            ):
                 self.move_grid(grid_info, 1)
             # 通常左クリックでActive
             elif event.button() == Qt.MouseButton.LeftButton:
                 self.set_active_grid(grid_info)
             # Alt + 右クリックでRename
-            elif event.button() == Qt.MouseButton.RightButton and mods == Qt.KeyboardModifier.AltModifier:
+            elif (
+                event.button() == Qt.MouseButton.RightButton
+                and mods == Qt.KeyboardModifier.AltModifier
+            ):
                 self.rename_grid(grid_info)
             # Ctrl+Alt+Shift+右クリックでGrid削除
             elif event.button() == Qt.MouseButton.RightButton and (
-                mods & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.ShiftModifier)
-            ) == (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.ShiftModifier):
+                mods
+                & (
+                    Qt.KeyboardModifier.ControlModifier
+                    | Qt.KeyboardModifier.AltModifier
+                    | Qt.KeyboardModifier.ShiftModifier
+                )
+            ) == (
+                Qt.KeyboardModifier.ControlModifier
+                | Qt.KeyboardModifier.AltModifier
+                | Qt.KeyboardModifier.ShiftModifier
+            ):
                 self.remove_grid(grid_info)
 
         name_label.mousePressEvent = name_label_mousePressEvent
@@ -454,7 +476,9 @@ class QuickAccessDockerWidget(QDockWidget):
 
 class QuickAccessDockerFactory(DockWidgetFactoryBase):
     def __init__(self):
-        super().__init__("quick_access_manager_docker", DockWidgetFactory.DockRight)
+        super().__init__(
+            "quick_access_manager_docker", DockWidgetFactory.DockPosition.DockRight
+        )
 
     def createDockWidget(self):
         return QuickAccessDockerWidget()
