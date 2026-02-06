@@ -174,7 +174,7 @@ class ArrowConfigPopup(QDialog):
         """Configure action gesture"""
         # Open action selection dialog
         action_dialog = GestureActionPopup(self)
-        if action_dialog.exec_():
+        if action_dialog.exec():
             action_id = action_dialog.get_action_id()
             if action_id:
                 self.gesture_config = {
