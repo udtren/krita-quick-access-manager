@@ -31,7 +31,7 @@ class ClickableGridWidget(QWidget):
             return
 
         # Only start grid drag if clicking on empty space (not on brush buttons)
-        widget_under_mouse = self.childAt(event.pos())
+        widget_under_mouse = self.childAt(event.position().toPoint())
         if widget_under_mouse and hasattr(widget_under_mouse, "preset"):
             return
 
@@ -68,7 +68,7 @@ class ClickableGridWidget(QWidget):
         source_preset, source_grid, source_index = self.find_source_preset(preset_name)
 
         if source_preset and source_grid:
-            drop_pos = event.pos()
+            drop_pos = event.position().toPoint()
             target_index = self.calculate_drop_position(drop_pos)
 
             # Remove from old position
