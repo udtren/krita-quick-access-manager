@@ -349,6 +349,9 @@ class CommonConfigDialog(QDialog):
             layout.addWidget(QLabel(f"  {widget_name}:"))
 
             for key, value in widget_config.items():
+                # start_visible is auto-persisted by the toggle button, skip it
+                if key == "start_visible":
+                    continue
                 hlayout = QHBoxLayout()
                 label = QLabel(f"    {key}")
                 label.setAlignment(Qt.AlignLeft)
@@ -421,8 +424,8 @@ class CommonConfigDialog(QDialog):
     def load_docker_buttons_config(self, layout):
         """Load and create UI for docker buttons configuration"""
         # Get the docker_buttons.json path
-        config_dir = os.path.dirname(self.config_path)
-        docker_buttons_path = os.path.join(config_dir, "docker_buttons.json")
+        from ..utils.config_utils import get_config_dir
+        docker_buttons_path = os.path.join(get_config_dir(), "docker_buttons.json")
 
         if not os.path.exists(docker_buttons_path):
             # Create default config

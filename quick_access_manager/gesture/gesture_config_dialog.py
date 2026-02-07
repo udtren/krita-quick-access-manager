@@ -25,6 +25,7 @@ from .gesture_main import (
     refresh_gesture_setting,
 )
 from ..utils.logs import write_log
+from ..utils.config_utils import get_plugin_dir, get_gesture_data_dir
 
 
 class GestureConfigDialog(QDialog):
@@ -40,14 +41,13 @@ class GestureConfigDialog(QDialog):
         self.setWindowTitle("Gesture Configuration")
         self.resize(600, 500)
 
-        self.config_dir = os.path.join(os.path.dirname(__file__), "config")
+        gesture_data_dir = get_gesture_data_dir()
+        self.config_dir = os.path.join(gesture_data_dir, "config")
+        os.makedirs(self.config_dir, exist_ok=True)
         self.image_dir = os.path.join(os.path.dirname(__file__), "image")
         self.configs = {}
         self.label_widgets = {}  # Store label widgets for updating
-        # gesture.json is now in the gesture folder, not in config subfolder
-        self.gesture_settings_path = os.path.join(
-            os.path.dirname(__file__), "gesture.json"
-        )
+        self.gesture_settings_path = os.path.join(gesture_data_dir, "gesture.json")
 
         # Get brush presets dictionary
         try:
@@ -125,7 +125,7 @@ class GestureConfigDialog(QDialog):
         top_layout.addStretch()
 
         # Get icon directory path (reused for both buttons)
-        icon_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", "system_icon")
+        icon_dir = os.path.join(get_plugin_dir(), "config", "system_icon")
 
         # Plus button to add new config
         self.plus_btn = QPushButton()

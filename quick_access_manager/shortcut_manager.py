@@ -13,6 +13,7 @@ from .utils.data_manager import load_shortcut_grids_data, save_shortcut_grids_da
 from .widgets.shortcut_popup import ShortcutPopup
 from .widgets.shortcut_grid_widget import SingleShortcutGridWidget
 from .utils.shortcut_utils import get_spacing_between_grids
+from .utils.config_utils import get_config_dir, get_plugin_dir
 from .utils.action_manager import ActionManager
 from .popup import ActionsPopup
 
@@ -38,9 +39,7 @@ class ShortcutAccessDockerWidget(QDockWidget):
 
     def setup_paths(self):
         """Setup configuration file paths"""
-        self.config_dir = os.path.join(os.path.dirname(__file__), "config")
-        if not os.path.exists(self.config_dir):
-            os.makedirs(self.config_dir)
+        self.config_dir = get_config_dir()
         self.data_file = os.path.join(self.config_dir, "shortcut_grid_data.json")
 
     def init_ui(self):
@@ -83,7 +82,7 @@ class ShortcutAccessDockerWidget(QDockWidget):
         """
 
         # Get icon directory path
-        icon_dir = os.path.join(self.config_dir, "system_icon")
+        icon_dir = os.path.join(get_plugin_dir(), "config", "system_icon")
 
         # Actions button
         self.show_all_btn = QPushButton()

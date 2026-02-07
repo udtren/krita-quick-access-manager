@@ -2,9 +2,12 @@ import os
 import json
 import datetime
 
-current_dir = os.path.dirname(__file__)  # utils directory
-config_dir = os.path.join(current_dir, "..", "config")
-config_path = os.path.join(current_dir, "..", "config", "common.json")
+# Config dir is at krita/quick_access_manager/config (outside pykrita)
+# __file__ => krita/pykrita/quick_access_manager/utils/data_manager.py
+_utils_dir = os.path.dirname(os.path.abspath(__file__))
+_krita_data_dir = os.path.dirname(os.path.dirname(os.path.dirname(_utils_dir)))
+config_dir = os.path.join(_krita_data_dir, "quick_access_manager", "config")
+config_path = os.path.join(config_dir, "common.json")
 
 
 def load_common_config():

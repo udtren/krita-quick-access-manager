@@ -44,8 +44,6 @@ class ClickableGridWidget(QWidget):
         mime_data.setText(f"grid:{self.grid_info['name']}")
         drag.setMimeData(mime_data)
 
-        drop_action = drag.exec_(Qt.MoveAction)
-
     def dragEnterEvent(self, event):
         """Handle drag enter events"""
         if event.mimeData().hasText():
