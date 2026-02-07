@@ -31,6 +31,7 @@ If you find this tool helpful, you can support its development:
   - [External API](#external-api)
 - [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker)
   - [Floating Widget](#floating-widget)
+- [Config Files Location](#config-files-location)
 - [Global Config](#global-config)
 - [Shortcut Button Config](#shortcut-button-config)
 - [Sort/Remove](#sortremove)
@@ -294,6 +295,26 @@ The floating widget system is based on the work from [Krita-UI-Redesign](https:/
 
 ### Customization
 To modify the docker's appearance and behavior, see "Global Config".
+
+## Config Files Location
+```
+krita_resource_folder
+ ├─quick_access_manager
+ │ ├─config
+ │ │ │ common.json
+ │ │ │ docker_buttons.json
+ │ │ │ grids_data.json
+ │ │ │ popup.json
+ │ │ │ quick_adjust_docker.json
+ │ │ │ shortcut_grid_data.json
+ │ │ └─icon
+ │ └─gesture
+ │  │ gesture.json
+ │  ├─config
+ │  └─icon
+ └─pykrita
+```
+
 
 ## Global Config
 ![Global Config](./quick_access_manager/image/qam_global_setting.gif)
