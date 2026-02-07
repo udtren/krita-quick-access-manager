@@ -349,6 +349,9 @@ class CommonConfigDialog(QDialog):
             layout.addWidget(QLabel(f"  {widget_name}:"))
 
             for key, value in widget_config.items():
+                # start_visible is auto-persisted by the toggle button, skip it
+                if key == "start_visible":
+                    continue
                 hlayout = QHBoxLayout()
                 label = QLabel(f"    {key}")
                 label.setAlignment(Qt.AlignLeft)

@@ -14,8 +14,10 @@ from ..floating_widgets.specific_color_selector import FloatSpecificColorSelecto
 from ...config.quick_adjust_docker_loader import (
     is_tool_options_enabled,
     is_tool_options_start_visible,
+    set_tool_options_start_visible,
     is_color_selector_enabled,
     is_color_selector_start_visible,
+    set_color_selector_start_visible,
 )
 
 
@@ -335,6 +337,7 @@ class ControlButtonWidget(QWidget):
                 self.tool_options_toggle_btn.setIcon(
                     (QIcon(os.path.join(self.icon_dir, "tool_options_off.png")))
                 )
+            set_tool_options_start_visible(is_checked)
 
     def enableColorSelectorExtension(self):
         """Enable the floating Specific Color Selector extension"""
@@ -388,6 +391,7 @@ class ControlButtonWidget(QWidget):
             self.color_selector_toggle_btn.setIcon(
                 QIcon(os.path.join(self.icon_dir, "specific_color_selector_off.png"))
             )
+        set_color_selector_start_visible(is_checked)
 
     def toggle_rotation_visibility(self):
         """Toggle the visibility of the floating rotation widget"""
