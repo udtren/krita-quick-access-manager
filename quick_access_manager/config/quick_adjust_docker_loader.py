@@ -163,6 +163,32 @@ def get_tool_options_position():
     return floating_config.get("tool_options", {}).get("position", "left_align_top")
 
 
+def set_tool_options_start_visible(visible):
+    """Update the start_visible setting for floating tool options in the config file.
+
+    Args:
+        visible (bool): Whether tool options should start visible
+    """
+    config_path = os.path.join(os.path.dirname(__file__), "quick_adjust_docker.json")
+    config = _load_config()
+    config.setdefault("floating_widgets", {}).setdefault("tool_options", {})["start_visible"] = visible
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
+
+
+def set_color_selector_start_visible(visible):
+    """Update the start_visible setting for floating color selector in the config file.
+
+    Args:
+        visible (bool): Whether color selector should start visible
+    """
+    config_path = os.path.join(os.path.dirname(__file__), "quick_adjust_docker.json")
+    config = _load_config()
+    config.setdefault("floating_widgets", {}).setdefault("color_selector", {})["start_visible"] = visible
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
+
+
 def is_color_selector_enabled():
     """Check if the floating color selector widget is enabled.
 

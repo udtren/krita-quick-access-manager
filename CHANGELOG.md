@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-02-07
+### Changed
+- Floating widget visibility (Tool Options, Color Selector) now auto-persists to config on toggle
+  - Clicking the toggle button saves `start_visible` to `quick_adjust_docker.json`
+  - Visibility state is restored on next Krita launch
+  - Removed `start_visible` option from Settings dialog (no longer needed)
+
+
 ## 2026-01-31
 ### Added
 - Floating Specific Color Selector widget
