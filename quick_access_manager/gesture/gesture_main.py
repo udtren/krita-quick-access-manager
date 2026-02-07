@@ -12,6 +12,7 @@ from krita import Krita  # type: ignore
 from .gesture_actions import execute_gesture
 from .widgets.gesture_preview import GesturePreviewWidget
 from ..utils.logs import write_log
+from ..utils.config_utils import get_gesture_data_dir
 
 
 # ==================================================================
@@ -43,7 +44,7 @@ class GestureDetector(QObject):
 
     def load_gesture_configs(self):
         """Load all gesture configurations from config directory"""
-        config_dir = os.path.join(os.path.dirname(__file__), "config")
+        config_dir = os.path.join(get_gesture_data_dir(), "config")
         if not os.path.exists(config_dir):
             write_log("Gesture config directory not found")
             return
@@ -111,7 +112,7 @@ class GestureDetector(QObject):
     def load_settings(self):
         """Load settings from gesture.json (threshold and preview flag)"""
         try:
-            settings_path = os.path.join(os.path.dirname(__file__), "gesture.json")
+            settings_path = os.path.join(get_gesture_data_dir(), "gesture.json")
             if os.path.exists(settings_path):
                 with open(settings_path, "r", encoding="utf-8") as f:
                     settings = json.load(f)
@@ -598,11 +599,7 @@ def is_gesture_filter_paused():
 
 def is_gesture_enabled():
     """Check if gesture system is enabled in settings"""
-    import os
-
-    # gesture.json is now in the gesture folder, not in config subfolder
-    gesture_dir = os.path.dirname(__file__)
-    settings_path = os.path.join(gesture_dir, "gesture.json")
+    settings_path = os.path.join(get_gesture_data_dir(), "gesture.json")
 
     try:
         if os.path.exists(settings_path):

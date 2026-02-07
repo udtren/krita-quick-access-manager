@@ -8,3 +8,4 @@ quick_access_manager/gesture/icon/*.png
 __pycache__/
 settings.local.json
 quick_access_manager/gesture/gesture.json
+_backup/

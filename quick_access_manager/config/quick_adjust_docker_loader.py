@@ -1,5 +1,6 @@
 import json
 import os
+from ..utils.config_utils import get_config_dir
 
 
 def _get_default_config():
@@ -40,7 +41,7 @@ def ensure_config_exists():
     Returns:
         bool: True if config was created, False if it already existed
     """
-    config_path = os.path.join(os.path.dirname(__file__), "quick_adjust_docker.json")
+    config_path = os.path.join(get_config_dir(), "quick_adjust_docker.json")
 
     if not os.path.exists(config_path):
         # Create the config file with default values
@@ -57,7 +58,7 @@ def _load_config():
     # Ensure config exists before loading
     ensure_config_exists()
 
-    config_path = os.path.join(os.path.dirname(__file__), "quick_adjust_docker.json")
+    config_path = os.path.join(get_config_dir(), "quick_adjust_docker.json")
     with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -169,7 +170,7 @@ def set_tool_options_start_visible(visible):
     Args:
         visible (bool): Whether tool options should start visible
     """
-    config_path = os.path.join(os.path.dirname(__file__), "quick_adjust_docker.json")
+    config_path = os.path.join(get_config_dir(), "quick_adjust_docker.json")
     config = _load_config()
     config.setdefault("floating_widgets", {}).setdefault("tool_options", {})["start_visible"] = visible
     with open(config_path, "w", encoding="utf-8") as f:
@@ -182,7 +183,7 @@ def set_color_selector_start_visible(visible):
     Args:
         visible (bool): Whether color selector should start visible
     """
-    config_path = os.path.join(os.path.dirname(__file__), "quick_adjust_docker.json")
+    config_path = os.path.join(get_config_dir(), "quick_adjust_docker.json")
     config = _load_config()
     config.setdefault("floating_widgets", {}).setdefault("color_selector", {})["start_visible"] = visible
     with open(config_path, "w", encoding="utf-8") as f:
@@ -296,7 +297,7 @@ def _get_docker_buttons_config_path():
     Returns:
         str: Path to docker_buttons.json
     """
-    return os.path.join(os.path.dirname(__file__), "docker_buttons.json")
+    return os.path.join(get_config_dir(), "docker_buttons.json")
 
 
 def _get_default_docker_buttons():
