@@ -9,14 +9,13 @@ from PyQt6.QtGui import QIcon
 from krita import Krita  # type: ignore
 
 from ..config.quick_adjust_docker_loader import get_font_size
+from ..utils.config_utils import get_config_dir
 
 
 def load_docker_buttons_config():
     """Load docker buttons configuration from JSON file"""
     try:
-        # Get the directory where the parent package is located
-        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        config_dir = os.path.join(current_dir, "config")
+        config_dir = get_config_dir()
         config_file = os.path.join(config_dir, "docker_buttons.json")
 
         if os.path.exists(config_file):
@@ -105,8 +104,7 @@ def create_docker_buttons(layout, docker_buttons_config, toggle_callback):
             # Create button with icon
             button = QPushButton()
             icon_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                "config",
+                get_config_dir(),
                 "icon",
                 button_icon,
             )

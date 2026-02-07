@@ -7,12 +7,13 @@ from PyQt6.QtWidgets import (
     QLabel,
     QFrame,
 )
-from PyQt6.QtCore import Qt, QTimer, QSize, QPoint
-from PyQt6.QtGui import QCursor, QKeySequence, QIcon, QPixmap, QShortcut
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QCursor, QIcon, QPixmap, QShortcut
 from krita import Krita  # type: ignore
-from ..utils.action_manager import ActionManager
+from ..utils.action_manager import ActionManager  
 from ..utils.logs import write_log
 from ..config.popup_loader import PopupConfigLoader
+from ..utils.config_utils import get_config_dir, get_plugin_dir
 import json
 import os
 
@@ -34,8 +35,7 @@ class ActionsPopup:
         """Load shortcut grid data to check for custom names"""
         try:
             # Get the path to the config file
-            plugin_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            config_path = os.path.join(plugin_dir, "config", "shortcut_grid_data.json")
+            config_path = os.path.join(get_config_dir(), "shortcut_grid_data.json")
 
             if os.path.exists(config_path):
                 with open(config_path, "r", encoding="utf-8") as f:
@@ -51,8 +51,7 @@ class ActionsPopup:
         """Load common configuration to get max_shortcut_per_row"""
         try:
             # Get the path to the common config file
-            plugin_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            config_path = os.path.join(plugin_dir, "config", "common.json")
+            config_path = os.path.join(get_config_dir(), "common.json")
 
             if os.path.exists(config_path):
                 with open(config_path, "r", encoding="utf-8") as f:
@@ -238,9 +237,8 @@ class ActionsPopup:
         toolbar_layout.setSpacing(5)
 
         # Get the base path for icons
-        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         close_icon = os.path.join(
-            base_path, "config", "system_icon", "circle-xmark.png"
+            get_plugin_dir(), "config", "system_icon", "circle-xmark.png"
         )
 
         # Pin button
@@ -302,17 +300,13 @@ class ActionsPopup:
 
     def update_pin_icon(self):
         """Update pin button icon based on pin status"""
-        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        system_icon_dir = os.path.join(get_plugin_dir(), "config", "system_icon")
 
         if self.is_pinned:
-            pin_icon = os.path.join(
-                base_path, "config", "system_icon", "pin_pinned.png"
-            )
+            pin_icon = os.path.join(system_icon_dir, "pin_pinned.png")
             tooltip = "Unpin window"
         else:
-            pin_icon = os.path.join(
-                base_path, "config", "system_icon", "pin_unpinned.png"
-            )
+            pin_icon = os.path.join(system_icon_dir, "pin_unpinned.png")
             tooltip = "Pin window"
 
         if self.pin_button and os.path.exists(pin_icon):
@@ -429,11 +423,8 @@ class ActionsPopup:
                         try:
                             icon_size = int(icon_size_str)
                             # Build icon path
-                            plugin_dir = os.path.dirname(
-                                os.path.dirname(os.path.abspath(__file__))
-                            )
                             icon_path = os.path.join(
-                                plugin_dir, "config", "icon", icon_name
+                                get_config_dir(), "icon", icon_name
                             )
 
                             if os.path.exists(icon_path):

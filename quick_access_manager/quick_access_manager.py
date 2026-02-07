@@ -19,6 +19,8 @@ from .dialogs.settings_dialog import CommonConfigDialog
 from .gesture.gesture_config_dialog import GestureConfigDialog
 from .utils.styles import docker_btn_style
 from .utils.config_utils import (
+    get_config_dir,
+    get_plugin_dir,
     get_spacing_between_grids,
     get_spacing_between_buttons,
     get_brush_icon_size,
@@ -39,9 +41,7 @@ class QuickAccessDockerWidget(QDockWidget):
         self.main_widget = None
         self.main_grid_layout = None
         self.grid_counter = 0
-        config_dir = os.path.join(os.path.dirname(__file__), "config")
-        if not os.path.exists(config_dir):
-            os.makedirs(config_dir)
+        config_dir = get_config_dir()
         self.data_file = os.path.join(config_dir, "grids_data.json")
         self.common_config_path = os.path.join(config_dir, "common.json")
         self.preset_dict = Krita.instance().resources("preset")
@@ -88,9 +88,8 @@ class QuickAccessDockerWidget(QDockWidget):
             }
         """
 
-        # Get icon directory path
-        config_dir = os.path.dirname(__file__)
-        icon_dir = os.path.join(config_dir, "config", "system_icon")
+        # Get icon directory path (system icons stay in plugin source)
+        icon_dir = os.path.join(get_plugin_dir(), "config", "system_icon")
 
         # Add Brush button
         add_brush_button = QPushButton()
@@ -305,7 +304,6 @@ class QuickAccessDockerWidget(QDockWidget):
     def remove_grid(self, grid_info):
         # グリッドを削除
         if grid_info in self.grids:
-            idx = self.grids.index(grid_info)
             # レイアウトから削除
             container = grid_info.get("container")
             if container:

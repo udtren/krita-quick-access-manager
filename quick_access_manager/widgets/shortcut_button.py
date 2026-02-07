@@ -3,6 +3,7 @@ from PyQt6.QtCore import Qt, QPoint, QMimeData, QSize
 from PyQt6.QtGui import QDrag, QIcon, QPixmap
 import os
 from ..utils.shortcut_utils import get_font_px, get_shortcut_button_config
+from ..utils.config_utils import get_config_dir
 from ..dialogs.button_config_dialog import ShortcutButtonConfigDialog
 from ..gesture.gesture_main import (
     pause_gesture_event_filter,
@@ -75,8 +76,7 @@ class ShortcutDraggableButton(QPushButton):
             return
 
         # Build icon path
-        current_dir = os.path.dirname(os.path.dirname(__file__))
-        icon_path = os.path.join(current_dir, "config", "icon", icon_name)
+        icon_path = os.path.join(get_config_dir(), "icon", icon_name)
 
         # Check if icon file exists
         if not os.path.exists(icon_path):

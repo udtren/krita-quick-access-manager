@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Clicking the toggle button saves `start_visible` to `quick_adjust_docker.json`
   - Visibility state is restored on next Krita launch
   - Removed `start_visible` option from Settings dialog (no longer needed)
+- Moved user config directory from `krita/pykrita/quick_access_manager/config` to `krita/quick_access_manager/config`
+  - Config files now survive plugin updates/reinstalls
+  - Centralized path utilities in `utils/config_utils.py` (`get_config_dir()`, `get_plugin_dir()`, `get_gesture_data_dir()`)
 
 
 ## 2026-01-31

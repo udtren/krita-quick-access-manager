@@ -7,11 +7,11 @@ from PyQt6.QtWidgets import (
     QLabel,
     QFrame,
 )
-from PyQt6.QtCore import Qt, QTimer, QPoint
-from PyQt6.QtGui import QCursor, QKeySequence, QIcon, QPixmap, QShortcut
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QCursor, QIcon, QShortcut
 from krita import Krita  # type: ignore
-from ..utils.logs import write_log
 from ..config.popup_loader import PopupConfigLoader
+from ..utils.config_utils import get_plugin_dir 
 
 
 class BrushSetsPopup:
@@ -71,7 +71,7 @@ class BrushSetsPopup:
             self.popup_window.show()
             self.popup_window.raise_()
 
-        except Exception as e:
+        except Exception:
             import traceback
 
             traceback.print_exc()
@@ -111,9 +111,8 @@ class BrushSetsPopup:
         toolbar_layout.setSpacing(5)
 
         # Get the base path for icons
-        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         close_icon = os.path.join(
-            base_path, "config", "system_icon", "circle-xmark.png"
+            get_plugin_dir(), "config", "system_icon", "circle-xmark.png"
         )
 
         # Pin button
@@ -177,17 +176,13 @@ class BrushSetsPopup:
         """Update pin button icon based on pin status"""
         import os
 
-        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        system_icon_dir = os.path.join(get_plugin_dir(), "config", "system_icon")
 
         if self.is_pinned:
-            pin_icon = os.path.join(
-                base_path, "config", "system_icon", "pin_pinned.png"
-            )
+            pin_icon = os.path.join(system_icon_dir, "pin_pinned.png")
             tooltip = "Unpin window"
         else:
-            pin_icon = os.path.join(
-                base_path, "config", "system_icon", "pin_unpinned.png"
-            )
+            pin_icon = os.path.join(system_icon_dir, "pin_unpinned.png")
             tooltip = "Pin window"
 
         if self.pin_button and os.path.exists(pin_icon):
@@ -309,7 +304,7 @@ class BrushSetsPopup:
                                 raise Exception("Null pixmap")
                         else:
                             raise Exception("No image")
-                    except Exception as e:
+                    except Exception:
                         # Fallback: use first 2 characters
                         brush_btn.setText(preset.name()[:2].upper())
                         brush_btn.setStyleSheet(

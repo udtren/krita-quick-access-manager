@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QWidget, QLabel, QGridLayout
 from PyQt6.QtGui import QPixmap
 from krita import Krita  # type: ignore
 from quick_access_manager.utils.logs import write_log
+from quick_access_manager.utils.config_utils import get_gesture_data_dir
 
 
 class GesturePreviewWidget(QWidget):
@@ -25,7 +26,7 @@ class GesturePreviewWidget(QWidget):
         write_log(f"Gesture alias loaded: {self.gesture_alias}")
 
         # Get icon directory path
-        self.icon_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "icon")
+        self.icon_dir = os.path.join(get_gesture_data_dir(), "icon")
 
         # Create grid layout (3x3)
         self.layout = QGridLayout(self)

@@ -2,6 +2,7 @@ import json
 import os
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeySequence
+from ..utils.config_utils import get_config_dir
 
 
 class PopupConfigLoader:
@@ -24,8 +25,7 @@ class PopupConfigLoader:
         """Load popup configuration from JSON file"""
         try:
             # Get the path to the config file
-            plugin_dir = os.path.dirname(os.path.abspath(__file__))
-            self._config_path = os.path.join(plugin_dir, "popup.json")
+            self._config_path = os.path.join(get_config_dir(), "popup.json")
 
             if os.path.exists(self._config_path):
                 with open(self._config_path, "r", encoding="utf-8") as f:
