@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QApplication,
+    QScrollArea
 )
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon
@@ -150,7 +151,10 @@ class QuickAccessDockerWidget(QDockWidget):
         self.main_grid_layout.setContentsMargins(0, 0, 0, 0)  # Minimize margins
         self.main_widget.setLayout(self.main_grid_layout)
 
-        main_layout.addWidget(self.main_widget)
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(self.main_widget)
+        main_layout.addWidget(scroll_area)
 
         #####################################
         ####   Other

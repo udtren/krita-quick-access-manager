@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QDockWidget,
+    QScrollArea,
 )
 from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
 from .utils.data_manager import load_shortcut_grids_data, save_shortcut_grids_data
@@ -56,7 +57,12 @@ class ShortcutAccessDockerWidget(QDockWidget):
         self.create_button_row()
 
         central_widget.setLayout(self.main_layout)
-        self.setWidget(central_widget)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(central_widget)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setWidget(scroll_area)
 
         # Setup connections
         self.setup_connections()
