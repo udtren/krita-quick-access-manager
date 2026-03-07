@@ -109,14 +109,13 @@ class ColorSelectorPopupWindow(QFrame):
 
         self._updateChannelBars()
 
-        w = self._popup_loader.get_color_selector_popup_width()
-        h = self._popup_loader.get_color_selector_popup_height()
-        self.resize(w, h)
-
     # ── Visibility ───────────────────────────────────────────────
 
     def showEvent(self, event):
         super().showEvent(event)
+        w = self._popup_loader.get_color_selector_popup_width()
+        h = self._popup_loader.get_color_selector_popup_height()
+        self.resize(w, h)
         self._pollKritaColor()   # sync to current Krita color on open
         self._poll_timer.start()
 
