@@ -35,8 +35,12 @@ class PopupConfigLoader:
                 self._config = {
                     "actions_popup_shortcut": "Tab",
                     "brush_sets_popup_shortcut": "W",
+                    "color_selector_popup_shortcut": "A",
                     "brush_icon_size": 46,
                     "grid_label_width": 60,
+                    "color_selector_popup_width": 300,
+                    "color_selector_popup_height": 400,
+                    "color_selector_value_font_size": 10,
                 }
                 self._save_config()
         except Exception as e:
@@ -45,8 +49,12 @@ class PopupConfigLoader:
             self._config = {
                 "actions_popup_shortcut": "Tab",
                 "brush_sets_popup_shortcut": "W",
+                "color_selector_popup_shortcut": "A",
                 "brush_icon_size": 46,
                 "grid_label_width": 60,
+                "color_selector_popup_width": 300,
+                "color_selector_popup_height": 400,
+                "color_selector_value_font_size": 10,
             }
 
     def _save_config(self):
@@ -85,6 +93,41 @@ class PopupConfigLoader:
     def get_brush_sets_popup_shortcut_string(self):
         """Get the brush sets popup shortcut as a string"""
         return self._config.get("brush_sets_popup_shortcut", "W")
+
+    def get_color_selector_popup_shortcut(self):
+        """Get the shortcut key sequence for color selector popup"""
+        shortcut_str = self._config.get("color_selector_popup_shortcut", "A")
+        return self._parse_shortcut(shortcut_str)
+
+    def get_color_selector_popup_shortcut_string(self):
+        """Get the color selector popup shortcut as a string"""
+        return self._config.get("color_selector_popup_shortcut", "A")
+
+    def set_color_selector_popup_shortcut(self, shortcut_str):
+        """Set the shortcut for color selector popup"""
+        self._config["color_selector_popup_shortcut"] = shortcut_str
+        self._save_config()
+
+    def get_color_selector_popup_width(self):
+        return self._config.get("color_selector_popup_width", 300)
+
+    def set_color_selector_popup_width(self, width):
+        self._config["color_selector_popup_width"] = width
+        self._save_config()
+
+    def get_color_selector_popup_height(self):
+        return self._config.get("color_selector_popup_height", 400)
+
+    def set_color_selector_popup_height(self, height):
+        self._config["color_selector_popup_height"] = height
+        self._save_config()
+
+    def get_color_selector_value_font_size(self):
+        return self._config.get("color_selector_value_font_size", 10)
+
+    def set_color_selector_value_font_size(self, size):
+        self._config["color_selector_value_font_size"] = size
+        self._save_config()
 
     def get_brush_icon_size(self):
         """Get the brush icon size"""

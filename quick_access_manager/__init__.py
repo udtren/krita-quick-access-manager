@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QMessageBox
 from .quick_access_manager import QuickAccessDockerFactory
 from .brush_adjust import BrushAdjustDockerFactory
 from .shortcut_manager import ShortcutAccessDockerFactory
+from .color_selector.color_selector_dock import ColorSelectorDock
 from .gesture import (
     initialize_gesture_system,
     shutdown_gesture_system,
@@ -59,3 +60,16 @@ extensions = [
 
 for extension_class in extensions:
     app.addExtension(extension_class(app))
+
+
+
+
+DOCKER_ID = "HueSVC"
+
+instance = Krita.instance()
+dock_widget_factory = DockWidgetFactory(
+    DOCKER_ID,
+    DockWidgetFactoryBase.DockRight,
+    ColorSelectorDock
+)
+instance.addDockWidgetFactory(dock_widget_factory)

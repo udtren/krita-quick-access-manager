@@ -232,6 +232,9 @@ You can enable/disable each slider via settings.
 - **Active Selection Status**: If there is an active selection, the icon will turn green.
 - **Toggle Gesture System**: Pause/Unpause the gesture system.
 
+### Customization
+To modify the docker's appearance and behavior, see "Global Config".
+
 ### Docker Toggle Buttons
 The buttons at the bottom of the docker provide quick show/hide toggles for other Krita dockers (e.g., Tool Options, Layers, Brush Presets).
 
@@ -293,8 +296,23 @@ The floating widget behavior can be customized in the Settings dialog under "Qui
 **Credits:**
 The floating widget system is based on the work from [Krita-UI-Redesign](https://github.com/veryprofessionaldodo/Krita-UI-Redesign) by veryprofessionaldodo.
 
-### Customization
-To modify the docker's appearance and behavior, see "Global Config".
+### HueSVC
+![HueSVC color selector](quick_access_manager/image/huesvc.png)
+
+A compact color selector docker with a vertical hue bar, saturation/value box, and 6 individual channel bars for H, S, V, R, G, B.
+
+**Features:**
+- Drag any channel bar to adjust its value; color is applied to Krita after a short debounce delay
+- Use the ▲/▼ buttons or type a number directly into each channel's value field for precise control
+- Syncs automatically with Krita's active foreground color every second
+- Available as a **popup window** — press the configured shortcut key to open it at the cursor; the popup closes when the mouse leaves
+
+**Popup Shortcut:** `A` (default)
+
+**Configuration** (Settings → Popup tab):
+- **Color Selector Popup Shortcut** — key to open/close the popup
+- **Popup Width / Height** — dimensions of the popup window
+- **Value Font Size** — font size for the channel value inputs
 
 ## Config Files Location
 ```
