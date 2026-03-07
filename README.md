@@ -31,6 +31,7 @@ If you find this tool helpful, you can support its development:
   - [External API](#external-api)
 - [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker)
   - [Floating Widget](#floating-widget)
+- [HueSVC](#huesvc)
 - [Config Files Location](#config-files-location)
 - [Global Config](#global-config)
 - [Shortcut Button Config](#shortcut-button-config)
