@@ -35,6 +35,7 @@ class PopupConfigLoader:
                 self._config = {
                     "actions_popup_shortcut": "Tab",
                     "brush_sets_popup_shortcut": "W",
+                    "color_selector_popup_shortcut": "A",
                     "brush_icon_size": 46,
                     "grid_label_width": 60,
                 }
@@ -45,6 +46,7 @@ class PopupConfigLoader:
             self._config = {
                 "actions_popup_shortcut": "Tab",
                 "brush_sets_popup_shortcut": "W",
+                "color_selector_popup_shortcut": "A",
                 "brush_icon_size": 46,
                 "grid_label_width": 60,
             }
@@ -85,6 +87,20 @@ class PopupConfigLoader:
     def get_brush_sets_popup_shortcut_string(self):
         """Get the brush sets popup shortcut as a string"""
         return self._config.get("brush_sets_popup_shortcut", "W")
+
+    def get_color_selector_popup_shortcut(self):
+        """Get the shortcut key sequence for color selector popup"""
+        shortcut_str = self._config.get("color_selector_popup_shortcut", "A")
+        return self._parse_shortcut(shortcut_str)
+
+    def get_color_selector_popup_shortcut_string(self):
+        """Get the color selector popup shortcut as a string"""
+        return self._config.get("color_selector_popup_shortcut", "A")
+
+    def set_color_selector_popup_shortcut(self, shortcut_str):
+        """Set the shortcut for color selector popup"""
+        self._config["color_selector_popup_shortcut"] = shortcut_str
+        self._save_config()
 
     def get_brush_icon_size(self):
         """Get the brush icon size"""
