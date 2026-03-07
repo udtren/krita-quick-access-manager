@@ -16,6 +16,8 @@ class ColorSelectorPopupWindow(QFrame):
         super().__init__(parent, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_DeleteOnClose, False)
 
+        self._popup_loader = PopupConfigLoader()
+
         # Internal color state
         self._h, self._s, self._v = 0, 255, 255
         color = QColor.fromHsv(0, 255, 255)
@@ -42,8 +44,9 @@ class ColorSelectorPopupWindow(QFrame):
         self.channel_bars = {}
         self.channel_labels = {}
 
+        font_size = self._popup_loader.get_color_selector_value_font_size()
         font = QFont()
-        font.setPointSize(10)
+        font.setPointSize(font_size)
 
         channels_layout = QVBoxLayout()
         channels_layout.setSpacing(3)
@@ -105,7 +108,10 @@ class ColorSelectorPopupWindow(QFrame):
         self._debounce_timer.timeout.connect(self._applyPendingColor)
 
         self._updateChannelBars()
-        self.adjustSize()
+
+        w = self._popup_loader.get_color_selector_popup_width()
+        h = self._popup_loader.get_color_selector_popup_height()
+        self.resize(w, h)
 
     # ── Visibility ───────────────────────────────────────────────
 
@@ -285,7 +291,6 @@ class ColorSelectorPopup:
             if self.popup_window is None:
                 self.popup_window = ColorSelectorPopupWindow()
 
-            self.popup_window.adjustSize()
             w = self.popup_window.width()
             h = self.popup_window.height()
             cursor_pos = QCursor.pos()

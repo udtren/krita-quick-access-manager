@@ -602,6 +602,19 @@ class CommonConfigDialog(QDialog):
         layout.addLayout(hlayout)
         self.popup_fields["brush_sets_popup_shortcut"] = edit
 
+        # Color Selector Popup Shortcut
+        hlayout = QHBoxLayout()
+        label = QLabel("Color Selector Popup Shortcut")
+        label.setAlignment(Qt.AlignLeft)
+        edit = QKeySequenceEdit()
+        edit.setKeySequence(self.popup_loader.get_color_selector_popup_shortcut_string())
+        edit.setMaximumWidth(150)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(edit)
+        layout.addLayout(hlayout)
+        self.popup_fields["color_selector_popup_shortcut"] = edit
+
         layout.addWidget(QLabel(""))
         layout.addWidget(QLabel("[Popup Appearance]"))
 
@@ -630,6 +643,48 @@ class CommonConfigDialog(QDialog):
         hlayout.addWidget(edit)
         layout.addLayout(hlayout)
         self.popup_fields["grid_label_width"] = edit
+
+        layout.addWidget(QLabel(""))
+        layout.addWidget(QLabel("[Color Selector Popup]"))
+
+        # Color Selector Popup Width
+        hlayout = QHBoxLayout()
+        label = QLabel("Popup Width")
+        label.setAlignment(Qt.AlignLeft)
+        edit = QLineEdit(str(self.popup_loader.get_color_selector_popup_width()))
+        edit.setFixedWidth(80)
+        edit.setAlignment(Qt.AlignRight)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(edit)
+        layout.addLayout(hlayout)
+        self.popup_fields["color_selector_popup_width"] = edit
+
+        # Color Selector Popup Height
+        hlayout = QHBoxLayout()
+        label = QLabel("Popup Height")
+        label.setAlignment(Qt.AlignLeft)
+        edit = QLineEdit(str(self.popup_loader.get_color_selector_popup_height()))
+        edit.setFixedWidth(80)
+        edit.setAlignment(Qt.AlignRight)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(edit)
+        layout.addLayout(hlayout)
+        self.popup_fields["color_selector_popup_height"] = edit
+
+        # Color Selector Value Font Size
+        hlayout = QHBoxLayout()
+        label = QLabel("Value Font Size")
+        label.setAlignment(Qt.AlignLeft)
+        edit = QLineEdit(str(self.popup_loader.get_color_selector_value_font_size()))
+        edit.setFixedWidth(80)
+        edit.setAlignment(Qt.AlignRight)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(edit)
+        layout.addLayout(hlayout)
+        self.popup_fields["color_selector_value_font_size"] = edit
 
         layout.addStretch()
 
@@ -719,6 +774,9 @@ class CommonConfigDialog(QDialog):
                 elif key == "brush_sets_popup_shortcut":
                     shortcut_str = edit.keySequence().toString()
                     self.popup_loader.set_brush_sets_popup_shortcut(shortcut_str)
+                elif key == "color_selector_popup_shortcut":
+                    shortcut_str = edit.keySequence().toString()
+                    self.popup_loader.set_color_selector_popup_shortcut(shortcut_str)
                 elif key == "brush_icon_size":
                     try:
                         size = int(edit.text())
@@ -729,6 +787,21 @@ class CommonConfigDialog(QDialog):
                     try:
                         width = int(edit.text())
                         self.popup_loader.set_grid_label_width(width)
+                    except ValueError:
+                        pass
+                elif key == "color_selector_popup_width":
+                    try:
+                        self.popup_loader.set_color_selector_popup_width(int(edit.text()))
+                    except ValueError:
+                        pass
+                elif key == "color_selector_popup_height":
+                    try:
+                        self.popup_loader.set_color_selector_popup_height(int(edit.text()))
+                    except ValueError:
+                        pass
+                elif key == "color_selector_value_font_size":
+                    try:
+                        self.popup_loader.set_color_selector_value_font_size(int(edit.text()))
                     except ValueError:
                         pass
 
