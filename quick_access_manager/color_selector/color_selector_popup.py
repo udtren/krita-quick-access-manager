@@ -153,6 +153,22 @@ class ColorSelectorPopupWindow(QFrame):
             self._setKritaForeground(color)
             self._poll_timer.start()
 
+    def _applyRGB(self, r, g, b, push=True):
+        self._r, self._g, self._b = r, g, b
+        color = QColor(r, g, b)
+        h = color.hsvHue()
+        self._h = h if h != -1 else self._h
+        self._s = color.hsvSaturation()
+        self._v = color.value()
+
+        self.hue_bar.setHue(self._h)
+        self.sv_box.setHue(self._h)
+        self.sv_box.setSatVal(self._s, self._v)
+        self._updateChannelBars()
+        if push:
+            self._setKritaForeground(color)
+            self._poll_timer.start()
+
     def _pollKritaColor(self):
         app = Krita.instance()
         if not app.activeWindow():
@@ -188,6 +204,7 @@ class ColorSelectorPopupWindow(QFrame):
     def _onChannelChanged(self, channel, value, debounce=False):
         h, s, v = self._h, self._s, self._v
         r, g, b = self._r, self._g, self._b
+        use_rgb = False
 
         if channel == 'H':
             h = value
@@ -197,29 +214,29 @@ class ColorSelectorPopupWindow(QFrame):
             v = value
         elif channel == 'R':
             r = value
-            c = QColor(r, g, b)
-            h = c.hsvHue() if c.hsvHue() != -1 else self._h
-            s, v = c.hsvSaturation(), c.value()
+            use_rgb = True
         elif channel == 'G':
             g = value
-            c = QColor(r, g, b)
-            h = c.hsvHue() if c.hsvHue() != -1 else self._h
-            s, v = c.hsvSaturation(), c.value()
+            use_rgb = True
         elif channel == 'B':
             b = value
-            c = QColor(r, g, b)
-            h = c.hsvHue() if c.hsvHue() != -1 else self._h
-            s, v = c.hsvSaturation(), c.value()
+            use_rgb = True
 
         if debounce:
             self._poll_timer.stop()
-            self._applyHSV(h, s, v, push=False)
+            if use_rgb:
+                self._applyRGB(r, g, b, push=False)
+            else:
+                self._applyHSV(h, s, v, push=False)
             self._debounce_timer.start()
         else:
-            self._applyHSV(h, s, v)
+            if use_rgb:
+                self._applyRGB(r, g, b)
+            else:
+                self._applyHSV(h, s, v)
 
     def _applyPendingColor(self):
-        self._setKritaForeground(QColor.fromHsv(self._h, self._s, self._v))
+        self._setKritaForeground(QColor(self._r, self._g, self._b))
         self._poll_timer.start()
 
     def _stepChannel(self, ch, delta):
