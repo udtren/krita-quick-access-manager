@@ -359,7 +359,24 @@ class ColorSelectorDock(DockWidget):
         self._updateChannelBars()
         if push:
             self._setKritaForeground(color)
-            self._poll_timer.start()  # reset poll interval after applying
+            self._poll_timer.start()
+
+    def _applyRGB(self, r, g, b, push=True):
+        """Set full state from exact RGB — avoids HSV round-trip drift."""
+        self._r, self._g, self._b = r, g, b
+        color = QColor(r, g, b)
+        h = color.hsvHue()
+        self._h = h if h != -1 else self._h
+        self._s = color.hsvSaturation()
+        self._v = color.value()
+
+        self.hue_bar.setHue(self._h)
+        self.sv_box.setHue(self._h)
+        self.sv_box.setSatVal(self._s, self._v)
+        self._updateChannelBars()
+        if push:
+            self._setKritaForeground(color)
+            self._poll_timer.start()
 
     def _pollKritaColor(self):
         """Read Krita's current foreground color and sync UI if it changed."""
@@ -399,6 +416,7 @@ class ColorSelectorDock(DockWidget):
     def _onChannelChanged(self, channel, value, debounce=False):
         h, s, v = self._h, self._s, self._v
         r, g, b = self._r, self._g, self._b
+        use_rgb = False
 
         if channel == 'H':
             h = value
@@ -408,30 +426,30 @@ class ColorSelectorDock(DockWidget):
             v = value
         elif channel == 'R':
             r = value
-            color = QColor(r, g, b)
-            h = color.hsvHue() if color.hsvHue() != -1 else self._h
-            s, v = color.hsvSaturation(), color.value()
+            use_rgb = True
         elif channel == 'G':
             g = value
-            color = QColor(r, g, b)
-            h = color.hsvHue() if color.hsvHue() != -1 else self._h
-            s, v = color.hsvSaturation(), color.value()
+            use_rgb = True
         elif channel == 'B':
             b = value
-            color = QColor(r, g, b)
-            h = color.hsvHue() if color.hsvHue() != -1 else self._h
-            s, v = color.hsvSaturation(), color.value()
+            use_rgb = True
 
         if debounce:
-            self._poll_timer.stop()  # freeze poll while user is dragging
-            self._applyHSV(h, s, v, push=False)
+            self._poll_timer.stop()
+            if use_rgb:
+                self._applyRGB(r, g, b, push=False)
+            else:
+                self._applyHSV(h, s, v, push=False)
             self._debounce_timer.start()
         else:
-            self._applyHSV(h, s, v)
+            if use_rgb:
+                self._applyRGB(r, g, b)
+            else:
+                self._applyHSV(h, s, v)
 
     def _applyPendingColor(self):
-        self._setKritaForeground(QColor.fromHsv(self._h, self._s, self._v))
-        self._poll_timer.start()  # resume poll only after color is applied
+        self._setKritaForeground(QColor(self._r, self._g, self._b))
+        self._poll_timer.start()
 
     def _stepChannel(self, ch, delta):
         """Increment or decrement a channel value by delta."""
