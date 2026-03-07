@@ -38,8 +38,8 @@ class PopupConfigLoader:
                     "color_selector_popup_shortcut": "A",
                     "brush_icon_size": 46,
                     "grid_label_width": 60,
-                    "color_selector_popup_width": 300,
-                    "color_selector_popup_height": 400,
+                    "color_selector_popup_width": 350,
+                    "color_selector_popup_height": 550,
                     "color_selector_value_font_size": 10,
                 }
                 self._save_config()
@@ -52,8 +52,8 @@ class PopupConfigLoader:
                 "color_selector_popup_shortcut": "A",
                 "brush_icon_size": 46,
                 "grid_label_width": 60,
-                "color_selector_popup_width": 300,
-                "color_selector_popup_height": 400,
+                "color_selector_popup_width": 350,
+                "color_selector_popup_height": 550,
                 "color_selector_value_font_size": 10,
             }
 
@@ -109,14 +109,14 @@ class PopupConfigLoader:
         self._save_config()
 
     def get_color_selector_popup_width(self):
-        return self._config.get("color_selector_popup_width", 300)
+        return self._config.get("color_selector_popup_width", 350)
 
     def set_color_selector_popup_width(self, width):
         self._config["color_selector_popup_width"] = width
         self._save_config()
 
     def get_color_selector_popup_height(self):
-        return self._config.get("color_selector_popup_height", 400)
+        return self._config.get("color_selector_popup_height", 550)
 
     def set_color_selector_popup_height(self, height):
         self._config["color_selector_popup_height"] = height
