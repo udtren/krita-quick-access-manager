@@ -1,7 +1,8 @@
 from krita import DockWidget, Krita, ManagedColor
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QPushButton
-from PyQt5.QtGui import QPainter, QColor, QImage, QFont, QIntValidator
+from PyQt5.QtGui import QPainter, QColor, QLinearGradient, QFont, QIntValidator
 from PyQt5.QtCore import Qt, QPoint, pyqtSignal, QTimer
+from ..config.popup_loader import PopupConfigLoader
 
 
 class HueBar(QWidget):
@@ -24,15 +25,13 @@ class HueBar(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, False)
         w, h = self.width(), self.height()
 
-        # Draw hue spectrum
-        for y in range(h):
-            hue = int((y / h) * 360) % 360
-            color = QColor.fromHsv(hue, 255, 255)
-            painter.setPen(color)
-            painter.drawLine(0, y, w, y)
+        # Draw hue spectrum via gradient (6 primary hue stops)
+        grad = QLinearGradient(0, 0, 0, h)
+        for i in range(7):
+            grad.setColorAt(i / 6, QColor.fromHsv(int(i * 360 / 6) % 360, 255, 255))
+        painter.fillRect(0, 0, w, h, grad)
 
         # Draw marker
         marker_y = int((self._hue / 360.0) * h)
@@ -73,12 +72,11 @@ class SVBox(QWidget):
         self._sat = 255
         self._val = 255
         self._pressed = False
-        self._image = None
-        self._rebuild()
 
     def setHue(self, h):
+        if h == self._hue:
+            return
         self._hue = h
-        self._rebuild()
         self.update()
 
     def setSatVal(self, s, v):
@@ -86,34 +84,25 @@ class SVBox(QWidget):
         self._val = v
         self.update()
 
-    def _rebuild(self):
-        """Rebuild the SV gradient image for the current hue."""
-        w, h = max(self.width(), 1), max(self.height(), 1)
-        img = QImage(w, h, QImage.Format_RGB32)
-
-        for x in range(w):
-            sat = int((x / (w - 1)) * 255) if w > 1 else 255
-            for y in range(h):
-                val = 255 - int((y / (h - 1)) * 255) if h > 1 else 255
-                img.setPixelColor(x, y, QColor.fromHsv(self._hue, sat, val))
-
-        self._image = img
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self._rebuild()
-
     def paintEvent(self, event):
         painter = QPainter(self)
-        if self._image:
-            painter.drawImage(0, 0, self._image)
-
-        # Draw crosshair at current selection
         w, h = self.width(), self.height()
+
+        # S gradient: white → full-hue color (left to right)
+        grad_s = QLinearGradient(0, 0, w, 0)
+        grad_s.setColorAt(0, Qt.white)
+        grad_s.setColorAt(1, QColor.fromHsv(self._hue, 255, 255))
+        painter.fillRect(0, 0, w, h, grad_s)
+
+        # V overlay: transparent → black (top to bottom)
+        grad_v = QLinearGradient(0, 0, 0, h)
+        grad_v.setColorAt(0, QColor(0, 0, 0, 0))
+        grad_v.setColorAt(1, QColor(0, 0, 0, 255))
+        painter.fillRect(0, 0, w, h, grad_v)
+
+        # Crosshair
         cx = int((self._sat / 255.0) * (w - 1))
         cy = int(((255 - self._val) / 255.0) * (h - 1))
-
-        # Outer ring (black) + inner ring (white) for visibility
         for color, radius in [(Qt.black, 6), (Qt.white, 5)]:
             painter.setPen(color)
             painter.setBrush(Qt.NoBrush)
@@ -187,23 +176,27 @@ class ChannelBar(QWidget):
         w, h = self.width(), self.height()
 
         # Draw gradient
-        for x in range(w):
-            t = x / (w - 1) if w > 1 else 1.0
-            ch = self._channel
-            if ch == 'H':
-                color = QColor.fromHsv(int(t * 359), self._s, self._v)
-            elif ch == 'S':
-                color = QColor.fromHsv(self._h, int(t * 255), self._v)
-            elif ch == 'V':
-                color = QColor.fromHsv(self._h, self._s, int(t * 255))
-            elif ch == 'R':
-                color = QColor(int(t * 255), self._g, self._b)
-            elif ch == 'G':
-                color = QColor(self._r, int(t * 255), self._b)
-            elif ch == 'B':
-                color = QColor(self._r, self._g, int(t * 255))
-            painter.setPen(color)
-            painter.drawLine(x, 0, x, h - 1)
+        grad = QLinearGradient(0, 0, w, 0)
+        ch = self._channel
+        if ch == 'H':
+            for i in range(7):
+                grad.setColorAt(i / 6, QColor.fromHsv(int(i * 360 / 6) % 360, self._s, self._v))
+        elif ch == 'S':
+            grad.setColorAt(0, QColor.fromHsv(self._h, 0, self._v))
+            grad.setColorAt(1, QColor.fromHsv(self._h, 255, self._v))
+        elif ch == 'V':
+            grad.setColorAt(0, QColor.fromHsv(self._h, self._s, 0))
+            grad.setColorAt(1, QColor.fromHsv(self._h, self._s, 255))
+        elif ch == 'R':
+            grad.setColorAt(0, QColor(0, self._g, self._b))
+            grad.setColorAt(1, QColor(255, self._g, self._b))
+        elif ch == 'G':
+            grad.setColorAt(0, QColor(self._r, 0, self._b))
+            grad.setColorAt(1, QColor(self._r, 255, self._b))
+        elif ch == 'B':
+            grad.setColorAt(0, QColor(self._r, self._g, 0))
+            grad.setColorAt(1, QColor(self._r, self._g, 255))
+        painter.fillRect(0, 0, w, h, grad)
 
         # Draw marker
         max_val = self._max_value()
@@ -239,6 +232,7 @@ class ColorSelectorDock(DockWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("HueSVC")
+        self._popup_loader = PopupConfigLoader()
 
         # Internal color state
         self._h, self._s, self._v = 0, 255, 255
@@ -265,8 +259,9 @@ class ColorSelectorDock(DockWidget):
         self.channel_bars = {}   # ch -> ChannelBar
         self.channel_labels = {} # ch -> QLineEdit
 
+        font_size = self._popup_loader.get_color_selector_value_font_size()
         font = QFont()
-        font.setPointSize(10)
+        font.setPointSize(font_size)
 
         channels_layout = QVBoxLayout()
         channels_layout.setSpacing(3)

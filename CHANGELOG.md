@@ -3,6 +3,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-03-07
+### Added
+- Color Selector Popup (`color_selector/color_selector_popup.py`)
+  - Frameless popup window with full HueSVC color selector UI (HueBar, SVBox, 6 channel bars)
+  - Auto-closes when mouse leaves the window
+  - Configurable keyboard shortcut (default: `A`) via `popup.json`
+  - Configurable popup width, height, and value font size via Settings → Popup tab
+- Color Selector docker (`color_selector/color_selector_dock.py`) now registered in `__init__.py`
+  - 6 horizontal channel bars (H/S/V/R/G/B) below the hue bar + SV box
+  - Each bar has ▲/▼ step buttons and an editable value input
+  - Debounce on bar drag (150 ms) — color pushed to Krita only after user stops
+  - Poll timer (1 s) syncs UI from Krita foreground color; paused during user edits
+- Settings → Popup tab: added Color Selector Popup Shortcut, Popup Width, Popup Height, Value Font Size fields
+
+### Changed
+- Replaced all pixel-by-pixel Python paint loops with `QLinearGradient` in `HueBar`, `SVBox`, and `ChannelBar`
+  - HueBar: single vertical gradient (7 hue stops)
+  - SVBox: two `fillRect` gradient passes; removed `_rebuild`/`_image`/`resizeEvent`; `setHue` guards against redundant repaints
+  - ChannelBar: single horizontal gradient (2 stops for S/V/R/G/B, 7 for H)
+
 ## 2026-02-28
 ### Changed
 - Made docker content scrollable using QScrollArea

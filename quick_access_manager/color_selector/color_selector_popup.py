@@ -1,8 +1,8 @@
 from krita import Krita, ManagedColor
 from PyQt5.QtWidgets import (
-    QWidget, QFrame, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QShortcut,
+    QFrame, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QShortcut,
 )
-from PyQt5.QtGui import QColor, QFont, QIntValidator
+from PyQt5.QtGui import QColor, QCursor, QFont, QIntValidator
 from PyQt5.QtCore import Qt, QTimer
 
 from .color_selector_dock import HueBar, SVBox, ChannelBar
@@ -282,8 +282,6 @@ class ColorSelectorPopup:
     def show_popup_at_cursor(self):
         """Toggle the popup at the current cursor position."""
         try:
-            from PyQt5.QtGui import QCursor
-
             if self.popup_window and self.popup_window.isVisible():
                 self.popup_window.hide()
                 return
