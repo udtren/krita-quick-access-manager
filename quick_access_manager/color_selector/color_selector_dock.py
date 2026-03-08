@@ -140,9 +140,9 @@ class ChannelBar(QWidget):
         super().__init__(parent)
         self._channel = channel  # 'H', 'S', 'V', 'R', 'G', 'B'
         self._h = 0
-        self._s = 255
-        self._v = 255
-        self._r = 255
+        self._s = 100  # display units: 0-100
+        self._v = 100  # display units: 0-100
+        self._r = 100  # display units: 0-100
         self._g = 0
         self._b = 0
         self._value = 0
@@ -151,7 +151,7 @@ class ChannelBar(QWidget):
         self.setMinimumWidth(80)
 
     def _max_value(self):
-        return 359 if self._channel == 'H' else 255
+        return 359 if self._channel == 'H' else 100
 
     def setColor(self, h, s, v, r, g, b):
         self._h, self._s, self._v = h, s, v
@@ -175,27 +175,32 @@ class ChannelBar(QWidget):
         painter = QPainter(self)
         w, h = self.width(), self.height()
 
+        # Convert display units (0-100) to QColor units (0-255)
+        def q(x): return round(x * 255 / 100)
+        s255, v255 = q(self._s), q(self._v)
+        r255, g255, b255 = q(self._r), q(self._g), q(self._b)
+
         # Draw gradient
         grad = QLinearGradient(0, 0, w, 0)
         ch = self._channel
         if ch == 'H':
             for i in range(7):
-                grad.setColorAt(i / 6, QColor.fromHsv(int(i * 360 / 6) % 360, self._s, self._v))
+                grad.setColorAt(i / 6, QColor.fromHsv(int(i * 360 / 6) % 360, s255, v255))
         elif ch == 'S':
-            grad.setColorAt(0, QColor.fromHsv(self._h, 0, self._v))
-            grad.setColorAt(1, QColor.fromHsv(self._h, 255, self._v))
+            grad.setColorAt(0, QColor.fromHsv(self._h, 0, v255))
+            grad.setColorAt(1, QColor.fromHsv(self._h, 255, v255))
         elif ch == 'V':
-            grad.setColorAt(0, QColor.fromHsv(self._h, self._s, 0))
-            grad.setColorAt(1, QColor.fromHsv(self._h, self._s, 255))
+            grad.setColorAt(0, QColor.fromHsv(self._h, s255, 0))
+            grad.setColorAt(1, QColor.fromHsv(self._h, s255, 255))
         elif ch == 'R':
-            grad.setColorAt(0, QColor(0, self._g, self._b))
-            grad.setColorAt(1, QColor(255, self._g, self._b))
+            grad.setColorAt(0, QColor(0, g255, b255))
+            grad.setColorAt(1, QColor(255, g255, b255))
         elif ch == 'G':
-            grad.setColorAt(0, QColor(self._r, 0, self._b))
-            grad.setColorAt(1, QColor(self._r, 255, self._b))
+            grad.setColorAt(0, QColor(r255, 0, b255))
+            grad.setColorAt(1, QColor(r255, 255, b255))
         elif ch == 'B':
-            grad.setColorAt(0, QColor(self._r, self._g, 0))
-            grad.setColorAt(1, QColor(self._r, self._g, 255))
+            grad.setColorAt(0, QColor(r255, g255, 0))
+            grad.setColorAt(1, QColor(r255, g255, 255))
         painter.fillRect(0, 0, w, h, grad)
 
         # Draw marker
@@ -274,7 +279,7 @@ class ColorSelectorDock(DockWidget):
 
             bar = ChannelBar(ch)
 
-            max_val = 359 if ch == 'H' else 255
+            max_val = 359 if ch == 'H' else 100
             val_edit = QLineEdit("0")
             val_edit.setFixedWidth(42)
             val_edit.setAlignment(Qt.AlignRight)
@@ -337,15 +342,18 @@ class ColorSelectorDock(DockWidget):
     # ── Sync helpers ────────────────────────────────────────────
 
     def _updateChannelBars(self):
-        """Push current state to all channel bars and labels."""
+        """Push current state to all channel bars and labels (display units: S/V/R/G/B in 0-100)."""
+        def d(x): return round(x * 100 / 255)
+        s100, v100 = d(self._s), d(self._v)
+        r100, g100, b100 = d(self._r), d(self._g), d(self._b)
         for bar in self.channel_bars.values():
-            bar.setColor(self._h, self._s, self._v, self._r, self._g, self._b)
+            bar.setColor(self._h, s100, v100, r100, g100, b100)
         self.channel_labels['H'].setText(str(self._h))
-        self.channel_labels['S'].setText(str(self._s))
-        self.channel_labels['V'].setText(str(self._v))
-        self.channel_labels['R'].setText(str(self._r))
-        self.channel_labels['G'].setText(str(self._g))
-        self.channel_labels['B'].setText(str(self._b))
+        self.channel_labels['S'].setText(str(s100))
+        self.channel_labels['V'].setText(str(v100))
+        self.channel_labels['R'].setText(str(r100))
+        self.channel_labels['G'].setText(str(g100))
+        self.channel_labels['B'].setText(str(b100))
 
     def _applyHSV(self, h, s, v, push=True):
         """Set full state from HSV, update all widgets, optionally push to Krita."""
@@ -418,20 +426,21 @@ class ColorSelectorDock(DockWidget):
         r, g, b = self._r, self._g, self._b
         use_rgb = False
 
+        def i(x): return round(x * 255 / 100)  # display (0-100) → internal (0-255)
         if channel == 'H':
             h = value
         elif channel == 'S':
-            s = value
+            s = i(value)
         elif channel == 'V':
-            v = value
+            v = i(value)
         elif channel == 'R':
-            r = value
+            r = i(value)
             use_rgb = True
         elif channel == 'G':
-            g = value
+            g = i(value)
             use_rgb = True
         elif channel == 'B':
-            b = value
+            b = i(value)
             use_rgb = True
 
         if debounce:
@@ -452,10 +461,12 @@ class ColorSelectorDock(DockWidget):
         self._poll_timer.start()
 
     def _stepChannel(self, ch, delta):
-        """Increment or decrement a channel value by delta."""
-        current = {'H': self._h, 'S': self._s, 'V': self._v,
-                   'R': self._r, 'G': self._g, 'B': self._b}[ch]
-        max_val = 359 if ch == 'H' else 255
+        """Increment or decrement a channel value by delta (in display units)."""
+        if ch == 'H':
+            current, max_val = self._h, 359
+        else:
+            internal = {'S': self._s, 'V': self._v, 'R': self._r, 'G': self._g, 'B': self._b}[ch]
+            current, max_val = round(internal * 100 / 255), 100
         self._onChannelChanged(ch, max(0, min(max_val, current + delta)))
 
     def _onChannelInput(self, ch):
@@ -466,7 +477,7 @@ class ColorSelectorDock(DockWidget):
         except ValueError:
             self._updateChannelBars()
             return
-        max_val = 359 if ch == 'H' else 255
+        max_val = 359 if ch == 'H' else 100
         val = max(0, min(max_val, val))
         self._onChannelChanged(ch, val)
 

@@ -42,6 +42,7 @@ class PopupConfigLoader:
                     "color_selector_popup_height": 550,
                     "color_selector_value_font_size": 10,
                     "color_selector_poll_interval": 500,
+                    "color_selector_rgb_display_mode": "percentage",
                 }
                 self._save_config()
         except Exception as e:
@@ -57,6 +58,7 @@ class PopupConfigLoader:
                 "color_selector_popup_height": 550,
                 "color_selector_value_font_size": 10,
                 "color_selector_poll_interval": 500,
+                "color_selector_rgb_display_mode": "percentage",
             }
 
     def _save_config(self):
@@ -136,6 +138,15 @@ class PopupConfigLoader:
 
     def set_color_selector_poll_interval(self, ms):
         self._config["color_selector_poll_interval"] = ms
+        self._save_config()
+
+    def get_color_selector_rgb_display_mode(self):
+        """Return 'percentage' (0-100) or 'value' (0-255) for R/G/B display"""
+        return self._config.get("color_selector_rgb_display_mode", "percentage")
+
+    def set_color_selector_rgb_display_mode(self, mode):
+        """Set R/G/B display mode: 'percentage' or 'value'"""
+        self._config["color_selector_rgb_display_mode"] = mode
         self._save_config()
 
     def get_brush_icon_size(self):

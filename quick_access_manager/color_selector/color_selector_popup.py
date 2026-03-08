@@ -59,7 +59,7 @@ class ColorSelectorPopupWindow(QFrame):
 
             bar = ChannelBar(ch)
 
-            max_val = 359 if ch == 'H' else 255
+            max_val = 359 if ch == 'H' else 100
             val_edit = QLineEdit("0")
             val_edit.setFixedWidth(42)
             val_edit.setAlignment(Qt.AlignRight)
@@ -131,14 +131,17 @@ class ColorSelectorPopupWindow(QFrame):
     # ── Sync helpers ─────────────────────────────────────────────
 
     def _updateChannelBars(self):
+        def d(x): return round(x * 100 / 255)
+        s100, v100 = d(self._s), d(self._v)
+        r100, g100, b100 = d(self._r), d(self._g), d(self._b)
         for bar in self.channel_bars.values():
-            bar.setColor(self._h, self._s, self._v, self._r, self._g, self._b)
+            bar.setColor(self._h, s100, v100, r100, g100, b100)
         self.channel_labels['H'].setText(str(self._h))
-        self.channel_labels['S'].setText(str(self._s))
-        self.channel_labels['V'].setText(str(self._v))
-        self.channel_labels['R'].setText(str(self._r))
-        self.channel_labels['G'].setText(str(self._g))
-        self.channel_labels['B'].setText(str(self._b))
+        self.channel_labels['S'].setText(str(s100))
+        self.channel_labels['V'].setText(str(v100))
+        self.channel_labels['R'].setText(str(r100))
+        self.channel_labels['G'].setText(str(g100))
+        self.channel_labels['B'].setText(str(b100))
 
     def _applyHSV(self, h, s, v, push=True):
         self._h, self._s, self._v = h, s, v
@@ -206,20 +209,21 @@ class ColorSelectorPopupWindow(QFrame):
         r, g, b = self._r, self._g, self._b
         use_rgb = False
 
+        def i(x): return round(x * 255 / 100)  # display (0-100) → internal (0-255)
         if channel == 'H':
             h = value
         elif channel == 'S':
-            s = value
+            s = i(value)
         elif channel == 'V':
-            v = value
+            v = i(value)
         elif channel == 'R':
-            r = value
+            r = i(value)
             use_rgb = True
         elif channel == 'G':
-            g = value
+            g = i(value)
             use_rgb = True
         elif channel == 'B':
-            b = value
+            b = i(value)
             use_rgb = True
 
         if debounce:
@@ -240,9 +244,11 @@ class ColorSelectorPopupWindow(QFrame):
         self._poll_timer.start()
 
     def _stepChannel(self, ch, delta):
-        current = {'H': self._h, 'S': self._s, 'V': self._v,
-                   'R': self._r, 'G': self._g, 'B': self._b}[ch]
-        max_val = 359 if ch == 'H' else 255
+        if ch == 'H':
+            current, max_val = self._h, 359
+        else:
+            internal = {'S': self._s, 'V': self._v, 'R': self._r, 'G': self._g, 'B': self._b}[ch]
+            current, max_val = round(internal * 100 / 255), 100
         self._onChannelChanged(ch, max(0, min(max_val, current + delta)))
 
     def _onChannelInput(self, ch):
@@ -252,7 +258,7 @@ class ColorSelectorPopupWindow(QFrame):
         except ValueError:
             self._updateChannelBars()
             return
-        max_val = 359 if ch == 'H' else 255
+        max_val = 359 if ch == 'H' else 100
         self._onChannelChanged(ch, max(0, min(max_val, val)))
 
     def _setKritaForeground(self, qcolor):

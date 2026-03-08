@@ -699,6 +699,21 @@ class CommonConfigDialog(QDialog):
         layout.addLayout(hlayout)
         self.popup_fields["color_selector_poll_interval"] = edit
 
+        # RGB Display Mode
+        hlayout = QHBoxLayout()
+        label = QLabel("R/G/B Display Mode")
+        label.setAlignment(Qt.AlignLeft)
+        combo = QComboBox()
+        combo.addItem("Percentage (0-100)", "percentage")
+        combo.addItem("Value (0-255)", "value")
+        current_mode = self.popup_loader.get_color_selector_rgb_display_mode()
+        combo.setCurrentIndex(0 if current_mode == "percentage" else 1)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(combo)
+        layout.addLayout(hlayout)
+        self.popup_fields["color_selector_rgb_display_mode"] = combo
+
         layout.addStretch()
 
     def setup_connections(self):
@@ -822,6 +837,8 @@ class CommonConfigDialog(QDialog):
                         self.popup_loader.set_color_selector_poll_interval(int(edit.text()))
                     except ValueError:
                         pass
+                elif key == "color_selector_rgb_display_mode":
+                    self.popup_loader.set_color_selector_rgb_display_mode(edit.currentData())
 
         # Save docker buttons config
         if hasattr(self, "docker_buttons_path") and self.docker_buttons_fields:
