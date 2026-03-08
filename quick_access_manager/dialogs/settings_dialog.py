@@ -686,6 +686,19 @@ class CommonConfigDialog(QDialog):
         layout.addLayout(hlayout)
         self.popup_fields["color_selector_value_font_size"] = edit
 
+        # Color Selector Poll Interval
+        hlayout = QHBoxLayout()
+        label = QLabel("Foreground Color Check Interval (ms)")
+        label.setAlignment(Qt.AlignLeft)
+        edit = QLineEdit(str(self.popup_loader.get_color_selector_poll_interval()))
+        edit.setFixedWidth(80)
+        edit.setAlignment(Qt.AlignRight)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(edit)
+        layout.addLayout(hlayout)
+        self.popup_fields["color_selector_poll_interval"] = edit
+
         layout.addStretch()
 
     def setup_connections(self):
@@ -802,6 +815,11 @@ class CommonConfigDialog(QDialog):
                 elif key == "color_selector_value_font_size":
                     try:
                         self.popup_loader.set_color_selector_value_font_size(int(edit.text()))
+                    except ValueError:
+                        pass
+                elif key == "color_selector_poll_interval":
+                    try:
+                        self.popup_loader.set_color_selector_poll_interval(int(edit.text()))
                     except ValueError:
                         pass
 

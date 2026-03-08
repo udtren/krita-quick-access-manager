@@ -314,6 +314,7 @@ A compact color selector docker with a vertical hue bar, saturation/value box, a
 - **Color Selector Popup Shortcut** — key to open/close the popup
 - **Popup Width / Height** — dimensions of the popup window
 - **Value Font Size** — font size for the channel value inputs
+- **Foreground Color Check Interval (ms)** — how often the docker/popup polls Krita's foreground color (default: 500 ms)
 
 ## Config Files Location
 ```

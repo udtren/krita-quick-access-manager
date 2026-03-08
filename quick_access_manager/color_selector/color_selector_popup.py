@@ -96,9 +96,9 @@ class ColorSelectorPopupWindow(QFrame):
         self.hue_bar.hueChanged.connect(self._onHueBarChanged)
         self.sv_box.colorChanged.connect(self._onSVChanged)
 
-        # Poll Krita foreground color every second
+        # Poll Krita foreground color (interval configurable)
         self._poll_timer = QTimer(self)
-        self._poll_timer.setInterval(1000)
+        self._poll_timer.setInterval(self._popup_loader.get_color_selector_poll_interval())
         self._poll_timer.timeout.connect(self._pollKritaColor)
 
         # Debounce timer for bar dragging

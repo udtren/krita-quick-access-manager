@@ -317,9 +317,9 @@ class ColorSelectorDock(DockWidget):
         # Initialise label text
         self._updateChannelBars()
 
-        # Poll Krita foreground color every second
+        # Poll Krita foreground color (interval configurable)
         self._poll_timer = QTimer(self)
-        self._poll_timer.setInterval(1000)
+        self._poll_timer.setInterval(self._popup_loader.get_color_selector_poll_interval())
         self._poll_timer.timeout.connect(self._pollKritaColor)
         self._poll_timer.start()
 

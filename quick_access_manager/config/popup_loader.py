@@ -41,6 +41,7 @@ class PopupConfigLoader:
                     "color_selector_popup_width": 350,
                     "color_selector_popup_height": 550,
                     "color_selector_value_font_size": 10,
+                    "color_selector_poll_interval": 500,
                 }
                 self._save_config()
         except Exception as e:
@@ -55,6 +56,7 @@ class PopupConfigLoader:
                 "color_selector_popup_width": 350,
                 "color_selector_popup_height": 550,
                 "color_selector_value_font_size": 10,
+                "color_selector_poll_interval": 500,
             }
 
     def _save_config(self):
@@ -127,6 +129,13 @@ class PopupConfigLoader:
 
     def set_color_selector_value_font_size(self, size):
         self._config["color_selector_value_font_size"] = size
+        self._save_config()
+
+    def get_color_selector_poll_interval(self):
+        return self._config.get("color_selector_poll_interval", 500)
+
+    def set_color_selector_poll_interval(self, ms):
+        self._config["color_selector_poll_interval"] = ms
         self._save_config()
 
     def get_brush_icon_size(self):
