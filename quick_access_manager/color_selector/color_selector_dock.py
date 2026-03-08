@@ -279,7 +279,12 @@ class ColorSelectorDock(DockWidget):
 
             bar = ChannelBar(ch)
 
-            max_val = 359 if ch == 'H' else 100
+            if ch == 'H':
+                max_val = 359
+            elif ch in ('R', 'G', 'B'):
+                max_val = 255 if self._popup_loader.get_color_selector_rgb_display_mode() == "value" else 100
+            else:
+                max_val = 100
             val_edit = QLineEdit("0")
             val_edit.setFixedWidth(42)
             val_edit.setAlignment(Qt.AlignRight)
@@ -308,7 +313,11 @@ class ColorSelectorDock(DockWidget):
 
             self.channel_bars[ch] = bar
             self.channel_labels[ch] = val_edit
-            bar.valueChanged.connect(lambda val, c=ch: self._onChannelChanged(c, val, debounce=True))
+            bar.valueChanged.connect(lambda val, c=ch: self._onChannelChanged(
+                c,
+                round(val * 255 / 100) if c in ('R', 'G', 'B') and self._popup_loader.get_color_selector_rgb_display_mode() == "value" else val,
+                debounce=True
+            ))
 
         outer_layout.addLayout(channels_layout)
 
@@ -348,12 +357,16 @@ class ColorSelectorDock(DockWidget):
         r100, g100, b100 = d(self._r), d(self._g), d(self._b)
         for bar in self.channel_bars.values():
             bar.setColor(self._h, s100, v100, r100, g100, b100)
+        rgb_mode = self._popup_loader.get_color_selector_rgb_display_mode()
+        r_disp = self._r if rgb_mode == "value" else r100
+        g_disp = self._g if rgb_mode == "value" else g100
+        b_disp = self._b if rgb_mode == "value" else b100
         self.channel_labels['H'].setText(str(self._h))
         self.channel_labels['S'].setText(str(s100))
         self.channel_labels['V'].setText(str(v100))
-        self.channel_labels['R'].setText(str(r100))
-        self.channel_labels['G'].setText(str(g100))
-        self.channel_labels['B'].setText(str(b100))
+        self.channel_labels['R'].setText(str(r_disp))
+        self.channel_labels['G'].setText(str(g_disp))
+        self.channel_labels['B'].setText(str(b_disp))
 
     def _applyHSV(self, h, s, v, push=True):
         """Set full state from HSV, update all widgets, optionally push to Krita."""
@@ -427,6 +440,7 @@ class ColorSelectorDock(DockWidget):
         use_rgb = False
 
         def i(x): return round(x * 255 / 100)  # display (0-100) → internal (0-255)
+        rgb_mode = self._popup_loader.get_color_selector_rgb_display_mode()
         if channel == 'H':
             h = value
         elif channel == 'S':
@@ -434,13 +448,13 @@ class ColorSelectorDock(DockWidget):
         elif channel == 'V':
             v = i(value)
         elif channel == 'R':
-            r = i(value)
+            r = value if rgb_mode == "value" else i(value)
             use_rgb = True
         elif channel == 'G':
-            g = i(value)
+            g = value if rgb_mode == "value" else i(value)
             use_rgb = True
         elif channel == 'B':
-            b = i(value)
+            b = value if rgb_mode == "value" else i(value)
             use_rgb = True
 
         if debounce:
@@ -464,9 +478,15 @@ class ColorSelectorDock(DockWidget):
         """Increment or decrement a channel value by delta (in display units)."""
         if ch == 'H':
             current, max_val = self._h, 359
-        else:
-            internal = {'S': self._s, 'V': self._v, 'R': self._r, 'G': self._g, 'B': self._b}[ch]
+        elif ch in ('S', 'V'):
+            internal = {'S': self._s, 'V': self._v}[ch]
             current, max_val = round(internal * 100 / 255), 100
+        else:  # R, G, B
+            internal = {'R': self._r, 'G': self._g, 'B': self._b}[ch]
+            if self._popup_loader.get_color_selector_rgb_display_mode() == "value":
+                current, max_val = internal, 255
+            else:
+                current, max_val = round(internal * 100 / 255), 100
         self._onChannelChanged(ch, max(0, min(max_val, current + delta)))
 
     def _onChannelInput(self, ch):
@@ -477,7 +497,12 @@ class ColorSelectorDock(DockWidget):
         except ValueError:
             self._updateChannelBars()
             return
-        max_val = 359 if ch == 'H' else 100
+        if ch == 'H':
+            max_val = 359
+        elif ch in ('R', 'G', 'B'):
+            max_val = 255 if self._popup_loader.get_color_selector_rgb_display_mode() == "value" else 100
+        else:
+            max_val = 100
         val = max(0, min(max_val, val))
         self._onChannelChanged(ch, val)
 
