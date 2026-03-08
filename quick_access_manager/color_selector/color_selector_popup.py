@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QColor, QCursor, QFont, QIntValidator
 from PyQt5.QtCore import Qt, QTimer
 
-from .color_selector_dock import HueBar, SVBox, ChannelBar
+from .color_selector_dock import HueBar, SVBox, ChannelBar, FgBgColorWidget
 from ..config.popup_loader import PopupConfigLoader
 
 
@@ -22,10 +22,20 @@ class ColorSelectorPopupWindow(QFrame):
         self._h, self._s, self._v = 0, 255, 255
         color = QColor.fromHsv(0, 255, 255)
         self._r, self._g, self._b = color.red(), color.green(), color.blue()
+        self._bg_r, self._bg_g, self._bg_b = 255, 255, 255
 
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(6, 6, 6, 6)
         outer_layout.setSpacing(6)
+
+        # ── FG/BG color swatch ──
+        fg_bg_layout = QHBoxLayout()
+        fg_bg_layout.setContentsMargins(0, 0, 0, 0)
+        self.fg_bg_widget = FgBgColorWidget()
+        self.fg_bg_widget.swapRequested.connect(self._swapColors)
+        fg_bg_layout.addWidget(self.fg_bg_widget)
+        fg_bg_layout.addStretch()
+        outer_layout.addLayout(fg_bg_layout)
 
         # ── Top: hue bar + SV box ──
         top_layout = QHBoxLayout()
@@ -59,7 +69,12 @@ class ColorSelectorPopupWindow(QFrame):
 
             bar = ChannelBar(ch)
 
-            max_val = 359 if ch == 'H' else 255
+            if ch == 'H':
+                max_val = 359
+            elif ch in ('R', 'G', 'B'):
+                max_val = 255 if self._popup_loader.get_color_selector_rgb_display_mode() == "value" else 100
+            else:
+                max_val = 100
             val_edit = QLineEdit("0")
             val_edit.setFixedWidth(42)
             val_edit.setAlignment(Qt.AlignRight)
@@ -88,7 +103,11 @@ class ColorSelectorPopupWindow(QFrame):
 
             self.channel_bars[ch] = bar
             self.channel_labels[ch] = val_edit
-            bar.valueChanged.connect(lambda val, c=ch: self._onChannelChanged(c, val, debounce=True))
+            bar.valueChanged.connect(lambda val, c=ch: self._onChannelChanged(
+                c,
+                round(val * 255 / 100) if c in ('R', 'G', 'B') and self._popup_loader.get_color_selector_rgb_display_mode() == "value" else val,
+                debounce=True
+            ))
 
         outer_layout.addLayout(channels_layout)
 
@@ -131,14 +150,25 @@ class ColorSelectorPopupWindow(QFrame):
     # ── Sync helpers ─────────────────────────────────────────────
 
     def _updateChannelBars(self):
+        def d(x): return round(x * 100 / 255)
+        s100, v100 = d(self._s), d(self._v)
+        r100, g100, b100 = d(self._r), d(self._g), d(self._b)
         for bar in self.channel_bars.values():
-            bar.setColor(self._h, self._s, self._v, self._r, self._g, self._b)
+            bar.setColor(self._h, s100, v100, r100, g100, b100)
+        rgb_mode = self._popup_loader.get_color_selector_rgb_display_mode()
+        r_disp = self._r if rgb_mode == "value" else r100
+        g_disp = self._g if rgb_mode == "value" else g100
+        b_disp = self._b if rgb_mode == "value" else b100
         self.channel_labels['H'].setText(str(self._h))
-        self.channel_labels['S'].setText(str(self._s))
-        self.channel_labels['V'].setText(str(self._v))
-        self.channel_labels['R'].setText(str(self._r))
-        self.channel_labels['G'].setText(str(self._g))
-        self.channel_labels['B'].setText(str(self._b))
+        self.channel_labels['S'].setText(str(s100))
+        self.channel_labels['V'].setText(str(v100))
+        self.channel_labels['R'].setText(str(r_disp))
+        self.channel_labels['G'].setText(str(g_disp))
+        self.channel_labels['B'].setText(str(b_disp))
+        self.fg_bg_widget.setColors(
+            QColor(self._r, self._g, self._b),
+            QColor(self._bg_r, self._bg_g, self._bg_b),
+        )
 
     def _applyHSV(self, h, s, v, push=True):
         self._h, self._s, self._v = h, s, v
@@ -176,21 +206,32 @@ class ColorSelectorPopupWindow(QFrame):
         view = app.activeWindow().activeView()
         if not view:
             return
+        canvas = view.canvas()
+
+        # Poll foreground color
         mc = view.foregroundColor()
-        if not mc:
-            return
-        qcolor = mc.colorForCanvas(app.activeWindow().activeView().canvas())
-        if not qcolor or not qcolor.isValid():
-            return
+        if mc:
+            qcolor = mc.colorForCanvas(canvas)
+            if qcolor and qcolor.isValid():
+                r, g, b = qcolor.red(), qcolor.green(), qcolor.blue()
+                if (r, g, b) != (self._r, self._g, self._b):
+                    color = QColor(r, g, b)
+                    h = color.hsvHue() if color.hsvHue() != -1 else self._h
+                    s, v = color.hsvSaturation(), color.value()
+                    self._applyHSV(h, s, v, push=False)
 
-        r, g, b = qcolor.red(), qcolor.green(), qcolor.blue()
-        if (r, g, b) == (self._r, self._g, self._b):
-            return
-
-        color = QColor(r, g, b)
-        h = color.hsvHue() if color.hsvHue() != -1 else self._h
-        s, v = color.hsvSaturation(), color.value()
-        self._applyHSV(h, s, v, push=False)
+        # Poll background color
+        mc_bg = view.backgroundColor()
+        if mc_bg:
+            qcolor_bg = mc_bg.colorForCanvas(canvas)
+            if qcolor_bg and qcolor_bg.isValid():
+                r, g, b = qcolor_bg.red(), qcolor_bg.green(), qcolor_bg.blue()
+                if (r, g, b) != (self._bg_r, self._bg_g, self._bg_b):
+                    self._bg_r, self._bg_g, self._bg_b = r, g, b
+                    self.fg_bg_widget.setColors(
+                        QColor(self._r, self._g, self._b),
+                        QColor(self._bg_r, self._bg_g, self._bg_b),
+                    )
 
     # ── Signal handlers ──────────────────────────────────────────
 
@@ -206,20 +247,22 @@ class ColorSelectorPopupWindow(QFrame):
         r, g, b = self._r, self._g, self._b
         use_rgb = False
 
+        def i(x): return round(x * 255 / 100)  # display (0-100) → internal (0-255)
+        rgb_mode = self._popup_loader.get_color_selector_rgb_display_mode()
         if channel == 'H':
             h = value
         elif channel == 'S':
-            s = value
+            s = i(value)
         elif channel == 'V':
-            v = value
+            v = i(value)
         elif channel == 'R':
-            r = value
+            r = value if rgb_mode == "value" else i(value)
             use_rgb = True
         elif channel == 'G':
-            g = value
+            g = value if rgb_mode == "value" else i(value)
             use_rgb = True
         elif channel == 'B':
-            b = value
+            b = value if rgb_mode == "value" else i(value)
             use_rgb = True
 
         if debounce:
@@ -240,9 +283,17 @@ class ColorSelectorPopupWindow(QFrame):
         self._poll_timer.start()
 
     def _stepChannel(self, ch, delta):
-        current = {'H': self._h, 'S': self._s, 'V': self._v,
-                   'R': self._r, 'G': self._g, 'B': self._b}[ch]
-        max_val = 359 if ch == 'H' else 255
+        if ch == 'H':
+            current, max_val = self._h, 359
+        elif ch in ('S', 'V'):
+            internal = {'S': self._s, 'V': self._v}[ch]
+            current, max_val = round(internal * 100 / 255), 100
+        else:  # R, G, B
+            internal = {'R': self._r, 'G': self._g, 'B': self._b}[ch]
+            if self._popup_loader.get_color_selector_rgb_display_mode() == "value":
+                current, max_val = internal, 255
+            else:
+                current, max_val = round(internal * 100 / 255), 100
         self._onChannelChanged(ch, max(0, min(max_val, current + delta)))
 
     def _onChannelInput(self, ch):
@@ -252,8 +303,41 @@ class ColorSelectorPopupWindow(QFrame):
         except ValueError:
             self._updateChannelBars()
             return
-        max_val = 359 if ch == 'H' else 255
+        if ch == 'H':
+            max_val = 359
+        elif ch in ('R', 'G', 'B'):
+            max_val = 255 if self._popup_loader.get_color_selector_rgb_display_mode() == "value" else 100
+        else:
+            max_val = 100
         self._onChannelChanged(ch, max(0, min(max_val, val)))
+
+    def _swapColors(self):
+        """Swap Krita's foreground and background colors."""
+        app = Krita.instance()
+        if not app.activeWindow():
+            return
+        view = app.activeWindow().activeView()
+        if not view:
+            return
+        mc_fg = view.foregroundColor()
+        mc_bg = view.backgroundColor()
+        if not mc_fg or not mc_bg:
+            return
+        view.setForeGroundColor(mc_bg)
+        view.setBackGroundColor(mc_fg)
+        canvas = view.canvas()
+        qcolor_new_fg = mc_bg.colorForCanvas(canvas)
+        if qcolor_new_fg and qcolor_new_fg.isValid():
+            color = QColor(qcolor_new_fg.red(), qcolor_new_fg.green(), qcolor_new_fg.blue())
+            h = color.hsvHue() if color.hsvHue() != -1 else self._h
+            self._applyHSV(h, color.hsvSaturation(), color.value(), push=False)
+        qcolor_new_bg = mc_fg.colorForCanvas(canvas)
+        if qcolor_new_bg and qcolor_new_bg.isValid():
+            self._bg_r, self._bg_g, self._bg_b = qcolor_new_bg.red(), qcolor_new_bg.green(), qcolor_new_bg.blue()
+        self.fg_bg_widget.setColors(
+            QColor(self._r, self._g, self._b),
+            QColor(self._bg_r, self._bg_g, self._bg_b),
+        )
 
     def _setKritaForeground(self, qcolor):
         app = Krita.instance()

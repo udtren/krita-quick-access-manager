@@ -303,9 +303,10 @@ The floating widget system is based on the work from [Krita-UI-Redesign](https:/
 A compact color selector docker with a vertical hue bar, saturation/value box, and 6 individual channel bars for H, S, V, R, G, B.
 
 **Features:**
+- **FG/BG color swatch** — two stacked squares at the top display the current foreground (front) and background (back) colors; click either to swap them instantly
 - Drag any channel bar to adjust its value; color is applied to Krita after a short debounce delay
 - Use the ▲/▼ buttons or type a number directly into each channel's value field for precise control
-- Syncs automatically with Krita's active foreground color every second
+- Syncs automatically with Krita's active foreground and background colors at a configurable interval
 - Available as a **popup window** — press the configured shortcut key to open it at the cursor; the popup closes when the mouse leaves
 
 **Popup Shortcut:** `A` (default)
@@ -314,7 +315,8 @@ A compact color selector docker with a vertical hue bar, saturation/value box, a
 - **Color Selector Popup Shortcut** — key to open/close the popup
 - **Popup Width / Height** — dimensions of the popup window
 - **Value Font Size** — font size for the channel value inputs
-- **Foreground Color Check Interval (ms)** — how often the docker/popup polls Krita's foreground color (default: 500 ms)
+- **Foreground Color Check Interval (ms)** — how often the docker/popup polls Krita's foreground and background colors (default: 500 ms)
+- **R/G/B Display Mode** — choose `Percentage (0–100)` or `Value (0–255)` for the R, G, B channel bars and inputs
 
 ## Config Files Location
 ```

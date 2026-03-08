@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-03-08
+### Added
+- HueSVC: FG/BG color swatch widget (`FgBgColorWidget`) displayed above the HueBar + SVBox in both the docker and the popup
+  - Shows current foreground (front square) and background (back square, offset) colors
+  - Click either square to swap Krita's foreground and background colors instantly
+  - Background color is polled alongside foreground color and updates the swatch automatically
+- HueSVC: configurable R/G/B display mode (`color_selector_rgb_display_mode` in `popup.json`)
+  - `percentage` (default): R/G/B channel bars and inputs use 0–100 scale
+  - `value`: R/G/B channel bars and inputs use 0–255 scale
+  - Bar drag, ▲/▼ step, and direct text input all respect the chosen mode
+- Settings → Popup tab: added **R/G/B Display Mode** combo box (Percentage / Value)
+
 ## 2026-03-07
 ### Added
 - Color Selector Popup (`color_selector/color_selector_popup.py`)
