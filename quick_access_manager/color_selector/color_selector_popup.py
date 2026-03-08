@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QColor, QCursor, QFont, QIntValidator
 from PyQt5.QtCore import Qt, QTimer
 
-from .color_selector_dock import HueBar, SVBox, ChannelBar
+from .color_selector_dock import HueBar, SVBox, ChannelBar, FgBgColorWidget
 from ..config.popup_loader import PopupConfigLoader
 
 
@@ -22,10 +22,20 @@ class ColorSelectorPopupWindow(QFrame):
         self._h, self._s, self._v = 0, 255, 255
         color = QColor.fromHsv(0, 255, 255)
         self._r, self._g, self._b = color.red(), color.green(), color.blue()
+        self._bg_r, self._bg_g, self._bg_b = 255, 255, 255
 
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(6, 6, 6, 6)
         outer_layout.setSpacing(6)
+
+        # ── FG/BG color swatch ──
+        fg_bg_layout = QHBoxLayout()
+        fg_bg_layout.setContentsMargins(0, 0, 0, 0)
+        self.fg_bg_widget = FgBgColorWidget()
+        self.fg_bg_widget.swapRequested.connect(self._swapColors)
+        fg_bg_layout.addWidget(self.fg_bg_widget)
+        fg_bg_layout.addStretch()
+        outer_layout.addLayout(fg_bg_layout)
 
         # ── Top: hue bar + SV box ──
         top_layout = QHBoxLayout()
@@ -155,6 +165,10 @@ class ColorSelectorPopupWindow(QFrame):
         self.channel_labels['R'].setText(str(r_disp))
         self.channel_labels['G'].setText(str(g_disp))
         self.channel_labels['B'].setText(str(b_disp))
+        self.fg_bg_widget.setColors(
+            QColor(self._r, self._g, self._b),
+            QColor(self._bg_r, self._bg_g, self._bg_b),
+        )
 
     def _applyHSV(self, h, s, v, push=True):
         self._h, self._s, self._v = h, s, v
@@ -192,21 +206,32 @@ class ColorSelectorPopupWindow(QFrame):
         view = app.activeWindow().activeView()
         if not view:
             return
+        canvas = view.canvas()
+
+        # Poll foreground color
         mc = view.foregroundColor()
-        if not mc:
-            return
-        qcolor = mc.colorForCanvas(app.activeWindow().activeView().canvas())
-        if not qcolor or not qcolor.isValid():
-            return
+        if mc:
+            qcolor = mc.colorForCanvas(canvas)
+            if qcolor and qcolor.isValid():
+                r, g, b = qcolor.red(), qcolor.green(), qcolor.blue()
+                if (r, g, b) != (self._r, self._g, self._b):
+                    color = QColor(r, g, b)
+                    h = color.hsvHue() if color.hsvHue() != -1 else self._h
+                    s, v = color.hsvSaturation(), color.value()
+                    self._applyHSV(h, s, v, push=False)
 
-        r, g, b = qcolor.red(), qcolor.green(), qcolor.blue()
-        if (r, g, b) == (self._r, self._g, self._b):
-            return
-
-        color = QColor(r, g, b)
-        h = color.hsvHue() if color.hsvHue() != -1 else self._h
-        s, v = color.hsvSaturation(), color.value()
-        self._applyHSV(h, s, v, push=False)
+        # Poll background color
+        mc_bg = view.backgroundColor()
+        if mc_bg:
+            qcolor_bg = mc_bg.colorForCanvas(canvas)
+            if qcolor_bg and qcolor_bg.isValid():
+                r, g, b = qcolor_bg.red(), qcolor_bg.green(), qcolor_bg.blue()
+                if (r, g, b) != (self._bg_r, self._bg_g, self._bg_b):
+                    self._bg_r, self._bg_g, self._bg_b = r, g, b
+                    self.fg_bg_widget.setColors(
+                        QColor(self._r, self._g, self._b),
+                        QColor(self._bg_r, self._bg_g, self._bg_b),
+                    )
 
     # ── Signal handlers ──────────────────────────────────────────
 
@@ -285,6 +310,34 @@ class ColorSelectorPopupWindow(QFrame):
         else:
             max_val = 100
         self._onChannelChanged(ch, max(0, min(max_val, val)))
+
+    def _swapColors(self):
+        """Swap Krita's foreground and background colors."""
+        app = Krita.instance()
+        if not app.activeWindow():
+            return
+        view = app.activeWindow().activeView()
+        if not view:
+            return
+        mc_fg = view.foregroundColor()
+        mc_bg = view.backgroundColor()
+        if not mc_fg or not mc_bg:
+            return
+        view.setForeGroundColor(mc_bg)
+        view.setBackGroundColor(mc_fg)
+        canvas = view.canvas()
+        qcolor_new_fg = mc_bg.colorForCanvas(canvas)
+        if qcolor_new_fg and qcolor_new_fg.isValid():
+            color = QColor(qcolor_new_fg.red(), qcolor_new_fg.green(), qcolor_new_fg.blue())
+            h = color.hsvHue() if color.hsvHue() != -1 else self._h
+            self._applyHSV(h, color.hsvSaturation(), color.value(), push=False)
+        qcolor_new_bg = mc_fg.colorForCanvas(canvas)
+        if qcolor_new_bg and qcolor_new_bg.isValid():
+            self._bg_r, self._bg_g, self._bg_b = qcolor_new_bg.red(), qcolor_new_bg.green(), qcolor_new_bg.blue()
+        self.fg_bg_widget.setColors(
+            QColor(self._r, self._g, self._b),
+            QColor(self._bg_r, self._bg_g, self._bg_b),
+        )
 
     def _setKritaForeground(self, qcolor):
         app = Krita.instance()
