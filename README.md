@@ -235,7 +235,8 @@ You can enable/disable each slider via settings.
 
 **Temp Erase Mode**
 
-Hold the **Alt** key to temporarily activate Krita's erase mode. Releasing Alt restores the original state:
+Hold the **Alt** key to temporarily activate Krita's erase mode. Releasing Alt restores the original state.
+
 Can be enabled/disabled via Settings → Quick Adjust tab → *Hold Alt to temporarily activate erase mode*.
 
 ### Customization
