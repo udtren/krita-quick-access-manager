@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-03-14
+### Added
+- Alt Erase (`brush_adjust/alt_erase_listener.py`): application-level key listener that temporarily activates Krita's erase mode while Alt is held
+  - On Alt press: records original erase state; enables erase if it was off
+  - On Alt release: restores erase to off only if it was originally off (leaves it on if it was already on)
+  - Configurable via Settings → Quick Adjust tab → **Hold Alt to temporarily activate erase mode** checkbox (`alt_erase_enabled` in `quick_adjust_docker.json`)
+  - Listener is installed at startup and uninstalled when the docker widget is destroyed
+
 ## 2026-03-08
 ### Added
 - HueSVC: FG/BG color swatch widget (`FgBgColorWidget`) displayed above the HueBar + SVBox in both the docker and the popup

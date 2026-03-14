@@ -320,6 +320,19 @@ class CommonConfigDialog(QDialog):
 
             layout.addLayout(hlayout)
 
+        # Alt Erase toggle
+        layout.addWidget(QLabel("[Alt Erase]"))
+        hlayout = QHBoxLayout()
+        label = QLabel("  Hold Alt to temporarily activate erase mode")
+        label.setAlignment(Qt.AlignLeft)
+        chk = QCheckBox()
+        chk.setChecked(self.quick_adjust_config.get("alt_erase_enabled", True))
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(chk)
+        layout.addLayout(hlayout)
+        self.quick_adjust_fields[("alt_erase_enabled",)] = chk
+
         # Add fields for floating_widgets section
         floating_widgets = self.quick_adjust_config.get("floating_widgets", {})
         # Ensure section exists with defaults
@@ -760,6 +773,8 @@ class CommonConfigDialog(QDialog):
                             self.quick_adjust_config[key] = modes_list
                         else:
                             self.quick_adjust_config[key] = []
+                    elif isinstance(edit, QCheckBox):
+                        self.quick_adjust_config[key] = edit.isChecked()
                     else:
                         # font_size or other single values
                         self.quick_adjust_config[key] = edit.text()
