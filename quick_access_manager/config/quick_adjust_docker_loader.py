@@ -33,6 +33,7 @@ def _get_default_config():
         ],
         "font_size": "12px",
         "alt_erase_enabled": True,
+        "alt_erase_key": "Alt",
     }
 
 
@@ -291,6 +292,16 @@ def get_alt_erase_enabled():
     """
     config = _load_config()
     return config.get("alt_erase_enabled", True)
+
+
+def get_alt_erase_key():
+    """Return the key name used to trigger temporary erase mode.
+
+    Returns:
+        str: Key name (e.g., "Alt", "Shift", "A"). Default: "Alt"
+    """
+    config = _load_config()
+    return config.get("alt_erase_key", "Alt")
 
 
 def get_all_config():

@@ -323,7 +323,7 @@ class CommonConfigDialog(QDialog):
         # Alt Erase toggle
         layout.addWidget(QLabel("[Alt Erase]"))
         hlayout = QHBoxLayout()
-        label = QLabel("  Hold Alt to temporarily activate erase mode")
+        label = QLabel("  Hold key to temporarily activate erase mode")
         label.setAlignment(Qt.AlignLeft)
         chk = QCheckBox()
         chk.setChecked(self.quick_adjust_config.get("alt_erase_enabled", True))
@@ -332,6 +332,18 @@ class CommonConfigDialog(QDialog):
         hlayout.addWidget(chk)
         layout.addLayout(hlayout)
         self.quick_adjust_fields[("alt_erase_enabled",)] = chk
+
+        hlayout = QHBoxLayout()
+        label = QLabel("  Toggle Key (e.g. Alt, Shift, A, F1)")
+        label.setAlignment(Qt.AlignLeft)
+        key_edit = QLineEdit(self.quick_adjust_config.get("alt_erase_key", "Alt"))
+        key_edit.setFixedWidth(80)
+        key_edit.setAlignment(Qt.AlignRight)
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(key_edit)
+        layout.addLayout(hlayout)
+        self.quick_adjust_fields[("alt_erase_key",)] = key_edit
 
         # Add fields for floating_widgets section
         floating_widgets = self.quick_adjust_config.get("floating_widgets", {})
