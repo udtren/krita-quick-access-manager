@@ -32,6 +32,7 @@ def _get_default_config():
             "greater",
         ],
         "font_size": "12px",
+        "alt_erase_enabled": True,
     }
 
 
@@ -280,6 +281,16 @@ def get_brush_history_icon_size():
     """
     config = _load_config()
     return config.get("brush_history_section", {}).get("icon_size", 34)
+
+
+def get_alt_erase_enabled():
+    """Return whether the Alt-key temporary erase mode is enabled.
+
+    Returns:
+        bool: True if Alt erase is enabled (default: True)
+    """
+    config = _load_config()
+    return config.get("alt_erase_enabled", True)
 
 
 def get_all_config():

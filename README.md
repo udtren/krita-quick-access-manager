@@ -233,6 +233,11 @@ You can enable/disable each slider via settings.
 - **Active Selection Status**: If there is an active selection, the icon will turn green.
 - **Toggle Gesture System**: Pause/Unpause the gesture system.
 
+**Temp Erase Mode**
+
+Hold the **Alt** key to temporarily activate Krita's erase mode. Releasing Alt restores the original state:
+Can be enabled/disabled via Settings → Quick Adjust tab → *Hold Alt to temporarily activate erase mode*.
+
 ### Customization
 To modify the docker's appearance and behavior, see "Global Config".
 

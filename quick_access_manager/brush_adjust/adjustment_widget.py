@@ -39,6 +39,7 @@ from ..config.quick_adjust_docker_loader import (
     get_color_history_icon_size,
     get_brush_history_total,
     get_brush_history_icon_size,
+    get_alt_erase_enabled,
 )
 
 
@@ -51,6 +52,7 @@ from .docker_buttons import (
 from .utils_adjust import brush_size_to_slider, slider_to_brush_size
 from .brush_monitor import BrushMonitorMixin
 from .layer_monitor import LayerMonitorMixin
+from .alt_erase_listener import AltEraseListener
 
 
 class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
@@ -70,6 +72,13 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         self.color_history_config = get_color_history_section()
         self.docker_toggle_config = get_docker_toggle_section()
         self.blender_modes = get_blender_mode_list()
+
+        # Alt-key erase mode listener (conditional on config)
+        if get_alt_erase_enabled():
+            self._alt_erase_listener = AltEraseListener()
+            self.destroyed.connect(self._alt_erase_listener.remove)
+        else:
+            self._alt_erase_listener = None
 
         # Initialize monitoring from mixins
         self.setup_brush_monitoring()
