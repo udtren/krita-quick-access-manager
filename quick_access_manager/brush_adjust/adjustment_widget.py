@@ -40,6 +40,7 @@ from ..config.quick_adjust_docker_loader import (
     get_brush_history_total,
     get_brush_history_icon_size,
     get_alt_erase_enabled,
+    get_alt_erase_key,
 )
 
 
@@ -75,7 +76,7 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
 
         # Alt-key erase mode listener (conditional on config)
         if get_alt_erase_enabled():
-            self._alt_erase_listener = AltEraseListener()
+            self._alt_erase_listener = AltEraseListener(get_alt_erase_key())
             self.destroyed.connect(self._alt_erase_listener.remove)
         else:
             self._alt_erase_listener = None

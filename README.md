@@ -235,9 +235,9 @@ You can enable/disable each slider via settings.
 
 **Temp Erase Mode**
 
-Hold the **Alt** key to temporarily activate Krita's erase mode. Releasing Alt restores the original state.
+Hold a configurable key (default: **Alt**) to temporarily activate Krita's erase mode. Releasing the key restores the original state.
 
-Can be enabled/disabled via Settings → Quick Adjust tab → *Hold Alt to temporarily activate erase mode*.
+Can be enabled/disabled and the trigger key can be changed via Settings → Quick Adjust tab → *[Alt Erase]* section (requires Krita restart to take effect).
 
 ### Customization
 To modify the docker's appearance and behavior, see "Global Config".
