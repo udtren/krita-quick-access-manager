@@ -34,12 +34,14 @@ def resolve_key(key_string: str) -> int:
 
 class AltEraseListener(QObject):
     """Application-level event filter that temporarily activates Krita's erase
-    mode while a configurable key is held.
+    mode while a configurable key is held — but only when no other key is
+    pressed simultaneously.
 
     Behaviour:
-    - Key pressed  : record original erase state; activate erase if it was off.
-    - Key released : if erase was originally off, deactivate it again.
-                     If it was already on before the key was pressed, leave it on.
+    - Key pressed alone : record original erase state; activate erase if it was off.
+    - Another key pressed while held : cancel the erase activation immediately.
+    - Key released : if no combo was detected and erase was originally off,
+                     deactivate erase. Otherwise leave erase state unchanged.
     """
 
     def __init__(self, key_string: str = "Alt"):
@@ -47,6 +49,7 @@ class AltEraseListener(QObject):
         self._key_code = resolve_key(key_string)
         self._key_active = False
         self._was_erasing = False
+        self._combo_detected = False  # another key pressed while ours was held
         QApplication.instance().installEventFilter(self)
 
     def remove(self):
@@ -59,19 +62,28 @@ class AltEraseListener(QObject):
     def eventFilter(self, obj, event):
         t = event.type()
 
-        if t == QEvent.KeyPress and not event.isAutoRepeat() and event.key() == self._key_code:
-            if not self._key_active:
-                self._key_active = True
-                action = self._erase_action()
-                if action:
-                    self._was_erasing = action.isChecked()
-                    if not self._was_erasing:
-                        action.setChecked(True)
+        if t == QEvent.KeyPress and not event.isAutoRepeat():
+            if event.key() == self._key_code:
+                if not self._key_active:
+                    self._key_active = True
+                    self._combo_detected = False
+                    action = self._erase_action()
+                    if action:
+                        self._was_erasing = action.isChecked()
+                        if not self._was_erasing:
+                            action.setChecked(True)
+            elif self._key_active and not self._combo_detected:
+                # Another key pressed while ours is held — cancel erase activation
+                self._combo_detected = True
+                if not self._was_erasing:
+                    action = self._erase_action()
+                    if action:
+                        action.setChecked(False)
 
         elif t == QEvent.KeyRelease and not event.isAutoRepeat() and event.key() == self._key_code:
             if self._key_active:
                 self._key_active = False
-                if not self._was_erasing:
+                if not self._combo_detected and not self._was_erasing:
                     action = self._erase_action()
                     if action:
                         action.setChecked(False)
