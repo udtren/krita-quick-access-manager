@@ -34,17 +34,19 @@ def resolve_key(key_string: str) -> int:
 
 class AltEraseListener(QObject):
     """Application-level event filter that activates Krita's erase mode while
-    a configurable key is held.
+    a configurable key is held — but only when no other key is pressed simultaneously.
 
     Behaviour:
-    - Key pressed : always enable erase.
-    - Key released : always disable erase.
+    - Key pressed alone  : always enable erase.
+    - Another key pressed while held : immediately cancel erase activation.
+    - Key released : always disable erase (unless combo cancelled it already).
     """
 
     def __init__(self, key_string: str = "Alt"):
         super().__init__()
         self._key_code = resolve_key(key_string)
         self._key_active = False
+        self._combo_detected = False
         QApplication.instance().installEventFilter(self)
 
     def remove(self):
@@ -57,18 +59,27 @@ class AltEraseListener(QObject):
     def eventFilter(self, obj, event):
         t = event.type()
 
-        if t == QEvent.KeyPress and not event.isAutoRepeat() and event.key() == self._key_code:
-            if not self._key_active:
-                self._key_active = True
+        if t == QEvent.KeyPress and not event.isAutoRepeat():
+            if event.key() == self._key_code:
+                if not self._key_active:
+                    self._key_active = True
+                    self._combo_detected = False
+                    action = self._erase_action()
+                    if action:
+                        action.setChecked(True)
+            elif self._key_active and not self._combo_detected:
+                # Another key pressed while ours is held — cancel erase
+                self._combo_detected = True
                 action = self._erase_action()
                 if action:
-                    action.setChecked(True)
+                    action.setChecked(False)
 
         elif t == QEvent.KeyRelease and not event.isAutoRepeat() and event.key() == self._key_code:
             if self._key_active:
                 self._key_active = False
-                action = self._erase_action()
-                if action:
-                    action.setChecked(False)
+                if not self._combo_detected:
+                    action = self._erase_action()
+                    if action:
+                        action.setChecked(False)
 
         return False  # never consume the event
