@@ -3,11 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-03-15
+### Changed
+- Alt Erase: simplified toggle behaviour — key press always enables erase, key release always disables erase (no longer preserves prior erase state)
+- Alt Erase: toggle key is now user-configurable (default: `Alt`) via Settings → Quick Adjust tab; supports modifier keys, letter keys, and function keys
+
 ## 2026-03-14
 ### Added
-- Alt Erase (`brush_adjust/alt_erase_listener.py`): application-level key listener that temporarily activates Krita's erase mode while Alt is held
-  - On Alt press: records original erase state; enables erase if it was off
-  - On Alt release: restores erase to off only if it was originally off (leaves it on if it was already on)
+- Alt Erase (`brush_adjust/alt_erase_listener.py`): application-level key listener that temporarily activates Krita's erase mode while a key is held
   - Configurable via Settings → Quick Adjust tab → **Hold Alt to temporarily activate erase mode** checkbox (`alt_erase_enabled` in `quick_adjust_docker.json`)
   - Listener is installed at startup and uninstalled when the docker widget is destroyed
 
