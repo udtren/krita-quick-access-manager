@@ -36,7 +36,7 @@ except ImportError:
         QWidget, QApplication, QVBoxLayout, QHBoxLayout, QGridLayout,
         QLabel, QPushButton, QToolButton, QCheckBox, QLineEdit, QComboBox,
         QSpinBox, QSlider, QDialog, QDialogButtonBox, QScrollArea, QFrame,
-        QShortcut, QSizePolicy, QDockWidget, QMdiArea, QTableWidget,
+        QSizePolicy, QDockWidget, QMdiArea, QTableWidget,
         QTableWidgetItem, QHeaderView, QMessageBox, QColorDialog,
         QInputDialog, QFormLayout, QTextEdit, QKeySequenceEdit, QGroupBox,
         QTabWidget, QAbstractItemView,
@@ -44,7 +44,7 @@ except ImportError:
     from PyQt6.QtGui import (  # noqa: F401
         QIcon, QPixmap, QPainter, QBrush, QColor, QCursor, QDrag,
         QPen, QPalette, QKeyEvent, QLinearGradient, QKeySequence,
-        QFont, QFontMetrics, QAction, QIntValidator,
+        QFont, QFontMetrics, QAction, QIntValidator, QShortcut,
     )
     PYQT6 = True
 
