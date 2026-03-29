@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-03-29
+### Changed
+- PyQt5 / PyQt6 dual compatibility (`compat.py`)
+  - Added `compat.py` shim — all Qt imports now routed through this module; detects PyQt5 or PyQt6 at runtime
+  - PyQt6 path patches all flat enum aliases (`Qt.AlignLeft`, `QEvent.KeyPress`, `QPalette.Window`, etc.) so existing code requires no changes
+  - `QShortcut` import moved from `QtWidgets` to `QtGui` for PyQt6
+  - `QAction` import moved from `QtWidgets` to `QtGui` for PyQt6
+  - All `exec_()` calls replaced with `exec()` (works on both PyQt5 ≥ 5.12 and PyQt6)
+  - All `QDrag.exec_()` calls replaced with `QDrag.exec()`
+  - `QDialog.Accepted` / `QDialog.Rejected` patched for PyQt6
+  - `DockWidgetFactory.DockRight` / `DockWidgetFactoryBase.DockRight` wrapped with try/except fallback to `DockPosition.DockRight` for Krita 6
+
 ## 2026-03-15
 ### Changed
 - Alt Erase: simplified toggle behaviour — key press always enables erase, key release always disables erase (no longer preserves prior erase state)
