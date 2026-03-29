@@ -66,10 +66,15 @@ for extension_class in extensions:
 
 DOCKER_ID = "HueSVC"
 
+try:
+    _dock_pos = DockWidgetFactoryBase.DockRight
+except AttributeError:
+    _dock_pos = DockWidgetFactoryBase.DockPosition.DockRight  # Krita 6
+
 instance = Krita.instance()
 dock_widget_factory = DockWidgetFactory(
     DOCKER_ID,
-    DockWidgetFactoryBase.DockRight,
+    _dock_pos,
     ColorSelectorDock
 )
 instance.addDockWidgetFactory(dock_widget_factory)
