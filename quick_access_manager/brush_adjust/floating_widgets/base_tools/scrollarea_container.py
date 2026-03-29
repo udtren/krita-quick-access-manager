@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
+from ....compat import QWidget, QVBoxLayout, QScrollArea
 
 
 class ntScrollAreaContainer(QWidget):

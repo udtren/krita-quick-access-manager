@@ -1,6 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QApplication
-from PyQt5.QtCore import Qt, QPoint, QMimeData
-from PyQt5.QtGui import QDrag
+from ..compat import QWidget, QApplication, Qt, QPoint, QMimeData, QDrag
 from ..utils.config_utils import get_brush_icon_size
 
 

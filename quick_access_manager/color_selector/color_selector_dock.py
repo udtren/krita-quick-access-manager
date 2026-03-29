@@ -1,7 +1,9 @@
 from krita import DockWidget, Krita, ManagedColor
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QPushButton
-from PyQt5.QtGui import QPainter, QColor, QLinearGradient, QFont, QIntValidator
-from PyQt5.QtCore import Qt, QPoint, pyqtSignal, QTimer
+from ..compat import (
+    QWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QPushButton,
+    QPainter, QColor, QLinearGradient, QFont, QIntValidator,
+    Qt, QPoint, pyqtSignal, QTimer,
+)
 from ..config.popup_loader import PopupConfigLoader
 
 

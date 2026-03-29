@@ -1,7 +1,6 @@
 import json
 import os
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeySequence
+from ..compat import Qt, QKeySequence
 from ..utils.config_utils import get_config_dir
 
 

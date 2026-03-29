@@ -1,22 +1,11 @@
 import json
 import os
-from PyQt5.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QWidget,
-    QScrollArea,
-    QCheckBox,
-    QTextEdit,
-    QKeySequenceEdit,
-    QTabWidget,
-    QGroupBox,
-    QComboBox,
+from ..compat import (
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QWidget, QScrollArea, QCheckBox, QTextEdit, QKeySequenceEdit, QTabWidget,
+    QGroupBox, QComboBox,
+    Qt,
 )
-from PyQt5.QtCore import Qt
 from ..config.popup_loader import PopupConfigLoader
 
 

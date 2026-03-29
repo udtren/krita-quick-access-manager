@@ -1,15 +1,9 @@
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QGridLayout,
-    QPushButton,
-    QLabel,
-    QShortcut,
-    QFrame,
+from ..compat import (
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton, QLabel,
+    QShortcut, QFrame,
+    Qt,
+    QCursor, QIcon,
 )
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor, QIcon
 from krita import Krita  # type: ignore
 from ..config.popup_loader import PopupConfigLoader
 from ..utils.config_utils import get_plugin_dir 
@@ -288,7 +282,7 @@ class BrushSetsPopup:
                         icon = preset.image()
                         if icon and not icon.isNull():
                             # Convert QImage to QPixmap and then to QIcon
-                            from PyQt5.QtGui import QPixmap, QIcon
+                            from ..compat import QPixmap, QIcon
 
                             pixmap = QPixmap.fromImage(icon)
                             if not pixmap.isNull():

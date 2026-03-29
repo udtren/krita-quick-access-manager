@@ -1,12 +1,7 @@
-from PyQt5.QtWidgets import (
-    QWidget,
-    QToolButton,
-    QDockWidget,
-    QVBoxLayout,
-    QSizePolicy,
-    QScrollArea,
+from ....compat import (
+    QWidget, QToolButton, QDockWidget, QVBoxLayout, QSizePolicy, QScrollArea,
+    Qt, QSize, QPoint, QEvent,
 )
-from PyQt5.QtCore import Qt, QSize, QPoint, QEvent
 from .scrollarea_container import ntScrollAreaContainer
 from krita import Krita
 import sys

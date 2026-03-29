@@ -3,9 +3,7 @@ Gesture preview widget that displays available actions in a 3x3 grid.
 """
 
 import os
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout
-from PyQt5.QtGui import QPixmap
+from ...compat import Qt, QWidget, QLabel, QGridLayout, QPixmap
 from krita import Krita  # type: ignore
 from quick_access_manager.utils.logs import write_log
 from quick_access_manager.utils.config_utils import get_gesture_data_dir

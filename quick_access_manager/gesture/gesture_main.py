@@ -5,9 +5,7 @@ Handles key+mouse gesture detection and execution.
 
 import json
 import os
-from PyQt5.QtCore import Qt, QObject, QEvent
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QCursor
+from ..compat import Qt, QObject, QEvent, QApplication, QCursor
 from krita import Krita  # type: ignore
 from .gesture_actions import execute_gesture
 from .widgets.gesture_preview import GesturePreviewWidget

@@ -1,12 +1,6 @@
-from PyQt5.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QComboBox,
-    QLineEdit,
-    QMessageBox,
+from ..compat import (
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox,
+    QLineEdit, QMessageBox,
 )
 from krita import Krita  # type: ignore
 from .action_popup import GestureActionPopup
@@ -174,7 +168,7 @@ class ArrowConfigPopup(QDialog):
         """Configure action gesture"""
         # Open action selection dialog
         action_dialog = GestureActionPopup(self)
-        if action_dialog.exec_():
+        if action_dialog.exec():
             action_id = action_dialog.get_action_id()
             if action_id:
                 self.gesture_config = {

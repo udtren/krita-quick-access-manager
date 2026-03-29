@@ -1,5 +1,4 @@
-from PyQt5.QtCore import QObject, QEvent, Qt
-from PyQt5.QtWidgets import QApplication
+from ..compat import QObject, QEvent, Qt, QApplication
 from krita import Krita  # type: ignore
 
 # Map of key name strings to Qt key codes

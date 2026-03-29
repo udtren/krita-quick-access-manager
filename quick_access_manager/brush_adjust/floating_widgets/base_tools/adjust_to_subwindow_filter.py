@@ -1,5 +1,5 @@
 from krita import Krita
-from PyQt5.QtCore import QObject, QEvent, QPoint
+from ....compat import QObject, QEvent, QPoint
 
 
 class ntAdjustToSubwindowFilter(QObject):

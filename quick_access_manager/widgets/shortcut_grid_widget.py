@@ -1,16 +1,8 @@
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QGridLayout,
-    QApplication,
-    QDialog,
-    QLineEdit,
-    QFormLayout,
-    QDialogButtonBox,
+from ..compat import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGridLayout, QApplication,
+    QDialog, QLineEdit, QFormLayout, QDialogButtonBox,
+    Qt, QSize,
 )
-from PyQt5.QtCore import Qt, QSize
 from .shortcut_button import ShortcutDraggableButton
 from ..utils.shortcut_utils import (
     get_spacing_between_buttons,
@@ -334,7 +326,7 @@ class SingleShortcutGridWidget(QWidget):
         dialog.setLayout(layout)
 
         # Show dialog and process result
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             new_name = name_input.text().strip()
             max_per_row = max_per_row_input.text().strip()
             icon_size = icon_size_input.text().strip()

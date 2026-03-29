@@ -1,6 +1,4 @@
-from PyQt5.QtWidgets import QPushButton, QApplication
-from PyQt5.QtCore import Qt, QPoint, QMimeData, QSize
-from PyQt5.QtGui import QDrag, QIcon, QPixmap
+from ..compat import QPushButton, QApplication, Qt, QPoint, QMimeData, QSize, QDrag, QIcon, QPixmap
 import os
 from ..utils.shortcut_utils import get_font_px, get_shortcut_button_config
 from ..utils.config_utils import get_config_dir
@@ -153,7 +151,7 @@ class ShortcutDraggableButton(QPushButton):
     def lighten_color(self, color_hex, amount):
         """Lighten a hex color"""
         try:
-            from PyQt5.QtGui import QColor
+            from ..compat import QColor
 
             color = QColor(color_hex)
             h, s, v, a = color.getHsv()
@@ -166,7 +164,7 @@ class ShortcutDraggableButton(QPushButton):
     def darken_color(self, color_hex, amount):
         """Darken a hex color"""
         try:
-            from PyQt5.QtGui import QColor
+            from ..compat import QColor
 
             color = QColor(color_hex)
             h, s, v, a = color.getHsv()
@@ -234,7 +232,7 @@ class ShortcutDraggableButton(QPushButton):
         mime_data.setText(f"shortcut_action:{self.action.objectName()}")
         drag.setMimeData(mime_data)
         drag.setHotSpot(QPoint(16, 16))
-        drag.exec_(Qt.MoveAction)
+        drag.exec(Qt.MoveAction)
 
     def move_button_up(self):
         """Move button up in the grid order"""
@@ -301,7 +299,7 @@ class ShortcutDraggableButton(QPushButton):
         if not gesture_filter_state:
             pause_gesture_event_filter()
         dialog = ShortcutButtonConfigDialog(self)
-        if dialog.exec_():
+        if dialog.exec():
             self.apply_configuration(dialog)
         if not gesture_filter_state:
             resume_gesture_event_filter()

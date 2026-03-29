@@ -1,8 +1,6 @@
 import os
 from krita import *
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QPushButton
-from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QPixmap, QIcon
+from ...compat import QWidget, QVBoxLayout, QLabel, QFrame, QPushButton, QTimer, Qt, QPixmap, QIcon
 from ...gesture.gesture_main import (
     pause_gesture_event_filter,
     resume_gesture_event_filter,

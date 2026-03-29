@@ -1,20 +1,12 @@
 import os
 import json
 from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QGridLayout,
-    QPushButton,
-    QLabel,
-    QDockWidget,
-    QHBoxLayout,
-    QInputDialog,
-    QApplication,
-    QScrollArea
+from .compat import (
+    QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget,
+    QHBoxLayout, QInputDialog, QApplication, QScrollArea,
+    Qt, QSize,
+    QIcon,
 )
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
 from .dialogs.settings_dialog import CommonConfigDialog
 from .gesture.gesture_config_dialog import GestureConfigDialog
@@ -179,7 +171,7 @@ class QuickAccessDockerWidget(QDockWidget):
 
     def show_settings_dialog(self):
         dlg = CommonConfigDialog(self.common_config_path, self)
-        if dlg.exec_():
+        if dlg.exec():
             # 設定を再読み込みして即時反映
             global COMMON_CONFIG
             with open(self.common_config_path, "r", encoding="utf-8") as f:

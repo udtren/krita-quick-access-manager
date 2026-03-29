@@ -1,9 +1,9 @@
 from krita import Krita, ManagedColor
-from PyQt5.QtWidgets import (
+from ..compat import (
     QFrame, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QShortcut,
+    QColor, QCursor, QFont, QIntValidator,
+    Qt, QTimer,
 )
-from PyQt5.QtGui import QColor, QCursor, QFont, QIntValidator
-from PyQt5.QtCore import Qt, QTimer
 
 from .color_selector_dock import HueBar, SVBox, ChannelBar, FgBgColorWidget
 from ..config.popup_loader import PopupConfigLoader

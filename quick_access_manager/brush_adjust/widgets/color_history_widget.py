@@ -1,6 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QApplication
-from PyQt5.QtCore import QEvent
-from PyQt5.QtGui import QColor
+from ...compat import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QApplication, QEvent, QColor
 from krita import Krita, ManagedColor  # type: ignore
 
 COLOR_HISTORY_BACKGROUND_COLOR = "#b0b0b0"
@@ -77,7 +75,7 @@ class ColorHistoryWidget(QWidget):
         # Check if this is a pure mouse button press event (no modifiers like Ctrl)
         if event.type() == QEvent.MouseButtonPress:
             # Only check if there are no keyboard modifiers pressed
-            from PyQt5.QtCore import Qt
+            from ...compat import Qt
             if event.modifiers() == Qt.NoModifier:
                 # Pure mouse button press, check the current color
                 self.check_color_change()

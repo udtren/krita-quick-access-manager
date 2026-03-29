@@ -1,14 +1,8 @@
-from PyQt5.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QCheckBox,
-    QColorDialog,
+from ..compat import (
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QCheckBox, QColorDialog,
+    QColor,
 )
-from PyQt5.QtGui import QColor
 
 
 class ShortcutButtonConfigDialog(QDialog):

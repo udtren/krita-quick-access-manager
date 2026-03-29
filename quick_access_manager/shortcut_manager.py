@@ -1,13 +1,8 @@
 import os
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QDockWidget,
-    QScrollArea,
+from .compat import (
+    Qt, QSize,
+    QIcon,
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QDockWidget, QScrollArea,
 )
 from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
 from .utils.data_manager import load_shortcut_grids_data, save_shortcut_grids_data
@@ -127,7 +122,7 @@ class ShortcutAccessDockerWidget(QDockWidget):
     def show_all_shortcut_popup(self):
         """Show the action selection popup"""
         self.shortcut_popup = ShortcutPopup(self)
-        self.shortcut_popup.exec_()
+        self.shortcut_popup.exec()
 
     def add_grid(self):
         """Add a new shortcut grid"""
@@ -214,7 +209,7 @@ class ShortcutAccessDockerWidget(QDockWidget):
     def run_krita_action(self, action_id):
         """Execute a Krita action"""
         if not ActionManager.run_action(action_id):
-            from PyQt5.QtWidgets import QMessageBox
+            from .compat import QMessageBox
 
             QMessageBox.warning(
                 self, "Action Error", f"Action '{action_id}' not found."

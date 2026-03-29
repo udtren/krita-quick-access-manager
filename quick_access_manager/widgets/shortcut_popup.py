@@ -1,12 +1,6 @@
-from PyQt5.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QPushButton,
-    QLineEdit,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-    QMessageBox,
+from ..compat import (
+    QDialog, QVBoxLayout, QPushButton, QLineEdit, QTableWidget,
+    QTableWidgetItem, QHeaderView, QMessageBox,
 )
 from ..utils.action_manager import ActionManager
 from ..utils.styles import docker_btn_style

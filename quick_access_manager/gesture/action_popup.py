@@ -1,12 +1,6 @@
-from PyQt5.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QPushButton,
-    QLineEdit,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-    QMessageBox,
+from ..compat import (
+    QDialog, QVBoxLayout, QPushButton, QLineEdit, QTableWidget,
+    QTableWidgetItem, QHeaderView, QMessageBox,
 )
 from ..utils.action_manager import ActionManager
 
@@ -88,7 +82,7 @@ class GestureActionPopup(QDialog):
         layout.addWidget(self.table)
 
         # Button layout
-        from PyQt5.QtWidgets import QHBoxLayout
+        from ..compat import QHBoxLayout
         btn_layout = QHBoxLayout()
         self.ok_btn = QPushButton("OK")
         self.cancel_btn = QPushButton("Cancel")

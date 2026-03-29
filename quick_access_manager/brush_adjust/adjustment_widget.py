@@ -2,18 +2,12 @@
 Main brush adjustment widget with UI and coordination logic.
 """
 
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QSlider,
-    QPushButton,
-    QComboBox,
-    QDockWidget,
+from ..compat import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QPushButton,
+    QComboBox, QDockWidget,
+    Qt, QTimer,
+    QIcon, QPixmap,
 )
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QIcon, QPixmap
 from krita import Krita  # type: ignore
 import os
 

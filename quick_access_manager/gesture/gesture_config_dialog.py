@@ -1,18 +1,11 @@
 import json
 import os
-from PyQt5.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QGridLayout,
-    QLabel,
-    QPushButton,
-    QTabWidget,
-    QWidget,
-    QTextEdit,
+from ..compat import (
+    QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton,
+    QTabWidget, QWidget, QTextEdit,
+    Qt, QSize,
+    QIcon, QPixmap, QKeyEvent,
 )
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon, QPixmap, QKeyEvent
 from krita import Krita  # type: ignore
 from .arrow_config_popup import ArrowConfigPopup
 from .gesture_main import (
@@ -274,7 +267,7 @@ class GestureConfigDialog(QDialog):
                 self.label_widgets[label_key] = center_label
 
                 # Create vertical layout for center (button + label)
-                from PyQt5.QtWidgets import QVBoxLayout
+                from ..compat import QVBoxLayout
 
                 center_widget = QWidget()
                 center_layout = QVBoxLayout()
@@ -446,7 +439,7 @@ class GestureConfigDialog(QDialog):
     # ========================================================================
     def open_settings(self):
         """Open settings dialog"""
-        from PyQt5.QtWidgets import QCheckBox, QSpinBox, QFormLayout
+        from ..compat import QCheckBox, QSpinBox, QFormLayout
 
         settings_dialog = QDialog(self)
         settings_dialog.setWindowTitle("Gesture Settings")
@@ -556,7 +549,7 @@ Example:
         ok_btn.clicked.connect(save_settings)
         cancel_btn.clicked.connect(settings_dialog.reject)
 
-        settings_dialog.exec_()
+        settings_dialog.exec()
 
     # ========================================================================
 
@@ -654,7 +647,7 @@ Example:
 
         # Open arrow config popup
         dialog = ArrowConfigPopup(direction, config_name, self, self)
-        if dialog.exec_():
+        if dialog.exec():
             gesture_config = dialog.get_gesture_config()
             # Update the config data (including None to clear)
             if gesture_config is None:
@@ -699,7 +692,7 @@ Example:
         """Open dialog to configure the gesture trigger key and center action"""
         # First, configure the key
         dialog = KeyCaptureDialog(config_name, self)
-        if dialog.exec_():
+        if dialog.exec():
             key = dialog.get_captured_key()
             if key:
                 # Save the key to config
@@ -715,7 +708,7 @@ Example:
 
             # Then, configure the center action (key press action)
             action_dialog = ArrowConfigPopup("center", config_name, self, self)
-            if action_dialog.exec_():
+            if action_dialog.exec():
                 gesture_config = action_dialog.get_gesture_config()
                 if gesture_config is None:
                     # Remove the direction from config to clear it

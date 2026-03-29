@@ -2,7 +2,7 @@
 Layer state monitoring and control functionality.
 """
 
-from PyQt5.QtCore import QTimer
+from ..compat import QTimer
 from krita import Krita  # type: ignore
 
 
