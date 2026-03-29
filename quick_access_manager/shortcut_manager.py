@@ -304,7 +304,11 @@ class ShortcutAccessDockerWidget(QDockWidget):
 
 class ShortcutAccessDockerFactory(DockWidgetFactoryBase):
     def __init__(self):
-        super().__init__("shortcut_access_docker", DockWidgetFactory.DockRight)
+        try:
+            dock_pos = DockWidgetFactory.DockRight
+        except AttributeError:
+            dock_pos = DockWidgetFactory.DockPosition.DockRight  # Krita 6
+        super().__init__("shortcut_access_docker", dock_pos)
 
     def createDockWidget(self):
         return ShortcutAccessDockerWidget()

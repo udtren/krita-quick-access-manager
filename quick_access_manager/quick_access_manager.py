@@ -448,7 +448,11 @@ class QuickAccessDockerWidget(QDockWidget):
 
 class QuickAccessDockerFactory(DockWidgetFactoryBase):
     def __init__(self):
-        super().__init__("quick_access_manager_docker", DockWidgetFactory.DockRight)
+        try:
+            dock_pos = DockWidgetFactory.DockRight
+        except AttributeError:
+            dock_pos = DockWidgetFactory.DockPosition.DockRight  # Krita 6
+        super().__init__("quick_access_manager_docker", dock_pos)
 
     def createDockWidget(self):
         return QuickAccessDockerWidget()
