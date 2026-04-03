@@ -1,7 +1,6 @@
 import json
 import os
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeySequence
+from ..compat import Qt, QKeySequence
 from ..utils.config_utils import get_config_dir
 
 
@@ -36,6 +35,7 @@ class PopupConfigLoader:
                     "actions_popup_shortcut": "Tab",
                     "brush_sets_popup_shortcut": "W",
                     "color_selector_popup_shortcut": "A",
+                    "preset_switch_popup_shortcut": "",
                     "brush_icon_size": 46,
                     "grid_label_width": 60,
                     "color_selector_popup_width": 350,
@@ -52,6 +52,7 @@ class PopupConfigLoader:
                 "actions_popup_shortcut": "Tab",
                 "brush_sets_popup_shortcut": "W",
                 "color_selector_popup_shortcut": "A",
+                "preset_switch_popup_shortcut": "",
                 "brush_icon_size": 46,
                 "grid_label_width": 60,
                 "color_selector_popup_width": 350,
@@ -110,6 +111,22 @@ class PopupConfigLoader:
     def set_color_selector_popup_shortcut(self, shortcut_str):
         """Set the shortcut for color selector popup"""
         self._config["color_selector_popup_shortcut"] = shortcut_str
+        self._save_config()
+
+    def get_preset_switch_popup_shortcut_string(self):
+        """Get the preset switch popup shortcut as a string (empty = disabled)"""
+        return self._config.get("preset_switch_popup_shortcut", "")
+
+    def get_preset_switch_popup_shortcut(self):
+        """Get the shortcut key sequence for preset switch popup"""
+        shortcut_str = self._config.get("preset_switch_popup_shortcut", "")
+        if not shortcut_str:
+            return None
+        return self._parse_shortcut(shortcut_str)
+
+    def set_preset_switch_popup_shortcut(self, shortcut_str):
+        """Set the shortcut for preset switch popup"""
+        self._config["preset_switch_popup_shortcut"] = shortcut_str
         self._save_config()
 
     def get_color_selector_popup_width(self):

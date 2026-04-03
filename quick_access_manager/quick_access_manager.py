@@ -1,20 +1,12 @@
 import os
 import json
 from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QGridLayout,
-    QPushButton,
-    QLabel,
-    QDockWidget,
-    QHBoxLayout,
-    QInputDialog,
-    QApplication,
-    QScrollArea
+from .compat import (
+    QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget,
+    QHBoxLayout, QInputDialog, QApplication, QScrollArea,
+    Qt, QSize,
+    QIcon,
 )
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
 from .dialogs.settings_dialog import CommonConfigDialog
 from .gesture.gesture_config_dialog import GestureConfigDialog
@@ -28,7 +20,7 @@ from .utils.config_utils import (
 )
 from .widgets.draggable_button import DraggableBrushButton
 from .widgets.grid_container import ClickableGridWidget, DraggableGridContainer
-from .popup import BrushSetsPopup
+from .popup import BrushSetsPopup, PresetSwitchManager
 
 GRID_NAME_COLOR = "#979797"
 
@@ -53,6 +45,10 @@ class QuickAccessDockerWidget(QDockWidget):
         # Initialize popup functionality
         self.brush_popup = BrushSetsPopup(self)
         self.brush_popup.setup_popup_shortcut()
+
+        # Initialize preset switch manager
+        self.preset_switch = PresetSwitchManager(self)
+        self.preset_switch.setup_shortcut()
 
         self.init_ui()
 
@@ -179,7 +175,7 @@ class QuickAccessDockerWidget(QDockWidget):
 
     def show_settings_dialog(self):
         dlg = CommonConfigDialog(self.common_config_path, self)
-        if dlg.exec_():
+        if dlg.exec():
             # 設定を再読み込みして即時反映
             global COMMON_CONFIG
             with open(self.common_config_path, "r", encoding="utf-8") as f:
@@ -456,7 +452,11 @@ class QuickAccessDockerWidget(QDockWidget):
 
 class QuickAccessDockerFactory(DockWidgetFactoryBase):
     def __init__(self):
-        super().__init__("quick_access_manager_docker", DockWidgetFactory.DockRight)
+        try:
+            dock_pos = DockWidgetFactory.DockRight
+        except AttributeError:
+            dock_pos = DockWidgetFactory.DockPosition.DockRight  # Krita 6
+        super().__init__("quick_access_manager_docker", dock_pos)
 
     def createDockWidget(self):
         return QuickAccessDockerWidget()

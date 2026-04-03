@@ -1,6 +1,8 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QApplication
-from PyQt5.QtCore import QSize, QEvent
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QColor
+from ...compat import (
+    QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QApplication,
+    QSize, QEvent,
+    QIcon, QPixmap, QPainter, QBrush, QColor,
+)
 from krita import Krita  # type: ignore
 
 BRUSH_HISTORY_BACKGROUND_COLOR = "#b0b0b0"
@@ -87,7 +89,7 @@ class BrushHistoryWidget(QWidget):
         # Check if this is a pure mouse button press event (no modifiers like Ctrl)
         if event.type() == QEvent.MouseButtonPress:
             # Only check if there are no keyboard modifiers pressed
-            from PyQt5.QtCore import Qt
+            from ...compat import Qt
             if event.modifiers() == Qt.NoModifier:
                 # Pure mouse button press, check the current brush
                 self.check_brush_change()

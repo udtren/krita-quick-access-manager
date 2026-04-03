@@ -1,15 +1,9 @@
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QGridLayout,
-    QPushButton,
-    QLabel,
-    QShortcut,
-    QFrame,
+from ..compat import (
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton, QLabel,
+    QShortcut, QFrame,
+    Qt, QSize,
+    QCursor, QIcon, QPixmap,
 )
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from krita import Krita  # type: ignore
 from ..utils.action_manager import ActionManager  
 from ..utils.logs import write_log

@@ -1,5 +1,5 @@
 from krita import *  # type: ignore
-from PyQt5.QtWidgets import QMessageBox
+from .compat import QMessageBox
 from .quick_access_manager import QuickAccessDockerFactory
 from .brush_adjust import BrushAdjustDockerFactory
 from .shortcut_manager import ShortcutAccessDockerFactory
@@ -12,6 +12,7 @@ from .gesture import (
 from .gesture.shortcut.toggle_gesture_recognition import (
     ToggleGestureExtension,
 )
+from .popup import SavePresetsExtension
 
 
 class QuickAccessManagerExtension(Extension):
@@ -56,6 +57,7 @@ app = Krita.instance()
 extensions = [
     QuickAccessManagerExtension,
     ToggleGestureExtension,
+    SavePresetsExtension,
 ]
 
 for extension_class in extensions:
@@ -66,10 +68,15 @@ for extension_class in extensions:
 
 DOCKER_ID = "HueSVC"
 
+try:
+    _dock_pos = DockWidgetFactoryBase.DockRight
+except AttributeError:
+    _dock_pos = DockWidgetFactoryBase.DockPosition.DockRight  # Krita 6
+
 instance = Krita.instance()
 dock_widget_factory = DockWidgetFactory(
     DOCKER_ID,
-    DockWidgetFactoryBase.DockRight,
+    _dock_pos,
     ColorSelectorDock
 )
 instance.addDockWidgetFactory(dock_widget_factory)

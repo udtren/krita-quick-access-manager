@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import QMdiArea, QDockWidget
-from PyQt5.QtGui import QPalette, QColor
+from ...compat import QMdiArea, QDockWidget, QPalette, QColor
 from .base_tools.adjust_to_subwindow_filter import ntAdjustToSubwindowFilter
 from .base_tools.widget_pad import ntWidgetPad, WidgetPadPosition
 

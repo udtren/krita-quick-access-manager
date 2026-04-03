@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import QMdiArea, QDockWidget, QWidget, QHBoxLayout, QLabel
-from PyQt5.QtCore import Qt, QSize
+from ...compat import QMdiArea, QDockWidget, QWidget, QHBoxLayout, QLabel, Qt, QSize
 from .base_tools.adjust_to_subwindow_filter import ntAdjustToSubwindowFilter
 from .base_tools.widget_pad import ntWidgetPad, WidgetPadPosition
 from ..widgets import CircularRotationWidget

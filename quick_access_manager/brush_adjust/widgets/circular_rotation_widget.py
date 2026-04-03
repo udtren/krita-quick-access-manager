@@ -1,6 +1,4 @@
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QPainter, QPen, QBrush, QColor
+from ...compat import QWidget, Qt, pyqtSignal, QPainter, QPen, QBrush, QColor
 import math
 
 

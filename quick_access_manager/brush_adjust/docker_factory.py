@@ -2,7 +2,7 @@
 Docker factory and wrapper classes for the Brush Adjust Docker.
 """
 
-from PyQt5.QtWidgets import QDockWidget
+from ..compat import QDockWidget
 from krita import DockWidgetFactory, DockWidgetFactoryBase  # type: ignore
 
 from .adjustment_widget import BrushAdjustmentWidget
@@ -12,7 +12,11 @@ class BrushAdjustDockerFactory(DockWidgetFactoryBase):
     """Factory for creating the Brush Adjustments Docker"""
 
     def __init__(self):
-        super().__init__("brush_adjust_docker", DockWidgetFactory.DockRight)
+        try:
+            dock_pos = DockWidgetFactory.DockRight
+        except AttributeError:
+            dock_pos = DockWidgetFactory.DockPosition.DockRight  # Krita 6
+        super().__init__("brush_adjust_docker", dock_pos)
 
     def createDockWidget(self):
         """Create and return the brush adjustments dock widget"""

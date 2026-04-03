@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import QToolButton, QSizePolicy
-from PyQt5.QtCore import Qt, QSize
+from ....compat import QToolButton, QSizePolicy, Qt, QSize
 
 
 class float_tool_optionsggleVisibleButton(QToolButton):

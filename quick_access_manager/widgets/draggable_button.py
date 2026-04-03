@@ -1,6 +1,4 @@
-from PyQt5.QtWidgets import QPushButton, QApplication
-from PyQt5.QtCore import Qt, QPoint, QMimeData
-from PyQt5.QtGui import QDrag, QIcon, QPixmap
+from ..compat import QPushButton, QApplication, Qt, QPoint, QMimeData, QDrag, QIcon, QPixmap
 from ..utils.config_utils import get_brush_icon_size
 
 
@@ -90,7 +88,7 @@ class DraggableBrushButton(QPushButton):
         drag.setPixmap(self.icon().pixmap(32, 32))
         drag.setHotSpot(QPoint(16, 16))
 
-        drop_action = drag.exec_(Qt.MoveAction)
+        drop_action = drag.exec(Qt.MoveAction)
 
     def remove_from_grid(self):
         """Remove this preset from the grid"""
