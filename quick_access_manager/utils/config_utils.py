@@ -36,6 +36,16 @@ def get_plugin_dir():
     return os.path.dirname(utils_dir)
 
 
+def get_presets_config_dir():
+    """Get preset configs directory outside of pykrita.
+
+    Returns path like: AppData/Roaming/krita/quick_access_manager/presets
+    """
+    presets_dir = os.path.join(_get_krita_data_dir(), "quick_access_manager", "presets")
+    os.makedirs(presets_dir, exist_ok=True)
+    return presets_dir
+
+
 def get_gesture_data_dir():
     """Get gesture data directory outside of pykrita.
 

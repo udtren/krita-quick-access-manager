@@ -12,6 +12,7 @@ from .gesture import (
 from .gesture.shortcut.toggle_gesture_recognition import (
     ToggleGestureExtension,
 )
+from .popup import SavePresetsExtension
 
 
 class QuickAccessManagerExtension(Extension):
@@ -56,6 +57,7 @@ app = Krita.instance()
 extensions = [
     QuickAccessManagerExtension,
     ToggleGestureExtension,
+    SavePresetsExtension,
 ]
 
 for extension_class in extensions:

@@ -20,7 +20,7 @@ from .utils.config_utils import (
 )
 from .widgets.draggable_button import DraggableBrushButton
 from .widgets.grid_container import ClickableGridWidget, DraggableGridContainer
-from .popup import BrushSetsPopup
+from .popup import BrushSetsPopup, PresetSwitchManager
 
 GRID_NAME_COLOR = "#979797"
 
@@ -45,6 +45,10 @@ class QuickAccessDockerWidget(QDockWidget):
         # Initialize popup functionality
         self.brush_popup = BrushSetsPopup(self)
         self.brush_popup.setup_popup_shortcut()
+
+        # Initialize preset switch manager
+        self.preset_switch = PresetSwitchManager(self)
+        self.preset_switch.setup_shortcut()
 
         self.init_ui()
 
