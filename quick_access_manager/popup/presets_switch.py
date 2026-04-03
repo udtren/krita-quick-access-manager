@@ -147,7 +147,11 @@ class PresetSwitchManager:
             self._popup = None
 
         popup = _PresetSwitchPopup(data, resource, view, self.parent_docker)
-        popup.move(QCursor.pos())
+        cursor_pos = QCursor.pos()
+        popup.move(
+            cursor_pos.x() - popup.width() // 2,
+            cursor_pos.y() - popup.height() // 3,
+        )
         popup.show()
         self._popup = popup
 
