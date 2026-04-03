@@ -29,6 +29,7 @@ If you find this tool helpful, you can support its development:
   - [Preview](#preview)
   - [Alias](#alias)
   - [External API](#external-api)
+- [Presets Switcher](#presets-switcher)
 - [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker)
   - [Floating Widget](#floating-widget)
 - [HueSVC](#huesvc)
@@ -200,6 +201,31 @@ finally:
 - `pause_gesture_event_filter()`: Calls `QApplication.removeEventFilter()` for zero overhead when paused
 - `resume_gesture_event_filter()`: Calls `QApplication.installEventFilter()` to restore gesture detection
 - When paused, the event filter is completely removed from Qt's event chain, eliminating all processing overhead
+
+## Presets Switcher
+
+![alt text](quick_access_manager/image/presets_switch.gif)
+
+Save and switch between multiple XML configurations for a single brush preset — useful for storing different setting variations (e.g. different sizes, textures, or opacity levels) without duplicating the preset itself.
+
+### Features
+
+- **Save Config** (`Save Presets XML Data` action): Captures the current brush preset's full XML state and saves it under a user-defined name. Assign a keyboard shortcut via Krita's **Settings → Configure Krita → Keyboard Shortcuts** and search for *Save Presets XML Data*.
+- **Switch Popup**: Press the configured shortcut (Settings → Popup tab → *Preset Switch Popup Shortcut*) to open a small frameless popup listing all saved configs for the current brush. Click a config to apply it instantly. Moving the mouse away closes the popup.
+- **Preset Manager Tab**: Open **Settings → Preset Switcher** tab to view all saved configs grouped by brush. Check entries and click **Delete Selected** to remove them.
+
+### Data Storage
+
+Configs are stored as JSON files in `krita/quick_access_manager/presets/`, one file per brush (`{brush_name}.json`). Each file is a map of config name → XML string.
+
+### Usage
+
+1. Select a brush and dial in the settings you want to save.
+2. Trigger the **Save Presets XML Data** action (via keyboard shortcut or Krita's action system).
+3. Enter a name for the config in the dialog.
+4. Repeat for other variations.
+5. Use the **Switch Popup** shortcut while painting to cycle through saved configs for the active brush.
+6. Manage or delete saved configs via **Settings → Preset Manager**.
 
 ## Quick Brush Adjustments Docker
 ![Quick Brush Adjustments](./quick_access_manager/image/004.png)

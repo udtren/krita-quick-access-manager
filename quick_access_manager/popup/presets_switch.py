@@ -10,7 +10,11 @@ from ..compat import (
 )
 from ..utils.config_utils import get_presets_config_dir
 from ..config.popup_loader import PopupConfigLoader
-from ..gesture import is_gesture_filter_paused, pause_gesture_event_filter, resume_gesture_event_filter
+from ..gesture.gesture_main import (
+    pause_gesture_event_filter,
+    resume_gesture_event_filter,
+    is_gesture_filter_paused,
+)
 
 
 def _sanitize_filename(name):

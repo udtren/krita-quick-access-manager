@@ -34,7 +34,7 @@ class CommonConfigDialog(QDialog):
         self.tab_widget.addTab(self.main_tab.create_page(), "Main")
         self.tab_widget.addTab(self.quick_adjust_tab.create_page(), "Quick Adjust")
         self.tab_widget.addTab(self.popup_tab.create_page(), "Popup")
-        self.tab_widget.addTab(self.preset_manager_tab.create_page(), "Preset Manager")
+        self.tab_widget.addTab(self.preset_manager_tab.create_page(), "Preset Switcher")
         layout.addWidget(self.tab_widget)
 
         if initial_tab is not None:

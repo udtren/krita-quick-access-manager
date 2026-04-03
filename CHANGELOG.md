@@ -3,6 +3,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-04-03
+### Added
+- Presets Switcher (`popup/presets_switch.py`): save and switch between multiple XML configurations for a single brush preset
+  - **Save Config**: `SavePresetsExtension` registers a `Save Presets XML Data` Krita action — assignable via Krita's keyboard shortcut settings; pauses gesture event filter while the name dialog is open
+  - **Switch Popup**: frameless popup listing all saved configs for the current brush; click to apply, mouse-leave to close; shortcut configurable via Settings → Popup tab → *Preset Switch Popup Shortcut*
+  - **Preset Switcher tab**: new tab in Settings dialog replaces the old standalone dialog — select a brush file from the dropdown, check configs, and delete selected entries; saves immediately on delete
+  - Configs stored as `{brush_name}.json` in `krita/quick_access_manager/presets/`
+- Settings dialog split into `dialogs/tabs/` subfolder for maintainability
+  - `MainTab` — color/font/layout config
+  - `QuickAdjustTab` — quick adjust docker and docker toggle buttons config
+  - `PopupTab` — popup shortcuts and appearance
+  - `PresetManagerTab` — preset switcher data management
+  - `CommonConfigDialog` reduced to a thin orchestrator; accepts `initial_tab=` to open on a specific tab
+- `settings_dialog.py`: exported `TAB_MAIN`, `TAB_QUICK_ADJUST`, `TAB_POPUP`, `TAB_PRESET_MANAGER` index constants
+
+### Fixed
+- Preset switch popup: `RuntimeError: wrapped C/C++ object of type _PresetSwitchPopup has been deleted` when pressing the popup key after the popup was closed via `WA_DeleteOnClose` — guard now uses `is not None` instead of truthiness check, with `try/except RuntimeError` around `isVisible()`
+
 ## 2026-03-29
 ### Changed
 - PyQt5 / PyQt6 dual compatibility (`compat.py`)
