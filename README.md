@@ -212,7 +212,7 @@ Save and switch between multiple XML configurations for a single brush preset �
 
 - **Save Config** (`Save Presets XML Data` action): Captures the current brush preset's full XML state and saves it under a user-defined name. Assign a keyboard shortcut via Krita's **Settings → Configure Krita → Keyboard Shortcuts** and search for *Save Presets XML Data*.
 - **Switch Popup**: Press the configured shortcut (Settings → Popup tab → *Preset Switch Popup Shortcut*) to open a small frameless popup listing all saved configs for the current brush. Click a config to apply it instantly. Moving the mouse away closes the popup.
-- **Preset Manager Tab**: Open **Settings → Preset Switcher** tab to view all saved configs grouped by brush. Check entries and click **Delete Selected** to remove them.
+- **Preset Switcher Tab**: Open **Settings → Preset Switcher** tab to view all saved configs grouped by brush. Check entries and click **Delete Selected** to remove them.
 
 ### Data Storage
 
@@ -225,7 +225,7 @@ Configs are stored as JSON files in `krita/quick_access_manager/presets/`, one f
 3. Enter a name for the config in the dialog.
 4. Repeat for other variations.
 5. Use the **Switch Popup** shortcut while painting to cycle through saved configs for the active brush.
-6. Manage or delete saved configs via **Settings → Preset Manager**.
+6. Manage or delete saved configs via **Settings → Preset Switcher**.
 
 ## Quick Brush Adjustments Docker
 ![Quick Brush Adjustments](./quick_access_manager/image/004.png)
