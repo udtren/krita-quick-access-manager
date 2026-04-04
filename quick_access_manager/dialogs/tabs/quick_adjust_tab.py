@@ -166,20 +166,9 @@ class QuickAdjustTab:
         # Alt Erase
         layout.addWidget(QLabel("[Alt Erase]"))
         hl = QHBoxLayout()
-        label = QLabel("  Hold key to temporarily activate erase mode")
+        label = QLabel("  Toggle Key (e.g. Alt, Shift, A, F1 — empty to disable)")
         label.setAlignment(Qt.AlignLeft)
-        chk = QCheckBox()
-        chk.setChecked(self.quick_adjust_config.get("alt_erase_enabled", True))
-        hl.addWidget(label)
-        hl.addStretch()
-        hl.addWidget(chk)
-        layout.addLayout(hl)
-        self.quick_adjust_fields[("alt_erase_enabled",)] = chk
-
-        hl = QHBoxLayout()
-        label = QLabel("  Toggle Key (e.g. Alt, Shift, A, F1)")
-        label.setAlignment(Qt.AlignLeft)
-        key_edit = QLineEdit(self.quick_adjust_config.get("alt_erase_key", "Alt"))
+        key_edit = QLineEdit(self.quick_adjust_config.get("alt_erase_key", ""))
         key_edit.setFixedWidth(80)
         key_edit.setAlignment(Qt.AlignRight)
         hl.addWidget(label)
@@ -187,6 +176,48 @@ class QuickAdjustTab:
         hl.addWidget(key_edit)
         layout.addLayout(hl)
         self.quick_adjust_fields[("alt_erase_key",)] = key_edit
+
+        # Preserve Alpha
+        layout.addWidget(QLabel("[Preserve Alpha]"))
+        hl = QHBoxLayout()
+        label = QLabel("  Hold key to temporarily enable Preserve Alpha")
+        label.setAlignment(Qt.AlignLeft)
+        hl.addWidget(label)
+        hl.addStretch()
+        layout.addLayout(hl)
+
+        hl = QHBoxLayout()
+        label = QLabel("  Toggle Key (e.g. Shift, A, F2 — empty to disable)")
+        label.setAlignment(Qt.AlignLeft)
+        key_edit = QLineEdit(self.quick_adjust_config.get("preserve_alpha_key", ""))
+        key_edit.setFixedWidth(80)
+        key_edit.setAlignment(Qt.AlignRight)
+        hl.addWidget(label)
+        hl.addStretch()
+        hl.addWidget(key_edit)
+        layout.addLayout(hl)
+        self.quick_adjust_fields[("preserve_alpha_key",)] = key_edit
+
+        # Select Outline (Freehand Selection)
+        layout.addWidget(QLabel("[Temp Freehand Selection]"))
+        hl = QHBoxLayout()
+        label = QLabel("  Hold key to switch to Freehand Selection, release to return to Brush")
+        label.setAlignment(Qt.AlignLeft)
+        hl.addWidget(label)
+        hl.addStretch()
+        layout.addLayout(hl)
+
+        hl = QHBoxLayout()
+        label = QLabel("  Toggle Key (e.g. Shift, A, F3 — empty to disable)")
+        label.setAlignment(Qt.AlignLeft)
+        key_edit = QLineEdit(self.quick_adjust_config.get("select_outline_key", ""))
+        key_edit.setFixedWidth(80)
+        key_edit.setAlignment(Qt.AlignRight)
+        hl.addWidget(label)
+        hl.addStretch()
+        hl.addWidget(key_edit)
+        layout.addLayout(hl)
+        self.quick_adjust_fields[("select_outline_key",)] = key_edit
 
         # floating_widgets
         floating_widgets = self.quick_adjust_config.get("floating_widgets", {})

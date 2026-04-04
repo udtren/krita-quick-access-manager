@@ -41,12 +41,13 @@ class AltEraseListener(QObject):
     - Key released : always disable erase (unless combo cancelled it already).
     """
 
-    def __init__(self, key_string: str = "Alt"):
+    def __init__(self, key_string: str = ""):
         super().__init__()
-        self._key_code = resolve_key(key_string)
+        self._key_code = resolve_key(key_string) if key_string else None
         self._key_active = False
         self._combo_detected = False
-        QApplication.instance().installEventFilter(self)
+        if self._key_code is not None:
+            QApplication.instance().installEventFilter(self)
 
     def remove(self):
         """Uninstall the event filter. Call this when the owner widget is destroyed."""
@@ -55,7 +56,7 @@ class AltEraseListener(QObject):
     def _erase_action(self):
         return Krita.instance().action("erase_action")
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, _, event):
         t = event.type()
 
         if t == QEvent.KeyPress and not event.isAutoRepeat():
@@ -82,3 +83,91 @@ class AltEraseListener(QObject):
                         action.setChecked(False)
 
         return False  # never consume the event
+
+
+class PreserveAlphaListener(QObject):
+    """Temporarily enables Krita's Preserve Alpha mode while a configurable key is held.
+
+    Behaviour mirrors AltEraseListener: key held alone enables, another key
+    pressed simultaneously cancels, key release disables.
+    Empty key_string disables the listener entirely.
+    """
+
+    def __init__(self, key_string: str = ""):
+        super().__init__()
+        self._key_code = resolve_key(key_string) if key_string else None
+        self._key_active = False
+        self._combo_detected = False
+        if self._key_code is not None:
+            QApplication.instance().installEventFilter(self)
+
+    def remove(self):
+        QApplication.instance().removeEventFilter(self)
+
+    def _action(self):
+        return Krita.instance().action("preserve_alpha")
+
+    def eventFilter(self, _, event):
+        t = event.type()
+
+        if t == QEvent.KeyPress and not event.isAutoRepeat():
+            if event.key() == self._key_code:
+                if not self._key_active:
+                    self._key_active = True
+                    self._combo_detected = False
+                    action = self._action()
+                    if action:
+                        action.setChecked(True)
+            elif self._key_active and not self._combo_detected:
+                self._combo_detected = True
+                action = self._action()
+                if action:
+                    action.setChecked(False)
+
+        elif t == QEvent.KeyRelease and not event.isAutoRepeat() and event.key() == self._key_code:
+            if self._key_active:
+                self._key_active = False
+                if not self._combo_detected:
+                    action = self._action()
+                    if action:
+                        action.setChecked(False)
+
+        return False
+
+
+class SelectOutlineListener(QObject):
+    """Switches to the Freehand Selection tool while a configurable key is held,
+    then returns to the Brush tool on release.
+
+    Combos (other keys pressed simultaneously) are allowed.
+    Empty key_string disables the listener entirely.
+    """
+
+    def __init__(self, key_string: str = ""):
+        super().__init__()
+        self._key_code = resolve_key(key_string) if key_string else None
+        self._key_active = False
+        if self._key_code is not None:
+            QApplication.instance().installEventFilter(self)
+
+    def remove(self):
+        QApplication.instance().removeEventFilter(self)
+
+    def eventFilter(self, _, event):
+        t = event.type()
+
+        if t == QEvent.KeyPress and not event.isAutoRepeat() and event.key() == self._key_code:
+            if not self._key_active:
+                self._key_active = True
+                action = Krita.instance().action("KisToolSelectOutline")
+                if action:
+                    action.trigger()
+
+        elif t == QEvent.KeyRelease and not event.isAutoRepeat() and event.key() == self._key_code:
+            if self._key_active:
+                self._key_active = False
+                action = Krita.instance().action("KritaShape/KisToolBrush")
+                if action:
+                    action.trigger()
+
+        return False

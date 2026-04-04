@@ -33,6 +33,7 @@ If you find this tool helpful, you can support its development:
   - [External API](#external-api)
 - [Presets Switcher](#presets-switcher)
 - [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker)
+  - [Temp Action Mode](#temp-action-mode)
   - [Floating Widget](#floating-widget)
 - [HueSVC](#huesvc)
 - [Config Files Location](#config-files-location)
@@ -261,11 +262,13 @@ You can enable/disable each slider via settings.
 - **Active Selection Status**: If there is an active selection, the icon will turn green.
 - **Toggle Gesture System**: Pause/Unpause the gesture system.
 
-**Temp Erase Mode**
+### Temp Action Mode
 
-Hold a configurable key (default: **Alt**) to temporarily activate Krita's erase mode. Releasing the key restores the original state.
+Hold a configurable key to temporarily activate an action. Releasing the key restores the original state. All keys are empty (disabled) by default and can be changed via Settings → Quick Adjust tab (requires Krita restart to take effect).
 
-Can be enabled/disabled and the trigger key can be changed via Settings → Quick Adjust tab → *[Alt Erase]* section (requires Krita restart to take effect).
+- **Temp Erase**: Hold key to temporarily activate Krita's erase mode. Configure under *[Alt Erase]*.
+- **Temp Preserve Alpha**: Hold key to temporarily enable Krita's Preserve Alpha mode. Configure under *[Preserve Alpha]*.
+- **Temp Freehand Selection**: Hold key to switch to the Freehand Selection tool; release to return to the Brush tool. Configure under *[Temp Freehand Selection]*.
 
 ### Customization
 To modify the docker's appearance and behavior, see "Global Config".

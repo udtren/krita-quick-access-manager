@@ -33,8 +33,9 @@ from ..config.quick_adjust_docker_loader import (
     get_color_history_icon_size,
     get_brush_history_total,
     get_brush_history_icon_size,
-    get_alt_erase_enabled,
     get_alt_erase_key,
+    get_preserve_alpha_key,
+    get_select_outline_key,
 )
 
 
@@ -47,7 +48,7 @@ from .docker_buttons import (
 from .utils_adjust import brush_size_to_slider, slider_to_brush_size
 from .brush_monitor import BrushMonitorMixin
 from .layer_monitor import LayerMonitorMixin
-from .alt_erase_listener import AltEraseListener
+from .alt_erase_listener import AltEraseListener, PreserveAlphaListener, SelectOutlineListener
 
 
 class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
@@ -68,12 +69,29 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         self.docker_toggle_config = get_docker_toggle_section()
         self.blender_modes = get_blender_mode_list()
 
-        # Alt-key erase mode listener (conditional on config)
-        if get_alt_erase_enabled():
-            self._alt_erase_listener = AltEraseListener(get_alt_erase_key())
+        # Alt-key erase mode listener (empty key = disabled)
+        alt_erase_key = get_alt_erase_key()
+        if alt_erase_key:
+            self._alt_erase_listener = AltEraseListener(alt_erase_key)
             self.destroyed.connect(self._alt_erase_listener.remove)
         else:
             self._alt_erase_listener = None
+
+        # Preserve Alpha listener (empty key = disabled)
+        preserve_alpha_key = get_preserve_alpha_key()
+        if preserve_alpha_key:
+            self._preserve_alpha_listener = PreserveAlphaListener(preserve_alpha_key)
+            self.destroyed.connect(self._preserve_alpha_listener.remove)
+        else:
+            self._preserve_alpha_listener = None
+
+        # Freehand Selection / Brush tool swap listener (empty key = disabled)
+        select_outline_key = get_select_outline_key()
+        if select_outline_key:
+            self._select_outline_listener = SelectOutlineListener(select_outline_key)
+            self.destroyed.connect(self._select_outline_listener.remove)
+        else:
+            self._select_outline_listener = None
 
         # Initialize monitoring from mixins
         self.setup_brush_monitoring()

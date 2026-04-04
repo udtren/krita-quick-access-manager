@@ -32,8 +32,9 @@ def _get_default_config():
             "greater",
         ],
         "font_size": "12px",
-        "alt_erase_enabled": True,
-        "alt_erase_key": "Alt",
+        "alt_erase_key": "",
+        "preserve_alpha_key": "",
+        "select_outline_key": "",
     }
 
 
@@ -174,7 +175,9 @@ def set_tool_options_start_visible(visible):
     """
     config_path = os.path.join(get_config_dir(), "quick_adjust_docker.json")
     config = _load_config()
-    config.setdefault("floating_widgets", {}).setdefault("tool_options", {})["start_visible"] = visible
+    config.setdefault("floating_widgets", {}).setdefault("tool_options", {})[
+        "start_visible"
+    ] = visible
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=4)
 
@@ -187,7 +190,9 @@ def set_color_selector_start_visible(visible):
     """
     config_path = os.path.join(get_config_dir(), "quick_adjust_docker.json")
     config = _load_config()
-    config.setdefault("floating_widgets", {}).setdefault("color_selector", {})["start_visible"] = visible
+    config.setdefault("floating_widgets", {}).setdefault("color_selector", {})[
+        "start_visible"
+    ] = visible
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=4)
 
@@ -284,24 +289,34 @@ def get_brush_history_icon_size():
     return config.get("brush_history_section", {}).get("icon_size", 34)
 
 
-def get_alt_erase_enabled():
-    """Return whether the Alt-key temporary erase mode is enabled.
-
-    Returns:
-        bool: True if Alt erase is enabled (default: True)
-    """
-    config = _load_config()
-    return config.get("alt_erase_enabled", True)
-
-
 def get_alt_erase_key():
     """Return the key name used to trigger temporary erase mode.
 
     Returns:
-        str: Key name (e.g., "Alt", "Shift", "A"). Default: "Alt"
+        str: Key name, or "" if disabled (default: "")
     """
     config = _load_config()
-    return config.get("alt_erase_key", "Alt")
+    return config.get("alt_erase_key", "")
+
+
+def get_preserve_alpha_key():
+    """Return the key name used to temporarily enable Preserve Alpha.
+
+    Returns:
+        str: Key name, or "" if disabled (default: "")
+    """
+    config = _load_config()
+    return config.get("preserve_alpha_key", "")
+
+
+def get_select_outline_key():
+    """Return the key name used to temporarily switch to Freehand Selection tool.
+
+    Returns:
+        str: Key name, or "" if disabled (default: "")
+    """
+    config = _load_config()
+    return config.get("select_outline_key", "")
 
 
 def get_all_config():
