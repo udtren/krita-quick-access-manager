@@ -43,7 +43,7 @@ except ImportError:
     )
     from PyQt6.QtGui import (  # noqa: F401
         QIcon, QPixmap, QPainter, QBrush, QColor, QCursor, QDrag,
-        QPen, QPalette, QKeyEvent, QLinearGradient, QKeySequence,
+        QPen, QPalette, QKeyEvent, QMouseEvent, QLinearGradient, QKeySequence,
         QFont, QFontMetrics, QAction, QIntValidator, QShortcut,
     )
     PYQT6 = True
@@ -257,3 +257,8 @@ except ImportError:
 
     QDialog.Accepted = QDialog.DialogCode.Accepted
     QDialog.Rejected = QDialog.DialogCode.Rejected
+
+    # ------------------------------------------------------------------
+    # QMouseEvent.globalPos() removed in Qt6 — patch it back
+    # ------------------------------------------------------------------
+    QMouseEvent.globalPos = lambda self: self.globalPosition().toPoint()
