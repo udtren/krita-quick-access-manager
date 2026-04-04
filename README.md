@@ -1,13 +1,15 @@
 # Krita Quick Access Manager
 
-A plugin for Krita that provides quick access to brush presets and shortcut management.
+A plugin for Krita that provides quick access to brush presets, shortcut management, brush preset config switching, advanced gesture input, and floating brush/layer controls.
 
 ## Features
 
-- **Quick Brush Sets**: Organize and access your favorite brush presets in customizable grids with popup window support for quick switching
-- **Quick Actions**: Create custom shortcut buttons for any Krita action with popup window for instant access
-- **Gesture System**: Execute actions using keyboard + mouse directional gestures with visual preview overlay
-- **Quick Brush Adjust Docker**: Dedicated docker with brush/layer controls, color/brush history, and real-time status indicators
+- **Quick Brush Sets**: Organize brush presets into customizable grids; open a popup (configurable shortcut) to switch presets without leaving the canvas
+- **Quick Actions**: Create custom shortcut buttons for any Krita action; open an actions popup for instant one-key access
+- **Preset Switcher**: Save multiple XML configurations per brush preset and switch between them via a cursor-centered popup
+- **Gesture System**: Execute Krita actions via keyboard + mouse directional gestures with a real-time visual preview overlay
+- **Quick Brush Adjustments Docker**: Dedicated docker with brush size/opacity/flow/rotation, layer opacity, blend mode dropdowns, color & brush history, docker toggle buttons, floating widget support, and real-time selection/gesture status indicators
+- **HueSVC Color Selector**: Floating Hue + SV box color picker with R/G/B channel bars, FG/BG color swatch, and configurable display modes — available as both a docker and a cursor-centered popup
 
 ![Sample](./quick_access_manager/image/000.png)
 ---
@@ -347,7 +349,7 @@ A compact color selector docker with a vertical hue bar, saturation/value box, a
 - **Color Selector Popup Shortcut** — key to open/close the popup
 - **Popup Width / Height** — dimensions of the popup window
 - **Value Font Size** — font size for the channel value inputs
-- **Foreground Color Check Interval (ms)** — how often the docker/popup polls Krita's foreground and background colors (default: 500 ms)
+- **Foreground Color Check Interval (ms)** — how often the docker/popup polls Krita's foreground and background colors (default: 250 ms)
 - **R/G/B Display Mode** — choose `Percentage (0–100)` or `Value (0–255)` for the R, G, B channel bars and inputs
 
 ## Config Files Location

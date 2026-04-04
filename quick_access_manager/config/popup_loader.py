@@ -41,7 +41,7 @@ class PopupConfigLoader:
                     "color_selector_popup_width": 350,
                     "color_selector_popup_height": 550,
                     "color_selector_value_font_size": 10,
-                    "color_selector_poll_interval": 500,
+                    "color_selector_poll_interval": 250,
                     "color_selector_rgb_display_mode": "percentage",
                 }
                 self._save_config()
@@ -58,7 +58,7 @@ class PopupConfigLoader:
                 "color_selector_popup_width": 350,
                 "color_selector_popup_height": 550,
                 "color_selector_value_font_size": 10,
-                "color_selector_poll_interval": 500,
+                "color_selector_poll_interval": 250,
                 "color_selector_rgb_display_mode": "percentage",
             }
 
@@ -151,7 +151,7 @@ class PopupConfigLoader:
         self._save_config()
 
     def get_color_selector_poll_interval(self):
-        return self._config.get("color_selector_poll_interval", 500)
+        return self._config.get("color_selector_poll_interval", 250)
 
     def set_color_selector_poll_interval(self, ms):
         self._config["color_selector_poll_interval"] = ms
