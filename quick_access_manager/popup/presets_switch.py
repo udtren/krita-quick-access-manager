@@ -4,9 +4,14 @@ import re
 
 from krita import Krita, Preset, Extension  # type: ignore
 from ..compat import (
-    QWidget, QVBoxLayout, QPushButton, QLabel,
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QLabel,
     QShortcut,
-    QInputDialog, Qt, QCursor,
+    QInputDialog,
+    Qt,
+    QCursor,
 )
 from ..utils.config_utils import get_presets_config_dir
 from ..config.popup_loader import PopupConfigLoader
@@ -155,18 +160,6 @@ class PresetSwitchManager:
         popup.show()
         self._popup = popup
 
-    # ------------------------------------------------------------------
-    # Function 3: Open Settings dialog on the Preset Manager tab
-    # ------------------------------------------------------------------
-    def open_preset_manager_dialog(self):
-        """Open the Settings dialog directly on the Preset Manager tab."""
-        from ..dialogs.settings_dialog import CommonConfigDialog, TAB_PRESET_MANAGER
-        from ..utils.config_utils import get_config_dir
-        import os as _os
-        config_path = _os.path.join(get_config_dir(), "common.json")
-        dlg = CommonConfigDialog(config_path, self.parent_docker, initial_tab=TAB_PRESET_MANAGER)
-        dlg.exec()
-
 
 # ---------------------------------------------------------------------------
 # Popup widget for Function 2
@@ -224,7 +217,5 @@ class SavePresetsExtension(Extension):
         pass
 
     def createActions(self, window):
-        action = window.createAction(
-            "save_preset_xml_data", "Save Presets XML Data"
-        )
+        action = window.createAction("save_preset_xml_data", "Save Presets XML Data")
         action.triggered.connect(self._manager.save_preset_config)
