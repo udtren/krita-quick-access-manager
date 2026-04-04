@@ -3,6 +3,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-04-04
+### Added
+- **Temp Action Mode** (`brush_adjust/alt_erase_listener.py`): two new hold-key listeners alongside the existing Temp Erase
+  - `PreserveAlphaListener`: hold key to temporarily enable Krita's Preserve Alpha mode; releases restore previous state
+  - `SelectOutlineListener`: hold key to switch to the Freehand Selection tool, release to return to the Brush tool; combos with other keys are allowed
+  - All three listeners share the same empty-key-means-disabled pattern; keys configurable via Settings → Quick Adjust tab
+- `quick_adjust_docker_loader.py`: added `get_preserve_alpha_key()` and `get_select_outline_key()` getters; default keys are `""` (disabled)
+
+### Changed
+- **Temp Erase** (`AltEraseListener`): default key changed from `"Alt"` to `""` (disabled by default); consistent with the two new listeners
+- Removed `alt_erase_enabled` boolean from config and `get_alt_erase_enabled()` from loader — enabled state is now implied by whether a key is configured
+- `compat.py`: patched `QMouseEvent.globalPos = lambda self: self.globalPosition().toPoint()` for PyQt6 compatibility
+
+### Fixed
+- Preset switch popup position: now centered at cursor (`x - width//2, y - height//3`), matching brush set popup behaviour
+
 ## 2026-04-03
 ### Added
 - Presets Switcher (`popup/presets_switch.py`): save and switch between multiple XML configurations for a single brush preset
