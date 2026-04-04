@@ -1,5 +1,4 @@
 from krita import *  # type: ignore
-from .compat import QMessageBox
 from .quick_access_manager import QuickAccessDockerFactory
 from .brush_adjust import BrushAdjustDockerFactory
 from .shortcut_manager import ShortcutAccessDockerFactory
@@ -52,7 +51,9 @@ class QuickAccessManagerExtension(Extension):
             print(f"❌ Error shutting down gesture system: {e}")
 
 
+# -------------------
 # Register all extensions with Krita
+# -------------------
 app = Krita.instance()
 extensions = [
     QuickAccessManagerExtension,
@@ -63,9 +64,9 @@ extensions = [
 for extension_class in extensions:
     app.addExtension(extension_class(app))
 
-
-
-
+# -------------------
+# HueSVC Docker
+# -------------------
 DOCKER_ID = "HueSVC"
 
 try:
@@ -74,9 +75,5 @@ except AttributeError:
     _dock_pos = DockWidgetFactoryBase.DockPosition.DockRight  # Krita 6
 
 instance = Krita.instance()
-dock_widget_factory = DockWidgetFactory(
-    DOCKER_ID,
-    _dock_pos,
-    ColorSelectorDock
-)
+dock_widget_factory = DockWidgetFactory(DOCKER_ID, _dock_pos, ColorSelectorDock)
 instance.addDockWidgetFactory(dock_widget_factory)
