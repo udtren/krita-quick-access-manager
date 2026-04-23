@@ -30,6 +30,11 @@ class ShortcutAccessDockerWidget(QDockWidget):
         self.actions_popup = ActionsPopup(self)
         self.actions_popup.setup_popup_shortcut()
 
+        # One-time signal: restore grids when Krita window is ready
+        application = Krita.instance()
+        appNotifier = application.notifier()
+        appNotifier.windowCreated.connect(self.restore_grids_from_file)
+
         # Initialize UI
         self.init_ui()
 
@@ -114,15 +119,22 @@ class ShortcutAccessDockerWidget(QDockWidget):
         self.show_all_btn.clicked.connect(self.show_all_shortcut_popup)
         self.add_grid_btn.clicked.connect(self.add_grid)
 
-        # restore shortcut grids when Krita starts
-        application = Krita.instance()
-        appNotifier = application.notifier()
-        appNotifier.windowCreated.connect(self.restore_grids_from_file)
+    def reload_ui(self):
+        """Recreate the docker UI from scratch, reloading all data from disk."""
+        old_widget = self.widget()
+        self.grids = []
+        self.active_grid_idx = 0
+        self.main_layout = None
+        self.init_ui()
+        self.restore_grids_from_file()
+        if old_widget:
+            old_widget.deleteLater()
 
     def show_all_shortcut_popup(self):
         """Show the action selection popup"""
         self.shortcut_popup = ShortcutPopup(self)
-        self.shortcut_popup.exec()
+        if self.shortcut_popup.exec():
+            self.reload_ui()
 
     def add_grid(self):
         """Add a new shortcut grid"""
