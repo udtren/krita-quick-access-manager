@@ -188,14 +188,13 @@ class QuickAccessDockerWidget(QDockWidget):
         # Schedule deletion of the old widget after the new one is in place
         if old_widget:
             old_widget.deleteLater()
-        # Also reload the ShortcutAccessDockerWidget
+        # Also reload the ShortcutAccessDockerWidget and BrushAdjustDockerWidget
         window = Krita.instance().activeWindow()
         if window:
             for docker in window.dockers():
-                if docker.objectName() == "shortcut_access_docker":
+                if docker.objectName() in ("shortcut_access_docker", "QuickBrushAdjustmentsDocker"):
                     if hasattr(docker, "reload_ui"):
                         docker.reload_ui()
-                    break
 
     def show_settings_dialog(self):
         dlg = CommonConfigDialog(self.common_config_path, self)
