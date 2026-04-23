@@ -2,9 +2,18 @@ import os
 import json
 from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
 from .compat import (
-    QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget,
-    QHBoxLayout, QInputDialog, QApplication, QScrollArea,
-    Qt, QSize,
+    QWidget,
+    QVBoxLayout,
+    QGridLayout,
+    QPushButton,
+    QLabel,
+    QDockWidget,
+    QHBoxLayout,
+    QInputDialog,
+    QApplication,
+    QScrollArea,
+    Qt,
+    QSize,
     QIcon,
 )
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
@@ -192,7 +201,11 @@ class QuickAccessDockerWidget(QDockWidget):
         window = Krita.instance().activeWindow()
         if window:
             for docker in window.dockers():
-                if docker.objectName() in ("shortcut_access_docker", "QuickBrushAdjustmentsDocker"):
+                # print(f"Docker: {docker.objectName()} type={type(docker)}")
+                if docker.objectName() in (
+                    "shortcut_access_docker",
+                    "brush_adjust_docker",
+                ):
                     if hasattr(docker, "reload_ui"):
                         docker.reload_ui()
 
