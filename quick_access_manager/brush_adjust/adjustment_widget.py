@@ -3,12 +3,19 @@ Main brush adjustment widget with UI and coordination logic.
 """
 
 from ..compat import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QPushButton,
-    QComboBox, QDockWidget,
-    Qt, QTimer,
-    QIcon, QPixmap,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QSlider,
+    QPushButton,
+    QComboBox,
+    QDockWidget,
+    Qt,
+    QTimer,
+    QIcon,
+    QPixmap,
 )
-from krita import Krita  # type: ignore
 import os
 
 # Import widgets from the widgets2 package
@@ -45,10 +52,14 @@ from .docker_buttons import (
     create_docker_buttons,
     toggle_docker_by_keywords,
 )
-from .utils_adjust import brush_size_to_slider, slider_to_brush_size
+from .utils_adjust import brush_size_to_slider
 from .brush_monitor import BrushMonitorMixin
 from .layer_monitor import LayerMonitorMixin
-from .alt_erase_listener import AltEraseListener, PreserveAlphaListener, SelectOutlineListener
+from .alt_erase_listener import (
+    AltEraseListener,
+    PreserveAlphaListener,
+    SelectOutlineListener,
+)
 
 
 class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):

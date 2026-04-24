@@ -2,9 +2,18 @@ import os
 import json
 from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignore
 from .compat import (
-    QWidget, QVBoxLayout, QGridLayout, QPushButton, QLabel, QDockWidget,
-    QHBoxLayout, QInputDialog, QApplication, QScrollArea,
-    Qt, QSize,
+    QWidget,
+    QVBoxLayout,
+    QGridLayout,
+    QPushButton,
+    QLabel,
+    QDockWidget,
+    QHBoxLayout,
+    QInputDialog,
+    QApplication,
+    QScrollArea,
+    Qt,
+    QSize,
     QIcon,
 )
 from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
@@ -173,6 +182,33 @@ class QuickAccessDockerWidget(QDockWidget):
         # Store reference to keep dialog alive
         dialog.setAttribute(Qt.WA_DeleteOnClose, False)
 
+    def reload_ui(self):
+        """Recreate the docker UI from scratch, reloading all config from disk."""
+        old_widget = self.widget()
+        # Reset state before rebuild
+        self.grids, self.grid_counter = load_grids_data(
+            self.data_file, self.preset_dict
+        )
+        self.active_grid = None
+        self.main_widget = None
+        self.main_grid_layout = None
+        # Rebuild UI (calls setWidget() internally)
+        self.init_ui()
+        # Schedule deletion of the old widget after the new one is in place
+        if old_widget:
+            old_widget.deleteLater()
+        # Also reload the ShortcutAccessDockerWidget and BrushAdjustDockerWidget
+        window = Krita.instance().activeWindow()
+        if window:
+            for docker in window.dockers():
+                # print(f"Docker: {docker.objectName()} type={type(docker)}")
+                if docker.objectName() in (
+                    "shortcut_access_docker",
+                    "brush_adjust_docker",
+                ):
+                    if hasattr(docker, "reload_ui"):
+                        docker.reload_ui()
+
     def show_settings_dialog(self):
         dlg = CommonConfigDialog(self.common_config_path, self)
         if dlg.exec():
@@ -180,17 +216,7 @@ class QuickAccessDockerWidget(QDockWidget):
             global COMMON_CONFIG
             with open(self.common_config_path, "r", encoding="utf-8") as f:
                 COMMON_CONFIG = json.load(f)
-
-            self.refresh_styles()
-            # ボタンサイズやレイアウトも再構築
-            for grid_info in self.grids:
-                if grid_info.get("container"):
-                    container_layout = grid_info["container"].layout()
-                    if container_layout:
-                        container_layout.setSpacing(1)
-                if grid_info.get("layout"):
-                    grid_info["layout"].setSpacing(get_spacing_between_buttons())
-                self.update_grid(grid_info)
+            self.reload_ui()
 
     def refresh_styles(self):
         # ボタンやグリッドのスタイルを再適用

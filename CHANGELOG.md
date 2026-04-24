@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-04-23
+### Added
+- **Live UI reload without Krita restart**: config changes now apply immediately after closing the Settings dialog
+  - `QuickAccessDockerWidget.reload_ui()`: resets grid state, reloads grid data from disk, and rebuilds the full docker UI via `init_ui()`; old central widget is scheduled for deletion via `deleteLater()`
+  - `ShortcutAccessDockerWidget.reload_ui()`: resets grid list, calls `init_ui()` to rebuild the button row and scroll area, then calls `restore_grids_from_file()` to repopulate from disk; old scroll area is scheduled for deletion
+  - `BrushAdjustDockerWidget.reload_ui()`: snapshots current `color_history` and `brush_history` data, creates a fresh `BrushAdjustmentWidget` (picks up new config in its `__init__`), restores each history list into the new widget if its section is still enabled in the new config, and schedules the old widget for deletion
+  - `QuickAccessDockerWidget.reload_ui()` now also iterates `window.dockers()` and calls `reload_ui()` on `ShortcutAccessDockerWidget` (`objectName == "shortcut_access_docker"`) and `BrushAdjustDockerWidget` (`objectName == "QuickBrushAdjustmentsDocker"`) so all three dockers refresh in one action
+  - `windowCreated` signal connection moved from `ShortcutAccessDockerWidget.setup_connections()` to `__init__()` to prevent duplicate signal connections on each UI reload
+
+### Changed
+- `QuickAccessDockerWidget.show_settings_dialog()`: replaced partial refresh (styles + per-grid `update_grid` loop) with a full `reload_ui()` call after saving config
+
 ## 2026-04-04
 ### Added
 - **Temp Action Mode** (`brush_adjust/alt_erase_listener.py`): two new hold-key listeners alongside the existing Temp Erase
