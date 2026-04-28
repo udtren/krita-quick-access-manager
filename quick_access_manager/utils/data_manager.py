@@ -10,18 +10,6 @@ config_dir = os.path.join(_krita_data_dir, "quick_access_manager", "config")
 config_path = os.path.join(config_dir, "common.json")
 
 
-def load_common_config():
-    try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        # Return default config if file doesn't exist
-        return get_default_common_config()
-    except json.JSONDecodeError:
-        # Return default config if JSON is invalid
-        return get_default_common_config()
-
-
 def get_default_common_config():
     """Get the default common configuration"""
     return {
