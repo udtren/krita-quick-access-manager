@@ -218,35 +218,6 @@ class QuickAccessDockerWidget(QDockWidget):
                 COMMON_CONFIG = json.load(f)
             self.reload_ui()
 
-    def refresh_styles(self):
-        # ボタンやグリッドのスタイルを再適用
-        # ブラシグリッド
-        for grid in self.grids:
-            # グリッド名ラベル
-            if grid.get("name_label"):
-                grid["name_label"].setStyleSheet(
-                    "font-weight: bold; font-size: 12px; color: #4FC3F7;"
-                    if grid.get("is_active")
-                    else "font-weight: bold; font-size: 12px; color: #ffffff;"
-                )
-
-            # ブラシボタン
-            if grid.get("widget"):
-                layout = grid["layout"]
-                for i in range(layout.count()):
-                    btn = layout.itemAt(i).widget()
-                    if btn:
-                        btn.setStyleSheet(docker_btn_style())
-
-        # AddBrush/AddGrid/Settingボタンなども再適用
-        for btn in self.findChildren(QPushButton):
-            if btn.text() in [
-                "AddBrush",
-                "AddGrid",
-                "Setting",
-            ]:
-                btn.setStyleSheet(docker_btn_style())
-
     def _add_grid_ui(self, grid_info):
         grid_container = DraggableGridContainer(grid_info, self)
         container_layout = QVBoxLayout()
