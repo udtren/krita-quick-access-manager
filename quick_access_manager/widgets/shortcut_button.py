@@ -12,8 +12,6 @@ from ..gesture.gesture_main import (
     is_gesture_filter_paused,
 )
 
-# from ..utils.data_manager import write_log
-
 DEFAULT_CONFIG = get_shortcut_button_config()
 DEFAULT_FONT_COLOR = DEFAULT_CONFIG["font_color"]
 DEFAULT_BG_COLOR = DEFAULT_CONFIG["background_color"]
