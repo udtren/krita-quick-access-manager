@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-04-28
+### Changed
+- Remove unused methods and duplicated functions.
+
 ## 2026-04-23
 ### Added
 - **Live UI reload without Krita restart**: config changes now apply immediately after closing the Settings dialog
