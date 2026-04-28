@@ -307,12 +307,6 @@ class ShortcutAccessDockerWidget(QDockWidget):
         self.grids = []
         self.active_grid_idx = 0
 
-    def refresh_layout(self):
-        """Refresh layout spacing and styles"""
-        self.main_layout.setSpacing(get_spacing_between_grids())
-        for grid_widget in self.grids:
-            grid_widget.refresh_spacing_and_update()
-
 
 class ShortcutAccessDockerFactory(DockWidgetFactoryBase):
     def __init__(self):
