@@ -1,7 +1,10 @@
 from ..compat import QPushButton, QApplication, Qt, QPoint, QMimeData, QSize, QDrag, QIcon, QPixmap
 import os
-from ..utils.shortcut_utils import get_font_px, get_shortcut_button_config
-from ..utils.config_utils import get_config_dir
+from ..utils.config_utils import (
+    get_font_px, 
+    get_shortcut_button_config, 
+    get_config_dir
+    )
 from ..dialogs.button_config_dialog import ShortcutButtonConfigDialog
 from ..gesture.gesture_main import (
     pause_gesture_event_filter,
