@@ -8,8 +8,11 @@ from krita import DockWidgetFactory, DockWidgetFactoryBase, Krita  # type: ignor
 from .utils.data_manager import load_shortcut_grids_data, save_shortcut_grids_data
 from .widgets.shortcut_popup import ShortcutPopup
 from .widgets.shortcut_grid_widget import SingleShortcutGridWidget
-from .utils.shortcut_utils import get_spacing_between_grids
-from .utils.config_utils import get_config_dir, get_plugin_dir
+from .utils.config_utils import (
+    get_config_dir, 
+    get_plugin_dir, 
+    get_spacing_between_grids
+    )
 from .utils.action_manager import ActionManager
 from .popup import ActionsPopup
 
