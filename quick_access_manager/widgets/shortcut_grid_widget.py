@@ -4,7 +4,7 @@ from ..compat import (
     Qt, QSize,
 )
 from .shortcut_button import ShortcutDraggableButton
-from ..utils.shortcut_utils import (
+from ..utils.config_utils import (
     get_spacing_between_buttons,
     get_max_shortcut_per_row,
     get_shortcut_button_config,
