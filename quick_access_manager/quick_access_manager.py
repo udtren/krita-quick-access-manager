@@ -10,16 +10,16 @@ from .compat import (
     QDockWidget,
     QHBoxLayout,
     QInputDialog,
-    QApplication,
     QScrollArea,
+    QTabWidget,
+    QMenu,
     Qt,
     QSize,
     QIcon,
 )
-from .utils.data_manager import load_grids_data, save_grids_data, check_common_config
+from .utils.data_manager import load_tabs_data, save_tabs_data, check_common_config
 from .dialogs.settings_dialog import CommonConfigDialog
 from .gesture.gesture_config_dialog import GestureConfigDialog
-from .utils.styles import docker_btn_style
 from .utils.config_utils import (
     get_config_dir,
     get_plugin_dir,
@@ -38,194 +38,153 @@ class QuickAccessDockerWidget(QDockWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Quick Brush Sets")
-        self.grids = []  # Store multiple grids
-        self.active_grid = None  # Currently active grid
-        self.main_widget = None
-        self.main_grid_layout = None
+        self.tabs = []
+        self.tab_widget = None
+        self.active_grid = None
         self.grid_counter = 0
         config_dir = get_config_dir()
         self.data_file = os.path.join(config_dir, "grids_data.json")
         self.common_config_path = os.path.join(config_dir, "common.json")
         self.preset_dict = Krita.instance().resources("preset")
-        self.grids, self.grid_counter = load_grids_data(
-            self.data_file, self.preset_dict
-        )
+        self.tabs, self.grid_counter = load_tabs_data(self.data_file, self.preset_dict)
 
-        # Initialize popup functionality
         self.brush_popup = BrushSetsPopup(self)
         self.brush_popup.setup_popup_shortcut()
 
-        # Initialize preset switch manager
         self.preset_switch = PresetSwitchManager(self)
         self.preset_switch.setup_shortcut()
 
         self.init_ui()
 
+    @property
+    def grids(self):
+        """Flat list of all grids across all tabs — used by widgets/grid_container.py."""
+        result = []
+        for tab in self.tabs:
+            result.extend(tab["grids"])
+        return result
+
     def save_grids_data(self):
-        save_grids_data(self.data_file, self.grids)
+        save_tabs_data(self.data_file, self.tabs)
+
+    # ------------------------------------------------------------------
+    # UI construction
+    # ------------------------------------------------------------------
 
     def init_ui(self):
-        # Create a central widget for the dock
         central_widget = QWidget()
         main_layout = QVBoxLayout()
-        main_layout.setAlignment(Qt.AlignTop)  # Align main layout to top
-        main_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        main_layout.setAlignment(Qt.AlignTop)
+        main_layout.setContentsMargins(0, 0, 0, 0)
 
-        #####################################
-        ####   BrushSets Section
-        #####################################
-        # First button row (horizontal)
-        button_layout_1 = QHBoxLayout()
-        button_layout_1.setSpacing(1)
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(1)
 
-        # Common button style with icon size and background color
         icon_size = QSize(18, 18)
         button_style = """
             QPushButton {
                 background-color: #828282;
                 border: none;
                 border-radius: 2px;
+                color: white;
             }
-            QPushButton:hover {
-                background-color: #9a9a9a;
-            }
-            QPushButton:pressed {
-                background-color: #6a6a6a;
-            }
+            QPushButton:hover { background-color: #9a9a9a; }
+            QPushButton:pressed { background-color: #6a6a6a; }
         """
-
-        # Get icon directory path (system icons stay in plugin source)
         icon_dir = os.path.join(get_plugin_dir(), "config", "system_icon")
 
-        # Add Brush button
-        add_brush_button = QPushButton()
-        add_brush_icon = QIcon(os.path.join(icon_dir, "add_brush.png"))
-        add_brush_button.setIcon(add_brush_icon)
-        add_brush_button.setIconSize(icon_size)
-        add_brush_button.setStyleSheet(button_style)
-        add_brush_button.setFixedSize(22, 22)
-        add_brush_button.setToolTip("Add Current Brush")
-        add_brush_button.clicked.connect(self.add_current_brush)
-        button_layout_1.addWidget(add_brush_button)
+        add_brush_btn = QPushButton()
+        add_brush_btn.setIcon(QIcon(os.path.join(icon_dir, "add_brush.png")))
+        add_brush_btn.setIconSize(icon_size)
+        add_brush_btn.setStyleSheet(button_style)
+        add_brush_btn.setFixedSize(22, 22)
+        add_brush_btn.setToolTip("Add Current Brush")
+        add_brush_btn.clicked.connect(self.add_current_brush)
+        button_layout.addWidget(add_brush_btn)
 
-        # Add Grid button
-        add_grid_button = QPushButton()
-        add_grid_icon = QIcon(os.path.join(icon_dir, "add_grid.png"))
-        add_grid_button.setIcon(add_grid_icon)
-        add_grid_button.setIconSize(icon_size)
-        add_grid_button.setStyleSheet(button_style)
-        add_grid_button.setFixedSize(22, 22)
-        add_grid_button.setToolTip("Add New Grid")
-        add_grid_button.clicked.connect(self.add_new_grid)
-        button_layout_1.addWidget(add_grid_button)
+        add_grid_btn = QPushButton()
+        add_grid_btn.setIcon(QIcon(os.path.join(icon_dir, "add_grid.png")))
+        add_grid_btn.setIconSize(icon_size)
+        add_grid_btn.setStyleSheet(button_style)
+        add_grid_btn.setFixedSize(22, 22)
+        add_grid_btn.setToolTip("Add New Grid")
+        add_grid_btn.clicked.connect(self.add_new_grid)
+        button_layout.addWidget(add_grid_btn)
 
-        # Gesture button
-        gesture_button = QPushButton()
-        gesture_icon = QIcon(os.path.join(icon_dir, "gesture.png"))
-        gesture_button.setIcon(gesture_icon)
-        gesture_button.setIconSize(icon_size)
-        gesture_button.setStyleSheet(button_style)
-        gesture_button.setFixedSize(22, 22)
-        gesture_button.setToolTip("Gesture Configuration")
-        gesture_button.clicked.connect(self.open_gesture_config)
-        button_layout_1.addWidget(gesture_button)
+        add_tab_btn = QPushButton()
+        add_tab_btn.setIcon(QIcon(os.path.join(icon_dir, "add_tab.png")))
+        add_tab_btn.setIconSize(icon_size)
+        add_tab_btn.setStyleSheet(button_style)
+        add_tab_btn.setFixedSize(22, 22)
+        add_tab_btn.setToolTip("Add New Tab")
+        add_tab_btn.clicked.connect(self.add_new_tab)
+        button_layout.addWidget(add_tab_btn)
 
-        # Add Setting button
+        gesture_btn = QPushButton()
+        gesture_btn.setIcon(QIcon(os.path.join(icon_dir, "gesture.png")))
+        gesture_btn.setIconSize(icon_size)
+        gesture_btn.setStyleSheet(button_style)
+        gesture_btn.setFixedSize(22, 22)
+        gesture_btn.setToolTip("Gesture Configuration")
+        gesture_btn.clicked.connect(self.open_gesture_config)
+        button_layout.addWidget(gesture_btn)
+
         setting_btn = QPushButton()
-        setting_icon = QIcon(os.path.join(icon_dir, "setting.png"))
-        setting_btn.setIcon(setting_icon)
+        setting_btn.setIcon(QIcon(os.path.join(icon_dir, "setting.png")))
         setting_btn.setIconSize(icon_size)
         setting_btn.setStyleSheet(button_style)
         setting_btn.setFixedSize(22, 22)
         setting_btn.setToolTip("Settings")
         setting_btn.clicked.connect(self.show_settings_dialog)
-        button_layout_1.addWidget(setting_btn)
-        button_layout_1.addStretch()
+        button_layout.addWidget(setting_btn)
+        button_layout.addStretch()
+
+        main_layout.addLayout(button_layout)
+
+        self.tab_widget = QTabWidget()
+        self.tab_widget.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tab_widget.tabBar().customContextMenuRequested.connect(
+            self._tab_context_menu
+        )
+        main_layout.addWidget(self.tab_widget)
 
         central_widget.setLayout(main_layout)
         self.setWidget(central_widget)
 
-        main_layout.addLayout(button_layout_1)
-
-        self.main_widget = QWidget()
-        self.main_grid_layout = QVBoxLayout()
-        self.main_grid_layout.setAlignment(Qt.AlignTop)  # Align grid layout to top
-        self.main_grid_layout.setSpacing(
-            get_spacing_between_grids()
-        )  # Minimize spacing between grids
-        self.main_grid_layout.setContentsMargins(0, 0, 0, 0)  # Minimize margins
-        self.main_widget.setLayout(self.main_grid_layout)
-
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(self.main_widget)
-        main_layout.addWidget(scroll_area)
-
-        #####################################
-        ####   Other
-        #####################################
-
-        # Add initial grid(s) from loaded data
-        if not self.grids:
-            self.add_new_grid()
+        if not self.tabs or not any(True for _ in self.tabs):
+            self.add_new_tab()
         else:
-            for grid_info in self.grids:
-                self._add_grid_ui(grid_info)
-            # Set first grid active
-            if self.grids:
-                self.set_active_grid(self.grids[0])
+            for tab_info in self.tabs:
+                self._add_tab_ui(tab_info)
+            all_grids = self.grids
+            if all_grids:
+                self.set_active_grid(all_grids[0])
 
-    def open_gesture_config(self):
-        """Open gesture configuration dialog"""
-        dialog = GestureConfigDialog()
-        dialog.show()  # Non-blocking - use show() instead of exec_()
-        # Store reference to keep dialog alive
-        dialog.setAttribute(Qt.WA_DeleteOnClose, False)
+    def _add_tab_ui(self, tab_info):
+        page = QWidget()
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignTop)
+        layout.setSpacing(get_spacing_between_grids())
+        layout.setContentsMargins(0, 0, 0, 0)
+        page.setLayout(layout)
 
-    def reload_ui(self):
-        """Recreate the docker UI from scratch, reloading all config from disk."""
-        old_widget = self.widget()
-        # Reset state before rebuild
-        self.grids, self.grid_counter = load_grids_data(
-            self.data_file, self.preset_dict
-        )
-        self.active_grid = None
-        self.main_widget = None
-        self.main_grid_layout = None
-        # Rebuild UI (calls setWidget() internally)
-        self.init_ui()
-        # Schedule deletion of the old widget after the new one is in place
-        if old_widget:
-            old_widget.deleteLater()
-        # Also reload the ShortcutAccessDockerWidget and BrushAdjustDockerWidget
-        window = Krita.instance().activeWindow()
-        if window:
-            for docker in window.dockers():
-                # print(f"Docker: {docker.objectName()} type={type(docker)}")
-                if docker.objectName() in (
-                    "shortcut_access_docker",
-                    "brush_adjust_docker",
-                ):
-                    if hasattr(docker, "reload_ui"):
-                        docker.reload_ui()
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(page)
 
-    def show_settings_dialog(self):
-        dlg = CommonConfigDialog(self.common_config_path, self)
-        if dlg.exec():
-            # 設定を再読み込みして即時反映
-            global COMMON_CONFIG
-            with open(self.common_config_path, "r", encoding="utf-8") as f:
-                COMMON_CONFIG = json.load(f)
-            self.reload_ui()
+        tab_info["layout"] = layout
+        self.tab_widget.addTab(scroll, tab_info["name"])
 
-    def _add_grid_ui(self, grid_info):
+        for grid_info in tab_info["grids"]:
+            self._add_grid_ui(grid_info, tab_info)
+
+    def _add_grid_ui(self, grid_info, tab_info):
         grid_container = DraggableGridContainer(grid_info, self)
         container_layout = QVBoxLayout()
-        container_layout.setAlignment(Qt.AlignTop)  # Align container to top
+        container_layout.setAlignment(Qt.AlignTop)
         container_layout.setSpacing(1)
         container_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Grid name label
         header_layout = QHBoxLayout()
         header_layout.setSpacing(1)
         header_layout.setContentsMargins(0, 0, 0, 0)
@@ -237,25 +196,11 @@ class QuickAccessDockerWidget(QDockWidget):
         grid_info["container"] = grid_container
         grid_info["name_label"] = name_label
 
-        def name_label_mousePressEvent(event):
-            mods = QApplication.keyboardModifiers()
-            # Shift + 左クリックで↑
-            if event.button() == Qt.LeftButton and mods == Qt.ShiftModifier:
-                self.move_grid(grid_info, -1)
-            # Shift + 右クリックで↓
-            elif event.button() == Qt.RightButton and mods == Qt.ShiftModifier:
-                self.move_grid(grid_info, 1)
-            # 通常左クリックでActive
-            elif event.button() == Qt.LeftButton:
-                self.set_active_grid(grid_info)
-            # Alt + 右クリックでRename
-            elif event.button() == Qt.RightButton and mods == Qt.AltModifier:
-                self.rename_grid(grid_info)
-            # Ctrl+Alt+Shift+右クリックでGrid削除
-            elif event.button() == Qt.RightButton and (
-                mods & (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier)
-            ) == (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier):
-                self.remove_grid(grid_info)
+        def name_label_mousePressEvent(event, _g=grid_info, _t=tab_info):
+            if event.button() == Qt.LeftButton:
+                self.set_active_grid(_g)
+            elif event.button() == Qt.RightButton:
+                self._show_grid_context_menu(event.globalPos(), _g, _t)
 
         name_label.mousePressEvent = name_label_mousePressEvent
 
@@ -273,94 +218,200 @@ class QuickAccessDockerWidget(QDockWidget):
         grid_container.setLayout(container_layout)
         grid_info["widget"] = grid_widget
         grid_info["layout"] = grid_layout
-        self.main_grid_layout.addWidget(grid_container)
+        tab_info["layout"].addWidget(grid_container)
         self.update_grid(grid_info)
 
-    def remove_grid(self, grid_info):
-        # グリッドを削除
-        if grid_info in self.grids:
-            # レイアウトから削除
-            container = grid_info.get("container")
-            if container:
-                self.main_grid_layout.removeWidget(container)
-                container.setParent(None)
-                container.deleteLater()
-            self.grids.remove(grid_info)
-            # アクティブグリッドの再設定
-            if self.grids:
-                self.set_active_grid(self.grids[0])
-            else:
-                self.active_grid = None
+    # ------------------------------------------------------------------
+    # Tab operations
+    # ------------------------------------------------------------------
+
+    def _current_tab(self):
+        idx = self.tab_widget.currentIndex()
+        if 0 <= idx < len(self.tabs):
+            return self.tabs[idx]
+        return None
+
+    def _tab_context_menu(self, pos):
+        idx = self.tab_widget.tabBar().tabAt(pos)
+        if idx < 0 or idx >= len(self.tabs):
+            return
+        tab_info = self.tabs[idx]
+        menu = QMenu(self)
+        rename_act = menu.addAction("Rename Tab")
+        rename_act.triggered.connect(lambda: self.rename_tab(tab_info, idx))
+        if len(self.tabs) > 1:
+            delete_act = menu.addAction("Delete Tab")
+            delete_act.triggered.connect(lambda: self.remove_tab(tab_info))
+        menu.exec(self.tab_widget.tabBar().mapToGlobal(pos))
+
+    def add_new_tab(self):
+        tab_info = {"name": f"Tab {len(self.tabs) + 1}", "grids": [], "layout": None}
+        self.tabs.append(tab_info)
+        self._add_tab_ui(tab_info)
+        self.tab_widget.setCurrentIndex(len(self.tabs) - 1)
+        self.save_grids_data()
+
+    def rename_tab(self, tab_info, idx):
+        new_name, ok = QInputDialog.getText(
+            self, "Rename Tab", "Enter tab name:", text=tab_info["name"]
+        )
+        if ok and new_name.strip():
+            tab_info["name"] = new_name.strip()
+            self.tab_widget.setTabText(idx, tab_info["name"])
             self.save_grids_data()
 
-    def move_grid(self, grid_info, direction):
-        idx = self.grids.index(grid_info)
-        new_idx = idx + direction
-        if 0 <= new_idx < len(self.grids):
-            self.grids.pop(idx)
-            self.grids.insert(new_idx, grid_info)
-            self.rebuild_grid_layout()
-            self.save_grids_data()
+    def remove_tab(self, tab_info):
+        if len(self.tabs) <= 1:
+            return
+        idx = self.tabs.index(tab_info)
+        if self.active_grid in tab_info["grids"]:
+            self.active_grid = None
+        self.tabs.remove(tab_info)
+        self.tab_widget.removeTab(idx)
+        if self.active_grid is None:
+            for tab in self.tabs:
+                if tab["grids"]:
+                    self.set_active_grid(tab["grids"][0])
+                    break
+        self.save_grids_data()
+
+    # ------------------------------------------------------------------
+    # Grid operations
+    # ------------------------------------------------------------------
+
+    def _show_grid_context_menu(self, global_pos, grid_info, tab_info):
+        menu = QMenu(self)
+        menu.addAction("Rename").triggered.connect(lambda: self.rename_grid(grid_info))
+        menu.addAction("Move Up").triggered.connect(
+            lambda: self.move_grid(grid_info, tab_info, -1)
+        )
+        menu.addAction("Move Down").triggered.connect(
+            lambda: self.move_grid(grid_info, tab_info, 1)
+        )
+        if len(self.tabs) > 1:
+            move_menu = menu.addMenu("Move to Tab")
+            for target_tab in self.tabs:
+                if target_tab is not tab_info:
+                    act = move_menu.addAction(target_tab["name"])
+                    act.triggered.connect(
+                        lambda _, t=target_tab: self.move_grid_to_tab(
+                            grid_info, tab_info, t
+                        )
+                    )
+        menu.addSeparator()
+        menu.addAction("Delete").triggered.connect(
+            lambda: self.remove_grid(grid_info, tab_info)
+        )
+        menu.exec(global_pos)
 
     def add_new_grid(self):
+        tab_info = self._current_tab()
+        if tab_info is None:
+            return
         self.grid_counter += 1
-        grid_name = f"Grid {self.grid_counter}"
         grid_info = {
             "container": None,
             "widget": None,
             "layout": None,
             "name_label": None,
-            "name": grid_name,
+            "name": f"Grid {self.grid_counter}",
             "brush_presets": [],
             "is_active": False,
         }
-        self.grids.append(grid_info)
-        self._add_grid_ui(grid_info)
-        if len(self.grids) == 1:
+        tab_info["grids"].append(grid_info)
+        self._add_grid_ui(grid_info, tab_info)
+        if self.active_grid is None:
             self.set_active_grid(grid_info)
         self.save_grids_data()
 
     def rename_grid(self, grid_info):
-        # Show input dialog for new grid name
         new_name, ok = QInputDialog.getText(
             self, "Rename Grid", "Enter new grid name:", text=grid_info["name"]
         )
-
         if ok and new_name.strip():
             grid_info["name"] = new_name.strip()
             grid_info["name_label"].setText(grid_info["name"])
             self.save_grids_data()
 
+    def remove_grid(self, grid_info, tab_info):
+        container = grid_info.get("container")
+        if container:
+            tab_info["layout"].removeWidget(container)
+            container.setParent(None)
+            container.deleteLater()
+        tab_info["grids"].remove(grid_info)
+        if self.active_grid is grid_info:
+            self.active_grid = None
+            all_grids = self.grids
+            if all_grids:
+                self.set_active_grid(all_grids[0])
+        self.save_grids_data()
+
+    def move_grid(self, grid_info, tab_info, direction):
+        grids = tab_info["grids"]
+        idx = grids.index(grid_info)
+        new_idx = idx + direction
+        if 0 <= new_idx < len(grids):
+            grids.pop(idx)
+            grids.insert(new_idx, grid_info)
+            self._rebuild_tab_layout(tab_info)
+            self.save_grids_data()
+
+    def move_grid_to_tab(self, grid_info, from_tab, to_tab):
+        container = grid_info.get("container")
+        if container:
+            from_tab["layout"].removeWidget(container)
+            container.setParent(None)
+            container.deleteLater()
+        from_tab["grids"].remove(grid_info)
+
+        grid_info["container"] = None
+        grid_info["widget"] = None
+        grid_info["layout"] = None
+        grid_info["name_label"] = None
+
+        to_tab["grids"].append(grid_info)
+        self._add_grid_ui(grid_info, to_tab)
+        self.tab_widget.setCurrentIndex(self.tabs.index(to_tab))
+        self.save_grids_data()
+
+    def _rebuild_tab_layout(self, tab_info):
+        layout = tab_info["layout"]
+        for i in reversed(range(layout.count())):
+            item = layout.itemAt(i)
+            if item and item.widget():
+                layout.removeWidget(item.widget())
+        for grid_info in tab_info["grids"]:
+            layout.addWidget(grid_info["container"])
+        for grid_info in tab_info["grids"]:
+            self.update_grid_style(grid_info)
+
+    # ------------------------------------------------------------------
+    # Grid display
+    # ------------------------------------------------------------------
+
     def get_dynamic_columns(self):
-        # max_brush_per_rowを優先して返す
         max_brush = check_common_config().get("layout", {}).get("max_brush_per_row", 8)
         return int(max_brush)
 
     def add_current_brush(self):
-        # Get current brush preset
         app = Krita.instance()
         if app.activeWindow() and app.activeWindow().activeView():
             current_preset = app.activeWindow().activeView().currentBrushPreset()
             if current_preset and self.active_grid:
-                # Add to the active grid instead of the last grid
-                active_grid = self.active_grid
-
-                # Check if preset already exists in any grid
-                all_presets = []
-                for grid in self.grids:
-                    all_presets.extend([p.name() for p in grid["brush_presets"]])
-
-                if current_preset.name() not in all_presets:
-                    active_grid["brush_presets"].append(current_preset)
-                    self.update_grid(active_grid)
+                all_preset_names = []
+                for tab in self.tabs:
+                    for grid in tab["grids"]:
+                        all_preset_names.extend(p.name() for p in grid["brush_presets"])
+                if current_preset.name() not in all_preset_names:
+                    self.active_grid["brush_presets"].append(current_preset)
+                    self.update_grid(self.active_grid)
                     self.save_grids_data()
 
     def update_grid(self, grid_info):
-        # Clear existing buttons in this grid
         layout = grid_info["layout"]
         for i in reversed(range(layout.count())):
             layout.itemAt(i).widget().setParent(None)
-        # max_brush_per_rowを使う
         columns = self.get_dynamic_columns()
         preset_count = len(grid_info["brush_presets"])
         required_rows = (
@@ -375,76 +426,81 @@ class QuickAccessDockerWidget(QDockWidget):
             layout.addWidget(brush_button, row, col)
 
     def set_active_grid(self, grid_info):
-        # Deactivate all grids
-        for grid in self.grids:
-            grid["is_active"] = False
-            self.update_grid_style(grid)
-        # Activate selected grid
+        for tab in self.tabs:
+            for grid in tab["grids"]:
+                grid["is_active"] = False
+                self.update_grid_style(grid)
         grid_info["is_active"] = True
         self.active_grid = grid_info
         self.update_grid_style(grid_info)
 
     def update_grid_style(self, grid_info):
-        # Update visual style based on active status
+        if grid_info["widget"] is None or grid_info["name_label"] is None:
+            return
         if grid_info["is_active"]:
             grid_info["widget"].setStyleSheet(
-                """
-                QWidget {
-                    border: 2px solid #0078d4;
-                    background-color: #f0f8ff;
-                }
-            """
+                "QWidget { border: 2px solid #0078d4; background-color: #f0f8ff; }"
             )
             grid_info["name_label"].setStyleSheet(
-                """
-                font-weight: bold; 
-                font-size: 12px; 
-                color: #4FC3F7;
-            """
+                "font-weight: bold; font-size: 12px; color: #4FC3F7;"
             )
         else:
             grid_info["widget"].setStyleSheet(
-                """
-                QWidget {
-                    border: 1px solid #cccccc;
-                    background-color: #ffffff;
-                }
-            """
+                "QWidget { border: 1px solid #cccccc; background-color: #ffffff; }"
             )
             grid_info["name_label"].setStyleSheet(
-                f"""
-                font-weight: bold; 
-                font-size: 12px; 
-                color: {GRID_NAME_COLOR};
-            """
+                f"font-weight: bold; font-size: 12px; color: {GRID_NAME_COLOR};"
             )
+
+    # ------------------------------------------------------------------
+    # Misc
+    # ------------------------------------------------------------------
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
 
     def select_brush_preset(self, preset):
-        # Set the selected brush preset as current
         app = Krita.instance()
         if app.activeWindow() and app.activeWindow().activeView():
             app.activeWindow().activeView().setCurrentBrushPreset(preset)
 
+    def open_gesture_config(self):
+        dialog = GestureConfigDialog()
+        dialog.show()
+        dialog.setAttribute(Qt.WA_DeleteOnClose, False)
+
+    def reload_ui(self):
+        old_widget = self.widget()
+        self.tabs, self.grid_counter = load_tabs_data(self.data_file, self.preset_dict)
+        self.active_grid = None
+        self.tab_widget = None
+        self.init_ui()
+        if old_widget:
+            old_widget.deleteLater()
+        window = Krita.instance().activeWindow()
+        if window:
+            for docker in window.dockers():
+                if docker.objectName() in (
+                    "shortcut_access_docker",
+                    "brush_adjust_docker",
+                ):
+                    if hasattr(docker, "reload_ui"):
+                        docker.reload_ui()
+
+    def show_settings_dialog(self):
+        dlg = CommonConfigDialog(self.common_config_path, self)
+        if dlg.exec():
+            global COMMON_CONFIG
+            with open(self.common_config_path, "r", encoding="utf-8") as f:
+                COMMON_CONFIG = json.load(f)
+            self.reload_ui()
+
     def rebuild_grid_layout(self):
-        # Clear main layout
-        for i in reversed(range(self.main_grid_layout.count())):
-            item = self.main_grid_layout.itemAt(i)
-            if item:
-                widget = item.widget()
-                if widget:
-                    self.main_grid_layout.removeWidget(widget)
-
-        # Re-add grids in new order
-        for grid_info in self.grids:
-            self.main_grid_layout.addWidget(grid_info["container"])
-
-        # Update styles
-        for grid_info in self.grids:
-            self.update_grid_style(grid_info)
-        self.save_grids_data()
+        """Legacy entry point called by drag-drop widgets — rebuilds the current tab."""
+        tab_info = self._current_tab()
+        if tab_info:
+            self._rebuild_tab_layout(tab_info)
+            self.save_grids_data()
 
 
 class QuickAccessDockerFactory(DockWidgetFactoryBase):

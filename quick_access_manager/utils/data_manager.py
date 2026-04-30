@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 import datetime
 
 # Config dir is at krita/quick_access_manager/config (outside pykrita)
@@ -106,6 +107,84 @@ def save_grids_data(data_file, grids):
                 "brush_presets": [p.name() for p in grid["brush_presets"]],
             }
             for grid in grids
+        ]
+    }
+    try:
+        with open(data_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception:
+        pass
+
+
+def load_tabs_data(data_file, preset_dict):
+    """Load grids_data.json as a multi-tab structure.
+
+    If the file uses the old flat {"grids": [...]} format it is backed up to
+    grids_data.json.bak and then migrated in-place to the new format.
+
+    Returns (tabs, grid_counter) where tabs is a list of:
+        {"name": str, "grids": [grid_info, ...], "layout": None}
+    """
+    tabs = []
+    grid_counter = 0
+
+    if os.path.exists(data_file):
+        try:
+            with open(data_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            if "grids" in data and "tabs" not in data:
+                backup_path = data_file + ".bak"
+                shutil.copy2(data_file, backup_path)
+                data = {"tabs": [{"name": "Tab 1", "grids": data["grids"]}]}
+                with open(data_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+
+            for tab_data in data.get("tabs", []):
+                tab_name = tab_data.get("name", f"Tab {len(tabs) + 1}")
+                grids = []
+                for grid_data in tab_data.get("grids", []):
+                    grid_counter += 1
+                    grid_name = grid_data.get("name", f"Grid {grid_counter}")
+                    brush_presets = [
+                        preset_dict[name]
+                        for name in grid_data.get("brush_presets", [])
+                        if name in preset_dict
+                    ]
+                    grids.append({
+                        "container": None,
+                        "widget": None,
+                        "layout": None,
+                        "name_label": None,
+                        "name": grid_name,
+                        "brush_presets": brush_presets,
+                        "is_active": False,
+                    })
+                tabs.append({"name": tab_name, "grids": grids, "layout": None})
+        except Exception:
+            pass
+
+    if not tabs:
+        tabs = [{"name": "Tab 1", "grids": [], "layout": None}]
+
+    return tabs, grid_counter
+
+
+def save_tabs_data(data_file, tabs):
+    """Save the multi-tab brush-sets structure to grids_data.json."""
+    data = {
+        "tabs": [
+            {
+                "name": tab["name"],
+                "grids": [
+                    {
+                        "name": grid["name"],
+                        "brush_presets": [p.name() for p in grid["brush_presets"]],
+                    }
+                    for grid in tab["grids"]
+                ],
+            }
+            for tab in tabs
         ]
     }
     try:
