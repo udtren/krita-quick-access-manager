@@ -253,3 +253,77 @@ def save_shortcut_grids_data(data_file, grids):
             json.dump(data, f, indent=2, ensure_ascii=False)
     except Exception as e:
         log_save_grids_data(f"save_shortcut_grids_data ERROR: {str(e)}")
+
+
+def load_shortcut_tabs_data(data_file):
+    """Load shortcut_grid_data.json as a multi-tab structure.
+
+    Migrates old flat {"grids": [...]} format: backs up to .bak then rewrites
+    in-place as {"tabs": [{"name": "Tab 1", "grids": [...]}]}.
+
+    Returns list of tab dicts:
+        {"name": str, "grids": [{"name", "max_shortcut_per_row", "icon_size", "shortcuts"}, ...]}
+    """
+    tabs = []
+
+    if os.path.exists(data_file):
+        try:
+            with open(data_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            if "grids" in data and "tabs" not in data:
+                backup_path = data_file + ".bak"
+                shutil.copy2(data_file, backup_path)
+                data = {"tabs": [{"name": "Tab 1", "grids": data["grids"]}]}
+                with open(data_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+
+            for tab_data in data.get("tabs", []):
+                tab_name = tab_data.get("name", f"Tab {len(tabs) + 1}")
+                grids = []
+                for grid_data in tab_data.get("grids", []):
+                    raw_shortcuts = grid_data.get("shortcuts", [])
+                    shortcuts = [
+                        s if isinstance(s, dict) else {"actionName": s}
+                        for s in raw_shortcuts
+                    ]
+                    grids.append({
+                        "name": grid_data.get("name", f"Shortcut Grid {len(grids) + 1}"),
+                        "max_shortcut_per_row": grid_data.get("max_shortcut_per_row", ""),
+                        "icon_size": grid_data.get("icon_size", ""),
+                        "shortcuts": shortcuts,
+                    })
+                tabs.append({"name": tab_name, "grids": grids})
+        except Exception:
+            pass
+
+    if not tabs:
+        tabs = [{"name": "Tab 1", "grids": []}]
+
+    return tabs
+
+
+def save_shortcut_tabs_data(data_file, tabs_data):
+    """Save shortcut grids as a multi-tab structure."""
+    data = {
+        "tabs": [
+            {
+                "name": tab["name"],
+                "grids": [
+                    {
+                        "name": grid["name"],
+                        "max_shortcut_per_row": grid.get("max_shortcut_per_row", ""),
+                        "icon_size": grid.get("icon_size", ""),
+                        "shortcuts": grid["shortcuts"],
+                    }
+                    for grid in tab["grids"]
+                ],
+            }
+            for tab in tabs_data
+        ]
+    }
+    try:
+        with open(data_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        log_save_grids_data(f"save_shortcut_tabs_data ERROR: {str(e)}")

@@ -103,6 +103,13 @@ class SingleShortcutGridWidget(QWidget):
             ) == (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier):
                 self.remove_grid()
 
+            # Plain right click: show context menu
+            elif event.button() == Qt.RightButton and modifiers == Qt.NoModifier:
+                if hasattr(self.parent_section, "_show_grid_context_menu"):
+                    self.parent_section._show_grid_context_menu(
+                        event.globalPos(), self
+                    )
+
         self.grid_name_label.mousePressEvent = grid_name_label_mousePressEvent
 
     def add_shortcut_button(self, action):
@@ -343,22 +350,10 @@ class SingleShortcutGridWidget(QWidget):
 
     def remove_grid(self):
         """Remove this grid"""
-        if self in self.parent_section.grids:
-            # Remove from layout
-            self.parent_section.main_layout.removeWidget(self)
-            self.setParent(None)
-            self.deleteLater()
-
-            # Remove from grids list
-            self.parent_section.grids.remove(self)
-
-            # Update active grid
-            if self.parent_section.grids:
-                self.parent_section.set_active_grid(0)
-            else:
-                self.parent_section.active_grid_idx = 0
-
-            self.parent_section.save_grids_data()
+        if hasattr(self.parent_section, "_remove_grid"):
+            tab_info = self.parent_section._find_tab_for_grid(self)
+            if tab_info is not None:
+                self.parent_section._remove_grid(self, tab_info)
 
     def dragEnterEvent(self, event):
         """Handle drag enter events"""
