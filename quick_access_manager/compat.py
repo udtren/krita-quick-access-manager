@@ -18,7 +18,7 @@ try:
         QShortcut, QSizePolicy, QDockWidget, QMdiArea, QTableWidget,
         QTableWidgetItem, QHeaderView, QMessageBox, QColorDialog,
         QInputDialog, QFormLayout, QTextEdit, QKeySequenceEdit, QGroupBox,
-        QTabWidget, QAction, QAbstractItemView,
+        QTabWidget, QAction, QAbstractItemView, QMenu,
     )
     from PyQt5.QtGui import (  # noqa: F401
         QIcon, QPixmap, QPainter, QBrush, QColor, QCursor, QDrag,
@@ -39,7 +39,7 @@ except ImportError:
         QSizePolicy, QDockWidget, QMdiArea, QTableWidget,
         QTableWidgetItem, QHeaderView, QMessageBox, QColorDialog,
         QInputDialog, QFormLayout, QTextEdit, QKeySequenceEdit, QGroupBox,
-        QTabWidget, QAbstractItemView,
+        QTabWidget, QAbstractItemView, QMenu,
     )
     from PyQt6.QtGui import (  # noqa: F401
         QIcon, QPixmap, QPainter, QBrush, QColor, QCursor, QDrag,
@@ -161,6 +161,9 @@ except ImportError:
     # Sort order
     Qt.AscendingOrder  = Qt.SortOrder.AscendingOrder
     Qt.DescendingOrder = Qt.SortOrder.DescendingOrder
+
+    # Context menu policy
+    Qt.CustomContextMenu = Qt.ContextMenuPolicy.CustomContextMenu
 
     # Focus policy
     Qt.NoFocus       = Qt.FocusPolicy.NoFocus

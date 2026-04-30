@@ -99,3 +99,18 @@ def get_dynamic_columns():
     config = get_common_config()
     max_brush = config.get("layout", {}).get("max_brush_per_row", 8)
     return int(max_brush)
+
+def get_max_shortcut_per_row():
+    """Get maximum shortcuts per row from config"""
+    config = get_common_config()
+    return int(config.get("layout", {}).get("max_shortcut_per_row", 3))
+
+
+def get_shortcut_button_config():
+    """Get shortcut button configuration"""
+    config = get_common_config()
+    return {
+        "font_size": config["font"]["shortcut_button_font_size"],
+        "font_color": config["color"]["shortcut_button_font_color"],
+        "background_color": config["color"]["shortcut_button_background_color"],
+    }

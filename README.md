@@ -14,6 +14,12 @@ A plugin for Krita that provides quick access to brush presets, shortcut managem
 ![Sample](./quick_access_manager/image/000.png)
 ---
 
+## Recent Changes
+
+**2026-04-30** — Both dockers (Quick Brush Sets, Quick Actions) now support **multiple tabs**. Use the `+Tab` button to add tabs; right-click a tab header or grid name for rename/move/delete options. Popups mirror the tab layout.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
+
 ## Support
 
 If you find this tool helpful, you can support its development:
@@ -48,13 +54,17 @@ If you find this tool helpful, you can support its development:
 4. The selected preset will be added to the active grid.
 ![How to Add a Brush Preset](./quick_access_manager/image/qam_add_brush.gif)
 
-## How to Add a Shortcut. 
+**Multi-tab support:** Click the `+Tab` button in the toolbar to create a new tab. Each tab holds its own set of grids. Right-click any tab header to **Rename Tab** or **Delete Tab** (the last remaining tab cannot be deleted).
+
+## How to Add a Shortcut
 1. In the "Quick Actions" section, activate the grid you want to add to.
 2. Click the "Actions" button to open the shortcut selection popup.
 3. Select the action you want to add from the table.
 4. Click the "AddAction" button.
 5. The selected shortcut will be added to the active grid.
 ![How to Add a Shortcut](./quick_access_manager/image/qam_add_action.gif)
+
+**Multi-tab support:** Click the `+Tab` button in the toolbar to create a new tab. Each tab holds its own set of grids. Right-click any tab header to **Rename Tab** or **Delete Tab** (the last remaining tab cannot be deleted).
  
 ## Popup Window
 ![Popup Demo](./quick_access_manager/image/popup_demo.gif)
@@ -440,6 +450,19 @@ To remove a brush or shortcut from a grid, hold <kbd>Ctrl</kbd> and right-click 
 
 **Remove Grid:**  
 To delete an entire grid, hold <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> and right-click the grid name.
+
+**Grid Context Menu (right-click the grid name):**  
+Right-clicking a grid name (without any modifier key) opens a context menu with the following options:
+- **Rename** — rename the grid
+- **Move Up** — move the grid one position up within the same tab
+- **Move Down** — move the grid one position down within the same tab
+- **Move to Tab** — move the grid to another tab (submenu lists available tabs; only shown when multiple tabs exist)
+- **Delete** — delete the grid
+
+**Tab Context Menu (right-click a tab header):**  
+Right-clicking a tab header opens a context menu with:
+- **Rename Tab** — rename the tab
+- **Delete Tab** — delete the tab and all its grids (only shown when more than one tab exists)
 
 **Edit Grid Parameter:**
 Each grid can have its own configuration parameters that override global settings.

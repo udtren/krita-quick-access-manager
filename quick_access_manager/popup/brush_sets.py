@@ -1,6 +1,6 @@
 from ..compat import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton, QLabel,
-    QShortcut, QFrame,
+    QShortcut, QFrame, QTabWidget,
     Qt,
     QCursor, QIcon,
 )
@@ -217,143 +217,112 @@ class BrushSetsPopup:
             event.accept()
 
     def create_popup_content(self, popup_layout):
-        """Create simplified brush grid content for popup"""
-        if not self.parent_docker.grids:
+        """Create brush grid content organised by tab."""
+        tabs = self.parent_docker.tabs
+        if not tabs or not any(tab["grids"] for tab in tabs):
             no_grids_label = QLabel("No brush grids available")
             no_grids_label.setStyleSheet("color: #999; font-style: italic;")
             popup_layout.addWidget(no_grids_label)
             return
 
-        main_widget = QWidget()
-        main_layout = QVBoxLayout()
-        main_layout.setSpacing(8)
-        main_layout.setContentsMargins(2, 2, 2, 2)
-        main_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        tab_widget = QTabWidget()
+        for tab_info in tabs:
+            tab_page = self._build_tab_page(tab_info)
+            tab_widget.addTab(tab_page, tab_info["name"])
 
-        # Display all grids
-        for grid_info in self.parent_docker.grids:
+        popup_layout.addWidget(tab_widget)
+
+    def _build_tab_page(self, tab_info):
+        """Build the grid content widget for one popup tab."""
+        page = QWidget()
+        layout = QVBoxLayout()
+        layout.setSpacing(8)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+
+        if not tab_info["grids"]:
+            empty = QLabel("No grids in this tab")
+            empty.setStyleSheet("color: #999; font-style: italic;")
+            layout.addWidget(empty)
+            page.setLayout(layout)
+            return page
+
+        for grid_info in tab_info["grids"]:
             grid_name = grid_info.get("name", "Unnamed Grid")
             grid_label = QLabel(grid_name)
             grid_label.setFixedWidth(self.popup_loader.get_grid_label_width())
             grid_label.setWordWrap(True)
             grid_label.setAlignment(Qt.AlignCenter)
             grid_label.setStyleSheet(
-                """
-                color: #000000;
-                background-color: #919191;
-                border-radius: 4px;
-                font-weight: bold;
-                font-size: 12px;
-                """
+                "color: #000000; background-color: #919191; border-radius: 4px;"
+                " font-weight: bold; font-size: 12px;"
             )
 
-            grid_name_preset_layout = QHBoxLayout()
-            grid_name_preset_layout.setContentsMargins(0, 0, 0, 0)
-            grid_name_preset_layout.setSpacing(5)
-            grid_name_preset_layout.addWidget(grid_label)
+            row_layout = QHBoxLayout()
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(5)
+            row_layout.addWidget(grid_label)
 
             if grid_info.get("brush_presets"):
                 grid_widget = QWidget()
                 grid_layout = QGridLayout()
                 grid_layout.setSpacing(1)
                 grid_layout.setContentsMargins(0, 0, 0, 0)
-
-                # Set alignment to left
                 grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-
                 columns = self.parent_docker.get_dynamic_columns()
 
                 for index, preset in enumerate(grid_info["brush_presets"]):
-                    row = index // columns
-                    col = index % columns
+                    brush_btn = self._build_brush_button(preset)
+                    grid_layout.addWidget(brush_btn, index // columns, index % columns)
 
-                    # Create brush button with icon
-                    brush_btn = QPushButton()
-                    icon_size = self.popup_loader.get_brush_icon_size()
-                    brush_btn.setFixedSize(icon_size, icon_size)
-                    brush_btn.setToolTip(preset.name())
-                    brush_btn.clicked.connect(
-                        lambda checked, p=preset: self.select_brush_preset_and_close(p)
-                    )
-
-                    # Set brush icon
-                    try:
-                        # Try to get the brush icon/thumbnail
-                        icon = preset.image()
-                        if icon and not icon.isNull():
-                            # Convert QImage to QPixmap and then to QIcon
-                            from ..compat import QPixmap, QIcon
-
-                            pixmap = QPixmap.fromImage(icon)
-                            if not pixmap.isNull():
-                                # Scale the pixmap to fit the button
-                                scaled_pixmap = pixmap.scaled(
-                                    icon_size,
-                                    icon_size,
-                                    Qt.KeepAspectRatio,
-                                    Qt.SmoothTransformation,
-                                )
-                                brush_btn.setIcon(QIcon(scaled_pixmap))
-                                brush_btn.setIconSize(scaled_pixmap.size())
-                            else:
-                                raise Exception("Null pixmap")
-                        else:
-                            raise Exception("No image")
-                    except Exception:
-                        # Fallback: use first 2 characters
-                        brush_btn.setText(preset.name()[:2].upper())
-                        brush_btn.setStyleSheet(
-                            """
-                            QPushButton {
-                                border: 1px solid #555;
-                                background-color: #3d3d3d;
-                                border-radius: 3px;
-                                color: #fff;
-                                font-weight: bold;
-                                font-size: 10px;
-                            }
-                            QPushButton:hover {
-                                border: 2px solid #0078d4;
-                                background-color: #4d4d4d;
-                            }
-                        """
-                        )
-                        grid_layout.addWidget(brush_btn, row, col)
-                        continue
-
-                    brush_btn.setStyleSheet(
-                        """
-                        QPushButton {
-                            border: 1px solid #555;
-                            background-color: #3d3d3d;
-                            border-radius: 8px;
-                            padding: 2px;
-                        }
-                        QPushButton:hover {
-                            border: 2px solid #0078d4;
-                            background-color: #4d4d4d;
-                        }
-                        QPushButton:pressed {
-                            background-color: #0078d4;
-                        }
-                    """
-                    )
-
-                    grid_layout.addWidget(brush_btn, row, col)
                 grid_widget.setLayout(grid_layout)
+                row_layout.addWidget(grid_widget)
             else:
-                # Empty grid message
                 empty_label = QLabel("  (empty)")
                 empty_label.setStyleSheet(
                     "color: #666; font-style: italic; font-size: 10px; margin-left: 10px;"
                 )
-                main_layout.addWidget(empty_label)
-            grid_name_preset_layout.addWidget(grid_widget)
-            grid_name_preset_layout.addStretch()
-            main_layout.addLayout(grid_name_preset_layout)
+                row_layout.addWidget(empty_label)
 
-        main_widget.setLayout(main_layout)
-        popup_layout.addWidget(main_widget)
+            row_layout.addStretch()
+            layout.addLayout(row_layout)
+
+        page.setLayout(layout)
+        return page
+
+    def _build_brush_button(self, preset):
+        """Build a single brush icon button for the popup."""
+        from ..compat import QPixmap
+        icon_size = self.popup_loader.get_brush_icon_size()
+        btn = QPushButton()
+        btn.setFixedSize(icon_size, icon_size)
+        btn.setToolTip(preset.name())
+        btn.clicked.connect(lambda _, p=preset: self.select_brush_preset_and_close(p))
+
+        try:
+            img = preset.image()
+            if not img or img.isNull():
+                raise ValueError
+            pixmap = QPixmap.fromImage(img)
+            if pixmap.isNull():
+                raise ValueError
+            scaled = pixmap.scaled(icon_size, icon_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            btn.setIcon(QIcon(scaled))
+            btn.setIconSize(scaled.size())
+            btn.setStyleSheet(
+                "QPushButton { border: 1px solid #555; background-color: #3d3d3d;"
+                " border-radius: 8px; padding: 2px; }"
+                " QPushButton:hover { border: 2px solid #0078d4; background-color: #4d4d4d; }"
+                " QPushButton:pressed { background-color: #0078d4; }"
+            )
+        except Exception:
+            btn.setText(preset.name()[:2].upper())
+            btn.setStyleSheet(
+                "QPushButton { border: 1px solid #555; background-color: #3d3d3d;"
+                " border-radius: 3px; color: #fff; font-weight: bold; font-size: 10px; }"
+                " QPushButton:hover { border: 2px solid #0078d4; background-color: #4d4d4d; }"
+            )
+        return btn
 
     def select_brush_preset_and_close(self, preset):
         """Select brush preset and close popup"""

@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-04-30
+### Added
+- **Multi-tab Quick Actions docker** (`shortcut_manager.py`): the Quick Actions docker now organises shortcut grids across multiple tabs, mirroring the brush-sets tab feature
+  - `+Tab` button (using `add_tab.png` icon) in the toolbar adds a new tab
+  - Right-click a tab header → **Rename Tab** / **Delete Tab** (last tab is protected from deletion)
+  - Right-click a grid title bar → context menu with **Rename**, **Move Up**, **Move Down**, **Move to Tab** (submenu listing other tabs), **Delete**
+  - `@property grids` on `ShortcutAccessDockerWidget` returns a flat list across all tabs so `SingleShortcutGridWidget` drag-drop and activation logic work unchanged
+- **Multi-tab Actions popup** (`popup/actions.py`): popup triggered by the keyboard shortcut now shows a `QTabWidget` mirroring the docker's tab structure; each tab page lists its grids with action buttons
+- `load_shortcut_tabs_data` / `save_shortcut_tabs_data` in `data_manager.py`: new persistence functions for the multi-tab shortcut structure
+
+### Changed
+- `shortcut_grid_data.json` migrated from flat `{"grids":[...]}` to `{"tabs":[{"name":…,"grids":[…]}]}`; old format is auto-detected on load, backed up to `shortcut_grid_data.json.bak`, and rewritten in-place — no backward-compat code needed after migration
+- `SingleShortcutGridWidget.remove_grid()`: simplified to delegate to `parent_section._remove_grid()`; no longer references the removed `main_layout` attribute
+- `SingleShortcutGridWidget.setup_events()`: plain right-click on the grid title now opens the docker's context menu (`_show_grid_context_menu`) instead of doing nothing
+
+## 2026-04-28
+### Changed
+- Remove unused methods and duplicated functions.
+
 ## 2026-04-23
 ### Added
 - **Live UI reload without Krita restart**: config changes now apply immediately after closing the Settings dialog
