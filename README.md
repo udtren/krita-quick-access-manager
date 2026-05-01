@@ -16,6 +16,8 @@ A plugin for Krita that provides quick access to brush presets, shortcut managem
 
 ## Recent Changes
 
+**2026-05-01** — Add Temp Brush Sets function. All hold-key listeners (Temp Erase, Preserve Alpha, Temp Freehand Selection) now accept **combo keys** such as `Alt+1` or `Ctrl+F2`.
+
 **2026-04-30** — Both dockers (Quick Brush Sets, Quick Actions) now support **multiple tabs**. Use the `+Tab` button to add tabs; right-click a tab header or grid name for rename/move/delete options. Popups mirror the tab layout.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
