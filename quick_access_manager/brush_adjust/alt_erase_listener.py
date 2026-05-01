@@ -18,6 +18,13 @@ _KEY_MAP = {
     **{f"F{i}": getattr(Qt, f"Key_F{i}") for i in range(1, 13)},
 }
 
+_MODIFIER_MAP = {
+    "Alt": Qt.AltModifier,
+    "Ctrl": Qt.ControlModifier,
+    "Shift": Qt.ShiftModifier,
+    "Meta": Qt.MetaModifier,
+}
+
 
 def resolve_key(key_string: str) -> int:
     """Convert a key name string to a Qt key code.
@@ -29,6 +36,25 @@ def resolve_key(key_string: str) -> int:
         Qt key code, or Qt.Key_Alt if the key name is unrecognised
     """
     return _KEY_MAP.get(key_string, Qt.Key_Alt)
+
+
+def _parse_combo(key_string: str):
+    """Parse a combo key string into (modifier_flags, key_code).
+
+    Supports plain keys ("A", "F1") and combos ("Alt+1", "Ctrl+F1", "Ctrl+Alt+A").
+    Returns (None, None) for empty or unrecognised input.
+    """
+    if not key_string:
+        return None, None
+    parts = [p.strip() for p in key_string.split("+")]
+    modifier_flags = Qt.NoModifier
+    key_code = None
+    for part in parts:
+        if part in _MODIFIER_MAP:
+            modifier_flags = modifier_flags | _MODIFIER_MAP[part]
+        elif part in _KEY_MAP:
+            key_code = _KEY_MAP[part]
+    return modifier_flags, key_code
 
 
 class AltEraseListener(QObject):
@@ -133,6 +159,70 @@ class PreserveAlphaListener(QObject):
                         action.setChecked(False)
 
         return False
+
+
+class TempBrushSetListener(QObject):
+    """Temporarily switches to a configured brush preset while a combo key is held,
+    then restores the original brush on release.
+
+    Supports plain keys ("A", "F1") and combos ("Alt+1", "Ctrl+F1").
+    Empty key_string or brush_name disables the listener entirely.
+    """
+
+    def __init__(self, key_string: str = "", brush_name: str = "", size_scale: float = 0.0):
+        super().__init__()
+        self._modifier_flags, self._key_code = _parse_combo(key_string) if key_string else (None, None)
+        self._brush_name = brush_name
+        self._size_scale = size_scale
+        self._key_active = False
+        self._original_preset = None
+        self._original_size = None
+        if self._key_code is not None and self._brush_name:
+            QApplication.instance().installEventFilter(self)
+
+    def remove(self):
+        QApplication.instance().removeEventFilter(self)
+
+    def eventFilter(self, _, event):
+        t = event.type()
+
+        if t == QEvent.KeyPress and not event.isAutoRepeat():
+            if event.key() == self._key_code and event.modifiers() == self._modifier_flags:
+                if not self._key_active:
+                    self._key_active = True
+                    self._switch_to_temp_brush()
+
+        elif t == QEvent.KeyRelease and not event.isAutoRepeat():
+            if event.key() == self._key_code and self._key_active:
+                self._key_active = False
+                self._restore_original_brush()
+
+        return False
+
+    def _switch_to_temp_brush(self):
+        app = Krita.instance()
+        if app.activeWindow() and app.activeWindow().activeView():
+            view = app.activeWindow().activeView()
+            self._original_preset = view.currentBrushPreset()
+            if self._size_scale > 0:
+                self._original_size = view.brushSize()
+            target = app.resources("preset").get(self._brush_name)
+            if target:
+                view.setCurrentBrushPreset(target)
+                if self._size_scale > 0:
+                    view.setBrushSize(self._original_size * self._size_scale)
+
+    def _restore_original_brush(self):
+        if self._original_preset is None:
+            return
+        app = Krita.instance()
+        if app.activeWindow() and app.activeWindow().activeView():
+            view = app.activeWindow().activeView()
+            view.setCurrentBrushPreset(self._original_preset)
+            if self._size_scale > 0 and self._original_size is not None:
+                view.setBrushSize(self._original_size)
+        self._original_preset = None
+        self._original_size = None
 
 
 class SelectOutlineListener(QObject):

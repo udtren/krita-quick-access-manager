@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-05-01
+### Added
+- **Temp Brush Set — `size_scale` parameter** (`alt_erase_listener.py`, `quick_adjust_tab.py`, `adjustment_widget.py`): each Temp Brush Set entry now accepts an optional `size_scale` float
+  - When `size_scale > 0`: on key press the current brush size is saved and the temp brush is set to `original_size × size_scale`; on release the original size is restored alongside the original preset
+  - When `size_scale == 0` (default): no size change is applied, matching previous behaviour
+  - UI field added in Settings → Quick Adjust → [Temp Brush Set] entries; saved to `temp_brush_sets[n].size_scale` in `quick_adjust_docker.json`
+
+### Changed
+- `TempBrushSetListener.__init__` gains `size_scale: float = 0.0`; `_switch_to_temp_brush` / `_restore_original_brush` save and restore brush size only when `size_scale > 0`
+
 ## 2026-04-30
 ### Added
 - **Multi-tab Quick Actions docker** (`shortcut_manager.py`): the Quick Actions docker now organises shortcut grids across multiple tabs, mirroring the brush-sets tab feature
