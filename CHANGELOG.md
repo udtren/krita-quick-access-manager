@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - When `size_scale > 0`: on key press the current brush size is saved and the temp brush is set to `original_size × size_scale`; on release the original size is restored alongside the original preset
   - When `size_scale == 0` (default): no size change is applied, matching previous behaviour
   - UI field added in Settings → Quick Adjust → [Temp Brush Set] entries; saved to `temp_brush_sets[n].size_scale` in `quick_adjust_docker.json`
+- **Combo key support for Temp Erase, Preserve Alpha, and Temp Freehand Selection** (`alt_erase_listener.py`, `quick_adjust_tab.py`): all three hold-key listeners now accept combo strings (e.g. `Alt+1`, `Ctrl+F2`) in addition to plain keys
+  - `_parse_combo` fixed: a single modifier name (`"Alt"`, `"Shift"`) is correctly treated as a plain key press rather than a modifier flag
+  - `AltEraseListener`, `PreserveAlphaListener`, `SelectOutlineListener`: switched from `resolve_key` to `_parse_combo`; `eventFilter` applies a modifier check only when a combo is configured, preserving the existing cancel-on-other-key behaviour for plain keys
+  - Settings UI key fields widened to 100 px and placeholder text updated to show combo examples
 
 ### Changed
 - `TempBrushSetListener.__init__` gains `size_scale: float = 0.0`; `_switch_to_temp_brush` / `_restore_original_brush` save and restore brush size only when `size_scale > 0`

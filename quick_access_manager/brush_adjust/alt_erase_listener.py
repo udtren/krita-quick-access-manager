@@ -41,7 +41,8 @@ def resolve_key(key_string: str) -> int:
 def _parse_combo(key_string: str):
     """Parse a combo key string into (modifier_flags, key_code).
 
-    Supports plain keys ("A", "F1") and combos ("Alt+1", "Ctrl+F1", "Ctrl+Alt+A").
+    Supports plain keys ("A", "F1", "Alt") and combos ("Alt+1", "Ctrl+F1", "Ctrl+Alt+A").
+    A single modifier name ("Alt", "Shift") is treated as a plain key press, not a modifier.
     Returns (None, None) for empty or unrecognised input.
     """
     if not key_string:
@@ -50,7 +51,7 @@ def _parse_combo(key_string: str):
     modifier_flags = Qt.NoModifier
     key_code = None
     for part in parts:
-        if part in _MODIFIER_MAP:
+        if part in _MODIFIER_MAP and len(parts) > 1:
             modifier_flags = modifier_flags | _MODIFIER_MAP[part]
         elif part in _KEY_MAP:
             key_code = _KEY_MAP[part]
@@ -69,7 +70,7 @@ class AltEraseListener(QObject):
 
     def __init__(self, key_string: str = ""):
         super().__init__()
-        self._key_code = resolve_key(key_string) if key_string else None
+        self._modifier_flags, self._key_code = _parse_combo(key_string) if key_string else (None, None)
         self._key_active = False
         self._combo_detected = False
         if self._key_code is not None:
@@ -86,7 +87,10 @@ class AltEraseListener(QObject):
         t = event.type()
 
         if t == QEvent.KeyPress and not event.isAutoRepeat():
-            if event.key() == self._key_code:
+            key_matches = event.key() == self._key_code
+            if self._modifier_flags != Qt.NoModifier:
+                key_matches = key_matches and event.modifiers() == self._modifier_flags
+            if key_matches:
                 if not self._key_active:
                     self._key_active = True
                     self._combo_detected = False
@@ -94,7 +98,6 @@ class AltEraseListener(QObject):
                     if action:
                         action.setChecked(True)
             elif self._key_active and not self._combo_detected:
-                # Another key pressed while ours is held — cancel erase
                 self._combo_detected = True
                 action = self._erase_action()
                 if action:
@@ -121,7 +124,7 @@ class PreserveAlphaListener(QObject):
 
     def __init__(self, key_string: str = ""):
         super().__init__()
-        self._key_code = resolve_key(key_string) if key_string else None
+        self._modifier_flags, self._key_code = _parse_combo(key_string) if key_string else (None, None)
         self._key_active = False
         self._combo_detected = False
         if self._key_code is not None:
@@ -137,7 +140,10 @@ class PreserveAlphaListener(QObject):
         t = event.type()
 
         if t == QEvent.KeyPress and not event.isAutoRepeat():
-            if event.key() == self._key_code:
+            key_matches = event.key() == self._key_code
+            if self._modifier_flags != Qt.NoModifier:
+                key_matches = key_matches and event.modifiers() == self._modifier_flags
+            if key_matches:
                 if not self._key_active:
                     self._key_active = True
                     self._combo_detected = False
@@ -235,7 +241,7 @@ class SelectOutlineListener(QObject):
 
     def __init__(self, key_string: str = ""):
         super().__init__()
-        self._key_code = resolve_key(key_string) if key_string else None
+        self._modifier_flags, self._key_code = _parse_combo(key_string) if key_string else (None, None)
         self._key_active = False
         if self._key_code is not None:
             QApplication.instance().installEventFilter(self)
@@ -246,8 +252,11 @@ class SelectOutlineListener(QObject):
     def eventFilter(self, _, event):
         t = event.type()
 
-        if t == QEvent.KeyPress and not event.isAutoRepeat() and event.key() == self._key_code:
-            if not self._key_active:
+        if t == QEvent.KeyPress and not event.isAutoRepeat():
+            key_matches = event.key() == self._key_code
+            if self._modifier_flags != Qt.NoModifier:
+                key_matches = key_matches and event.modifiers() == self._modifier_flags
+            if key_matches and not self._key_active:
                 self._key_active = True
                 action = Krita.instance().action("KisToolSelectOutline")
                 if action:
