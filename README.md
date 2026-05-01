@@ -40,6 +40,7 @@ If you find this tool helpful, you can support its development:
 - [Presets Switcher](#presets-switcher)
 - [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker)
   - [Temp Action Mode](#temp-action-mode)
+  - [Temp Brush Sets](#temp-brush-sets)
   - [Floating Widget](#floating-widget)
 - [HueSVC](#huesvc)
 - [Config Files Location](#config-files-location)
@@ -280,6 +281,36 @@ Hold a configurable key to temporarily activate an action. Releasing the key res
 - **Temp Preserve Alpha**: Hold key to temporarily enable Krita's Preserve Alpha mode. Configure under *[Preserve Alpha]*.
 - **Temp Freehand Selection**: Hold key to switch to the Freehand Selection tool; release to return to the Brush tool. Configure under *[Temp Freehand Selection]*.
 
+### Temp Brush Sets
+
+![alt text](quick_access_manager/image/temp_brush_set.gif)
+
+![alt text](quick_access_manager/image/temp_brush_set.png)
+
+Hold a key (or key combo) to temporarily switch to a configured brush preset; release to restore the original brush.
+
+**Configuration via Settings UI:**
+1. Click the "Setting" button in the docker
+2. Go to the "Quick Adjust" tab
+3. Scroll down to the "[Temp Brush Set]" section
+4. Click "Add Entry" to create a new entry
+5. Configure each entry:
+   - **Hold Key**: Key or combo to trigger the swap (e.g. `Alt+1`, `Ctrl+F1`, `F5`)
+   - **Brush**: Name of the target brush preset — click "Set to Current Brush" to fill this from the active preset in Krita
+   - **Size Scale**: Float multiplier applied to your current brush size when switching (`0` = no size change, `0.5` = half size, `2.0` = double size)
+6. Click "Remove This Entry" to delete an entry
+7. Click "Save" to apply changes (takes effect after restarting the plugin)
+
+**Multiple entries** are supported — add as many key/brush pairs as you need.
+
+**Configuration File (`quick_adjust_docker.json`):**
+```json
+"temp_brush_sets": [
+  { "key": "Alt+1", "brush": "b) Basic-5 Size Opacity", "size_scale": 0.5 },
+  { "key": "Ctrl+F1", "brush": "Ink-2 Fineliner", "size_scale": 0.0 }
+]
+```
+
 ### Customization
 To modify the docker's appearance and behavior, see "Global Config".
 
@@ -287,8 +318,7 @@ To modify the docker's appearance and behavior, see "Global Config".
 The buttons at the bottom of the docker provide quick show/hide toggles for other Krita dockers (e.g., Tool Options, Layers, Brush Presets).
 
 **Configuration via Settings UI:**
-
-![docker button config](docker_button_config.png)
+![docker button config](quick_access_manager/image/docker_button_config.png)
 
 1. Click the "Setting" button in the docker
 2. Go to the "Quick Adjust" tab

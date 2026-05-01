@@ -43,6 +43,7 @@ from ..config.quick_adjust_docker_loader import (
     get_alt_erase_key,
     get_preserve_alpha_key,
     get_select_outline_key,
+    get_temp_brush_sets,
 )
 
 
@@ -59,6 +60,7 @@ from .alt_erase_listener import (
     AltEraseListener,
     PreserveAlphaListener,
     SelectOutlineListener,
+    TempBrushSetListener,
 )
 
 
@@ -103,6 +105,17 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             self.destroyed.connect(self._select_outline_listener.remove)
         else:
             self._select_outline_listener = None
+
+        # Temp brush set listeners — one per configured entry
+        self._temp_brush_set_listeners = []
+        for entry in get_temp_brush_sets():
+            key = entry.get("key", "")
+            brush = entry.get("brush", "")
+            size_scale = float(entry.get("size_scale", 0.0))
+            if key and brush:
+                listener = TempBrushSetListener(key, brush, size_scale)
+                self.destroyed.connect(listener.remove)
+                self._temp_brush_set_listeners.append(listener)
 
         # Initialize monitoring from mixins
         self.setup_brush_monitoring()

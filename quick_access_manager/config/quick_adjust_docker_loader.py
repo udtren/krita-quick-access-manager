@@ -35,6 +35,7 @@ def _get_default_config():
         "alt_erase_key": "",
         "preserve_alpha_key": "",
         "select_outline_key": "",
+        "temp_brush_sets": [],
     }
 
 
@@ -317,6 +318,18 @@ def get_select_outline_key():
     """
     config = _load_config()
     return config.get("select_outline_key", "")
+
+
+def get_temp_brush_sets():
+    """Return the list of temp brush set entries.
+
+    Each entry is {"key": str, "brush": str, "size_scale": float}.
+
+    Returns:
+        list: List of temp brush set dicts (default: [])
+    """
+    config = _load_config()
+    return config.get("temp_brush_sets", [])
 
 
 def get_all_config():

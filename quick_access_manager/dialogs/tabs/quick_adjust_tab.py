@@ -2,7 +2,7 @@ import json
 import os
 from ...compat import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-    QScrollArea, QCheckBox, QTextEdit, QGroupBox, QComboBox, Qt,
+    QScrollArea, QCheckBox, QTextEdit, QGroupBox, QComboBox, QMessageBox, Qt,
 )
 from ...utils.config_utils import get_config_dir
 
@@ -14,6 +14,8 @@ class QuickAdjustTab:
         self.config_path = config_path
         self.quick_adjust_fields = {}
         self.docker_buttons_fields = []
+        self._temp_brush_set_entries = []
+        self._temp_brush_sets_container = None
         self.quick_adjust_config = {}
         self.quick_adjust_path = None
         self.docker_buttons_config = {}
@@ -219,6 +221,23 @@ class QuickAdjustTab:
         layout.addLayout(hl)
         self.quick_adjust_fields[("select_outline_key",)] = key_edit
 
+        # Temp Brush Set
+        layout.addWidget(QLabel("[Temp Brush Set]"))
+        layout.addWidget(QLabel("  Hold key to temporarily switch to a configured brush, release to restore"))
+
+        add_btn_row = QHBoxLayout()
+        add_entry_btn = QPushButton("Add Entry")
+        add_entry_btn.clicked.connect(self._add_temp_brush_set_ui)
+        add_btn_row.addWidget(add_entry_btn)
+        add_btn_row.addStretch()
+        layout.addLayout(add_btn_row)
+
+        self._temp_brush_sets_container = QVBoxLayout()
+        layout.addLayout(self._temp_brush_sets_container)
+
+        for entry in self.quick_adjust_config.get("temp_brush_sets", []):
+            self._add_temp_brush_set_ui(entry)
+
         # floating_widgets
         floating_widgets = self.quick_adjust_config.get("floating_widgets", {})
         if "floating_widgets" not in self.quick_adjust_config:
@@ -419,6 +438,76 @@ class QuickAdjustTab:
         group_box.setParent(None)
         group_box.deleteLater()
 
+    def _set_temp_brush_to_current(self, brush_edit):
+        """Read the currently active brush from Krita and write its name into brush_edit."""
+        from krita import Krita  # type: ignore
+        app = Krita.instance()
+        if app.activeWindow() and app.activeWindow().activeView():
+            preset = app.activeWindow().activeView().currentBrushPreset()
+            if preset:
+                brush_edit.setText(preset.name())
+            else:
+                QMessageBox.warning(None, "No Brush Selected", "Please select a brush preset in Krita first.")
+        else:
+            QMessageBox.warning(None, "No Active Window", "No active Krita window found.")
+
+    def _add_temp_brush_set_ui(self, entry=None):
+        if not isinstance(entry, dict):
+            entry = {"key": "", "brush": ""}
+        n = len(self._temp_brush_set_entries) + 1
+        group_box = QGroupBox(f"Temp Brush Set {n}")
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+        fields = {}
+
+        hl = QHBoxLayout()
+        hl.addWidget(QLabel("Hold Key:"))
+        key_edit = QLineEdit(entry.get("key", ""))
+        key_edit.setPlaceholderText("e.g. Alt+1, Ctrl+F1")
+        key_edit.setFixedWidth(100)
+        hl.addWidget(key_edit)
+        hl.addStretch()
+        group_layout.addLayout(hl)
+        fields["key"] = key_edit
+
+        hl = QHBoxLayout()
+        hl.addWidget(QLabel("Brush:"))
+        brush_edit = QLineEdit(entry.get("brush", ""))
+        brush_edit.setPlaceholderText("Select brush in Krita, then click →")
+        brush_edit.setMinimumWidth(160)
+        set_btn = QPushButton("Set to Current Brush")
+        set_btn.clicked.connect(lambda: self._set_temp_brush_to_current(brush_edit))
+        hl.addWidget(brush_edit)
+        hl.addWidget(set_btn)
+        group_layout.addLayout(hl)
+        fields["brush"] = brush_edit
+
+        hl = QHBoxLayout()
+        hl.addWidget(QLabel("Size Scale:"))
+        scale_edit = QLineEdit(str(entry.get("size_scale", 0.0)))
+        scale_edit.setPlaceholderText("0 = no change, 0.5 = half, 2.0 = double")
+        scale_edit.setFixedWidth(80)
+        scale_edit.setAlignment(Qt.AlignRight)
+        hl.addWidget(scale_edit)
+        hl.addStretch()
+        group_layout.addLayout(hl)
+        fields["size_scale"] = scale_edit
+
+        remove_btn = QPushButton("Remove This Entry")
+        remove_btn.clicked.connect(lambda: self._remove_temp_brush_set_ui(group_box))
+        group_layout.addWidget(remove_btn)
+
+        self._temp_brush_set_entries.append({"group_box": group_box, "fields": fields})
+        self._temp_brush_sets_container.addWidget(group_box)
+
+    def _remove_temp_brush_set_ui(self, group_box):
+        for item in self._temp_brush_set_entries:
+            if item["group_box"] == group_box:
+                self._temp_brush_set_entries.remove(item)
+                break
+        group_box.setParent(None)
+        group_box.deleteLater()
+
     def save(self):
         if self.quick_adjust_path and self.quick_adjust_fields:
             for key_tuple, edit in self.quick_adjust_fields.items():
@@ -452,6 +541,19 @@ class QuickAdjustTab:
                         self.quick_adjust_config[section][subsection][key] = edit.currentText()
                     else:
                         self.quick_adjust_config[section][subsection][key] = edit.text()
+
+            temp_brush_sets = []
+            for item in self._temp_brush_set_entries:
+                try:
+                    scale = float(item["fields"]["size_scale"].text().strip())
+                except (ValueError, TypeError):
+                    scale = 0.0
+                temp_brush_sets.append({
+                    "key": item["fields"]["key"].text().strip(),
+                    "brush": item["fields"]["brush"].text().strip(),
+                    "size_scale": scale,
+                })
+            self.quick_adjust_config["temp_brush_sets"] = temp_brush_sets
 
             with open(self.quick_adjust_path, "w", encoding="utf-8") as f:
                 json.dump(self.quick_adjust_config, f, indent=4)
