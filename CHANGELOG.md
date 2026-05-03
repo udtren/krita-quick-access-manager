@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-05-04
+### Changed
+- **Preset Switch popup** (`popup/presets_switch.py`): buttons are now sorted alphabetically by config name
+
 ## 2026-05-01
 ### Added
 - **Temp Brush Set — `size_scale` parameter** (`alt_erase_listener.py`, `quick_adjust_tab.py`, `adjustment_widget.py`): each Temp Brush Set entry now accepts an optional `size_scale` float
