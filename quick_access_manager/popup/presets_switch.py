@@ -182,7 +182,7 @@ class _PresetSwitchPopup(QWidget):
         title.setStyleSheet("font-weight: bold; font-size: 11px;")
         layout.addWidget(title)
 
-        for config_name, xml in data.items():
+        for config_name, xml in sorted(data.items()):
             btn = QPushButton(config_name)
             btn.setStyleSheet("text-align: left; padding: 4px 8px;")
             btn.clicked.connect(lambda _checked=False, x=xml: self._apply(x))
