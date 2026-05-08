@@ -1,6 +1,8 @@
 from ..compat import QObject, QEvent, Qt, QApplication
 from krita import Krita  # type: ignore
 
+_KEY_EVENT_TYPES = frozenset((QEvent.KeyPress, QEvent.KeyRelease))
+
 # Map of key name strings to Qt key codes
 _KEY_MAP = {
     "Alt": Qt.Key_Alt,
@@ -85,6 +87,8 @@ class AltEraseListener(QObject):
 
     def eventFilter(self, _, event):
         t = event.type()
+        if t not in _KEY_EVENT_TYPES:
+            return False
 
         if t == QEvent.KeyPress and not event.isAutoRepeat():
             key_matches = event.key() == self._key_code
@@ -111,7 +115,7 @@ class AltEraseListener(QObject):
                     if action:
                         action.setChecked(False)
 
-        return False  # never consume the event
+        return False
 
 
 class PreserveAlphaListener(QObject):
@@ -138,6 +142,8 @@ class PreserveAlphaListener(QObject):
 
     def eventFilter(self, _, event):
         t = event.type()
+        if t not in _KEY_EVENT_TYPES:
+            return False
 
         if t == QEvent.KeyPress and not event.isAutoRepeat():
             key_matches = event.key() == self._key_code
@@ -191,6 +197,8 @@ class TempBrushSetListener(QObject):
 
     def eventFilter(self, _, event):
         t = event.type()
+        if t not in _KEY_EVENT_TYPES:
+            return False
 
         if t == QEvent.KeyPress and not event.isAutoRepeat():
             if event.key() == self._key_code and event.modifiers() == self._modifier_flags:
@@ -251,6 +259,8 @@ class SelectOutlineListener(QObject):
 
     def eventFilter(self, _, event):
         t = event.type()
+        if t not in _KEY_EVENT_TYPES:
+            return False
 
         if t == QEvent.KeyPress and not event.isAutoRepeat():
             key_matches = event.key() == self._key_code

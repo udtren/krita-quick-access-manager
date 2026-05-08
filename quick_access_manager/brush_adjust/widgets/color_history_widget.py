@@ -71,14 +71,11 @@ class ColorHistoryWidget(QWidget):
             print(f"Error installing event filter: {e}")
 
     def eventFilter(self, obj, event):
-        """Filter events to detect mouse button press"""
-        # Check if this is a pure mouse button press event (no modifiers like Ctrl)
-        if event.type() == QEvent.MouseButtonPress:
-            # Only check if there are no keyboard modifiers pressed
-            from ...compat import Qt
-            if event.modifiers() == Qt.NoModifier:
-                # Pure mouse button press, check the current color
-                self.check_color_change()
+        if event.type() != QEvent.MouseButtonPress:
+            return super().eventFilter(obj, event)
+        from ...compat import Qt
+        if event.modifiers() == Qt.NoModifier:
+            self.check_color_change()
         return super().eventFilter(obj, event)
 
     def check_color_change(self):

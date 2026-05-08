@@ -12,6 +12,8 @@ from .widgets.gesture_preview import GesturePreviewWidget
 from ..utils.logs import write_log
 from ..utils.config_utils import get_gesture_data_dir
 
+_GESTURE_EVENT_TYPES = frozenset((QEvent.KeyPress, QEvent.KeyRelease, QEvent.MouseMove))
+
 
 # ==================================================================
 # Gesture Detector Class
@@ -282,6 +284,8 @@ class GestureDetector(QObject):
                 return False
 
             event_type = event.type()
+            if event_type not in _GESTURE_EVENT_TYPES:
+                return False
 
             # Key press - check if it's a gesture key
             if event_type == QEvent.KeyPress:
