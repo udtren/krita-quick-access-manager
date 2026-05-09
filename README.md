@@ -49,6 +49,7 @@ If you find this tool helpful, you can support its development:
 - [Global Config](#global-config)
 - [Shortcut Button Config](#shortcut-button-config)
 - [Sort/Remove](#sortremove)
+- [Performance](#performance)
 
 ## How to Add a Brush Preset
 1. In the "Quick Brush Sets" section, activate the grid you want to add to.
@@ -516,3 +517,19 @@ Each grid can have its own configuration parameters that override global setting
 **Activate Grid:**  
 To activate a grid, simply left-click the grid name.
 
+
+## Performance
+
+This plugin uses background timers and application-level event listeners to power its features. On low-end hardware, these can contribute to input lag — particularly when using a pen tablet with a high event rate.
+
+**Fine-grained tuning** — disable individual features to reduce overhead:
+- **Gesture system** — disable via Settings → Gesture → Settings → *Enable Gesture System*
+- **Brush Adjustments Docker sliders / history** — disable each section individually via Settings → Quick Adjust tab
+- **Temp action keys** — leave the key fields empty (Settings → Quick Adjust tab) to remove those listeners entirely
+
+**Performance Mode** — enable *Performance Mode* via Settings → Main tab → **Performance** section, then restart Krita. This disables:
+- Quick Brush Adjustments Docker
+- Gesture system
+- HueSVC Color Selector Docker
+
+Only the **Quick Brush Sets** and **Quick Actions** dockers remain active.

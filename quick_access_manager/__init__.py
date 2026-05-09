@@ -12,6 +12,7 @@ from .gesture.shortcut.toggle_gesture_recognition import (
     ToggleGestureExtension,
 )
 from .popup import SavePresetsExtension
+from .utils.data_manager import get_performance_mode
 
 
 class QuickAccessManagerExtension(Extension):
@@ -26,18 +27,24 @@ class QuickAccessManagerExtension(Extension):
         self.brush_adjust_factory = BrushAdjustDockerFactory()
         self.shortcut_docker_factory = ShortcutAccessDockerFactory()
         Krita.instance().addDockWidgetFactory(self.docker_factory)
-        Krita.instance().addDockWidgetFactory(self.brush_adjust_factory)
+
+        performance_mode = get_performance_mode()
+
+        if not performance_mode:
+            Krita.instance().addDockWidgetFactory(self.brush_adjust_factory)
+
         Krita.instance().addDockWidgetFactory(self.shortcut_docker_factory)
 
         # Initialize gesture system if enabled
-        try:
-            if is_gesture_enabled():
-                initialize_gesture_system()
-                print("✅ Gesture system initialized")
-            else:
-                print("⏸️ Gesture system is disabled")
-        except Exception as e:
-            print(f"❌ Error initializing gesture system: {e}")
+        if not performance_mode:
+            try:
+                if is_gesture_enabled():
+                    initialize_gesture_system()
+                    print("✅ Gesture system initialized")
+                else:
+                    print("⏸️ Gesture system is disabled")
+            except Exception as e:
+                print(f"❌ Error initializing gesture system: {e}")
 
     def createActions(self, window):
         pass
@@ -76,4 +83,5 @@ except AttributeError:
 
 instance = Krita.instance()
 dock_widget_factory = DockWidgetFactory(DOCKER_ID, _dock_pos, ColorSelectorDock)
-instance.addDockWidgetFactory(dock_widget_factory)
+if not performance_mode:
+    instance.addDockWidgetFactory(dock_widget_factory)
