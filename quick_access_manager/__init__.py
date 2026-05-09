@@ -83,5 +83,6 @@ except AttributeError:
 
 instance = Krita.instance()
 dock_widget_factory = DockWidgetFactory(DOCKER_ID, _dock_pos, ColorSelectorDock)
+performance_mode = get_performance_mode()
 if not performance_mode:
     instance.addDockWidgetFactory(dock_widget_factory)
