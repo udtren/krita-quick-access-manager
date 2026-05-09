@@ -14,6 +14,8 @@ from .gesture.shortcut.toggle_gesture_recognition import (
 from .popup import SavePresetsExtension
 from .utils.data_manager import get_performance_mode
 
+performance_mode = get_performance_mode()
+
 
 class QuickAccessManagerExtension(Extension):
     def __init__(self, parent):
@@ -27,8 +29,6 @@ class QuickAccessManagerExtension(Extension):
         self.brush_adjust_factory = BrushAdjustDockerFactory()
         self.shortcut_docker_factory = ShortcutAccessDockerFactory()
         Krita.instance().addDockWidgetFactory(self.docker_factory)
-
-        performance_mode = get_performance_mode()
 
         if not performance_mode:
             Krita.instance().addDockWidgetFactory(self.brush_adjust_factory)
@@ -83,6 +83,5 @@ except AttributeError:
 
 instance = Krita.instance()
 dock_widget_factory = DockWidgetFactory(DOCKER_ID, _dock_pos, ColorSelectorDock)
-performance_mode = get_performance_mode()
 if not performance_mode:
     instance.addDockWidgetFactory(dock_widget_factory)
