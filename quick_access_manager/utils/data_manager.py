@@ -31,7 +31,16 @@ def get_default_common_config():
             "spacing_between_grids": 1,
             "brush_icon_size": 40,
         },
+        "performance": {
+            "enable_performance_mode": False,
+        },
     }
+
+
+def get_performance_mode():
+    """Return True if Performance Mode is enabled in common.json."""
+    config = check_common_config()
+    return config.get("performance", {}).get("enable_performance_mode", False)
 
 
 def save_common_config(config):

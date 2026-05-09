@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-05-09
+### Added
+- **Performance Mode** (`__init__.py`, `dialogs/tabs/main_tab.py`, `utils/data_manager.py`): new **Performance** section in the Settings → Main tab with an *Enable Performance Mode* checkbox
+  - When enabled: the Quick Brush Adjustments Docker, Gesture system, and HueSVC Color Selector Docker are not registered on startup; only the Quick Brush Sets and Quick Actions dockers remain active
+  - Setting is stored in `common.json` under `performance.enable_performance_mode` (default: `false`)
+  - Requires a Krita restart to take effect
+
+### Fixed
+- **Input lag on high-frequency tablet devices** (`brush_adjust/alt_erase_listener.py`, `gesture/gesture_main.py`, `brush_adjust/widgets/brush_history_widget.py`, `brush_adjust/widgets/color_history_widget.py`): all application-level event filters now early-exit immediately for event types they do not handle
+  - `AltEraseListener`, `PreserveAlphaListener`, `TempBrushSetListener`, `SelectOutlineListener`: skip all non-keyboard events via `_KEY_EVENT_TYPES` frozenset check
+  - `GestureDetector`: skips all events other than `KeyPress`, `KeyRelease`, and `MouseMove` via `_GESTURE_EVENT_TYPES` frozenset check
+  - `BrushHistoryWidget`, `ColorHistoryWidget`: skip all events other than `MouseButtonPress`
+
 ## 2026-05-04
 ### Changed
 - **Preset Switch popup** (`popup/presets_switch.py`): buttons are now sorted alphabetically by config name
