@@ -1,11 +1,26 @@
 import os
 from krita import *
-from ...compat import QWidget, QVBoxLayout, QLabel, QFrame, QPushButton, QTimer, Qt, QPixmap, QIcon
+from ...compat import (
+    QWidget,
+    QVBoxLayout,
+    QLabel,
+    QFrame,
+    QPushButton,
+    QTimer,
+    Qt,
+    QPixmap,
+    QIcon,
+)
 from ...gesture.gesture_main import (
     pause_gesture_event_filter,
     resume_gesture_event_filter,
     is_gesture_filter_paused,
 )
+from ..listener_registry import (
+    pause_all_brush_listeners,
+    resume_all_brush_listeners,
+)
+from ...event_filter_registry import get_event_filter_count
 from ..floating_widgets.tool_options import FloatToolOptions
 from ..floating_widgets.floating_rotation import FloatRotation
 from ..floating_widgets.specific_color_selector import FloatSpecificColorSelector
@@ -134,9 +149,15 @@ class ControlButtonWidget(QWidget):
         self.gesture_status_label.setPixmap(
             QPixmap(os.path.join(self.icon_dir, "gesture_on.png"))
         )
-        self.gesture_status_label.setToolTip("Gesture: On")
+        self.gesture_status_label.setToolTip("Listeners: On")
         self.gesture_status_label.setCursor(Qt.PointingHandCursor)
         self.gesture_status_label.mousePressEvent = self.toggle_gesture_status
+
+        self.event_filter_count_label = QLabel("0")
+        self.event_filter_count_label.setFixedSize(16, 16)
+        self.event_filter_count_label.setAlignment(Qt.AlignCenter)
+        self.event_filter_count_label.setStyleSheet("font-size: 7pt;")
+        self.event_filter_count_label.setToolTip("Installed event filters: 0")
 
         layout.addWidget(self.tool_options_toggle_btn)
         layout.addWidget(self.color_selector_toggle_btn)
@@ -150,6 +171,7 @@ class ControlButtonWidget(QWidget):
         layout.addWidget(self.selection_info_label)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.gesture_status_label)
+        layout.addWidget(self.event_filter_count_label)
         layout.addStretch()
 
         self.setLayout(layout)
@@ -159,14 +181,12 @@ class ControlButtonWidget(QWidget):
         separator = QFrame()
         separator.setFrameShape(QFrame.VLine)
         separator.setFrameShadow(QFrame.Sunken)
-        separator.setStyleSheet(
-            """
+        separator.setStyleSheet("""
             QFrame {
                 color: #3a3a3a;
                 margin: 2px 8px;
             }
-            """
-        )
+            """)
         return separator
 
     def update_status(self):
@@ -216,7 +236,7 @@ class ControlButtonWidget(QWidget):
         if gesture_paused != self.is_gesture_paused:
             self.is_gesture_paused = gesture_paused
             gesture_icon = "gesture_off.png" if gesture_paused else "gesture_on.png"
-            gesture_tooltip = "Gesture: Off" if gesture_paused else "Gesture: On"
+            gesture_tooltip = "Listeners: Off" if gesture_paused else "Listeners: On"
             self.gesture_status_label.setToolTip(gesture_tooltip)
             self.gesture_status_label.setPixmap(
                 QPixmap(os.path.join(self.icon_dir, gesture_icon))
@@ -268,13 +288,19 @@ class ControlButtonWidget(QWidget):
         self.update_status()
 
     def toggle_gesture_status(self, _event):
-        """Toggle gesture system on/off when clicking the icon"""
+        """Toggle gesture system and brush listeners on/off when clicking the icon"""
         if is_gesture_filter_paused():
             resume_gesture_event_filter()
+            resume_all_brush_listeners()
         else:
             pause_gesture_event_filter()
-        # Force immediate update of the icon
+            pause_all_brush_listeners()
         self.update_status()
+
+    def _update_event_filter_count(self):
+        count = get_event_filter_count()
+        self.event_filter_count_label.setText(str(count))
+        self.event_filter_count_label.setToolTip(f"Installed event filters: {count}")
 
     def enableToolOptionsExtension(self):
         """Enable the floating Tool Options extension if not already enabled"""
@@ -320,6 +346,10 @@ class ControlButtonWidget(QWidget):
 
         # Enable floating color selector widget (start hidden)
         self.enableColorSelectorExtension()
+
+        # Defer by one event-loop tick so all windowCreated handlers (including
+        # the gesture filter's) have a chance to register before we read the count.
+        QTimer.singleShot(0, self._update_event_filter_count)
 
     def toggle_tool_options_visibility(self):
         """Toggle the visibility of the Tool Options floating widget"""

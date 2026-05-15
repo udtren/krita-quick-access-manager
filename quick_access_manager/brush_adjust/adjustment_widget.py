@@ -62,6 +62,7 @@ from .alt_erase_listener import (
     SelectOutlineListener,
     TempBrushSetListener,
 )
+from .listener_registry import _register_adjustment_widget
 
 
 class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
@@ -127,6 +128,32 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.update_docker_size)
         self.update_timer.start(2000)  # 1000 ms = 1 second
+
+        # Register this widget as the active instance for the module-level API
+        _register_adjustment_widget(self)
+
+    def _all_listeners(self):
+        listeners = [
+            self._alt_erase_listener,
+            self._preserve_alpha_listener,
+            self._select_outline_listener,
+        ]
+        return [l for l in listeners if l is not None] + self._temp_brush_set_listeners
+
+    def pause_all_listeners(self):
+        for listener in self._all_listeners():
+            listener.pause()
+
+    def resume_all_listeners(self):
+        for listener in self._all_listeners():
+            listener.resume()
+
+    def toggle_all_listeners(self):
+        listeners = self._all_listeners()
+        if listeners and not listeners[0]._paused:
+            self.pause_all_listeners()
+        else:
+            self.resume_all_listeners()
 
     def init_ui(self):
         """Build the complete UI"""
