@@ -3,20 +3,6 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2026-05-15
-### Added
-- **Event filter registry** (`event_filter_registry.py`): new module-level list that collects every QApplication-level event filter installed by the plugin at startup
-  - `register_event_filter(obj)` called by each listener/detector when it installs its filter
-  - `get_event_filter_count()` returns the current total
-  - `AltEraseListener`, `PreserveAlphaListener`, `TempBrushSetListener`, `SelectOutlineListener` (`brush_adjust/alt_erase_listener.py`): each registers on `installEventFilter` in `__init__`
-  - `GestureDetector` (`gesture/gesture_main.py`): registers on both install paths (immediate and deferred `_on_window_created`)
-  - `BrushHistoryWidget`, `ColorHistoryWidget` (`brush_adjust/widgets/`): register in `install_event_filter()`
-- **Installed event filter count label** (`brush_adjust/widgets/control_buttons_widgets.py`): small text label displayed below the gesture status icon showing the total number of registered event filters; populated once after `windowCreated` via `QTimer.singleShot(0, ...)` so all `windowCreated` handlers finish before the count is read
-
-### Fixed
-- **`BrushHistoryWidget.eventFilter` / `ColorHistoryWidget.eventFilter`** (`brush_adjust/widgets/`): pass-through path now returns `False` directly instead of `super().eventFilter(obj, event)` (unnecessary QWidget chain call at QApplication level); `Qt` moved from inline import inside the method to module-level import
-- **`DockerEventFilter.eventFilter`** (`brush_adjust/floating_widgets/base_tools/widget_pad.py`): event type list moved to a module-level `frozenset` (`_DOCKER_EVENT_TYPES`) to avoid re-creating a list object on every event; redundant `hasattr(self.pad, "adjustToView")` check removed; pass-through returns `False` instead of `super().eventFilter(obj, event)`
-
 ## 2026-05-09
 ### Added
 - **Performance Mode** (`__init__.py`, `dialogs/tabs/main_tab.py`, `utils/data_manager.py`): new **Performance** section in the Settings → Main tab with an *Enable Performance Mode* checkbox
