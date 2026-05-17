@@ -1,6 +1,5 @@
 from ..compat import QObject, QEvent, Qt, QApplication
 from krita import Krita  # type: ignore
-from ..event_filter_registry import register_event_filter
 
 _KEY_EVENT_TYPES = frozenset((QEvent.KeyPress, QEvent.KeyRelease))
 
@@ -73,31 +72,15 @@ class AltEraseListener(QObject):
 
     def __init__(self, key_string: str = ""):
         super().__init__()
-        self._modifier_flags, self._key_code = (
-            _parse_combo(key_string) if key_string else (None, None)
-        )
+        self._modifier_flags, self._key_code = _parse_combo(key_string) if key_string else (None, None)
         self._key_active = False
         self._combo_detected = False
-        self._paused = False
         if self._key_code is not None:
             QApplication.instance().installEventFilter(self)
-            register_event_filter(self)
 
     def remove(self):
         """Uninstall the event filter. Call this when the owner widget is destroyed."""
         QApplication.instance().removeEventFilter(self)
-
-    def pause(self):
-        """Temporarily remove this event filter without destroying the listener."""
-        if not self._paused:
-            QApplication.instance().removeEventFilter(self)
-            self._paused = True
-
-    def resume(self):
-        """Re-install this event filter after a pause."""
-        if self._paused and self._key_code is not None:
-            QApplication.instance().installEventFilter(self)
-            self._paused = False
 
     def _erase_action(self):
         return Krita.instance().action("erase_action")
@@ -124,11 +107,7 @@ class AltEraseListener(QObject):
                 if action:
                     action.setChecked(False)
 
-        elif (
-            t == QEvent.KeyRelease
-            and not event.isAutoRepeat()
-            and event.key() == self._key_code
-        ):
+        elif t == QEvent.KeyRelease and not event.isAutoRepeat() and event.key() == self._key_code:
             if self._key_active:
                 self._key_active = False
                 if not self._combo_detected:
@@ -149,28 +128,14 @@ class PreserveAlphaListener(QObject):
 
     def __init__(self, key_string: str = ""):
         super().__init__()
-        self._modifier_flags, self._key_code = (
-            _parse_combo(key_string) if key_string else (None, None)
-        )
+        self._modifier_flags, self._key_code = _parse_combo(key_string) if key_string else (None, None)
         self._key_active = False
         self._combo_detected = False
-        self._paused = False
         if self._key_code is not None:
             QApplication.instance().installEventFilter(self)
-            register_event_filter(self)
 
     def remove(self):
         QApplication.instance().removeEventFilter(self)
-
-    def pause(self):
-        if not self._paused:
-            QApplication.instance().removeEventFilter(self)
-            self._paused = True
-
-    def resume(self):
-        if self._paused and self._key_code is not None:
-            QApplication.instance().installEventFilter(self)
-            self._paused = False
 
     def _action(self):
         return Krita.instance().action("preserve_alpha")
@@ -197,11 +162,7 @@ class PreserveAlphaListener(QObject):
                 if action:
                     action.setChecked(False)
 
-        elif (
-            t == QEvent.KeyRelease
-            and not event.isAutoRepeat()
-            and event.key() == self._key_code
-        ):
+        elif t == QEvent.KeyRelease and not event.isAutoRepeat() and event.key() == self._key_code:
             if self._key_active:
                 self._key_active = False
                 if not self._combo_detected:
@@ -220,35 +181,19 @@ class TempBrushSetListener(QObject):
     Empty key_string or brush_name disables the listener entirely.
     """
 
-    def __init__(
-        self, key_string: str = "", brush_name: str = "", size_scale: float = 0.0
-    ):
+    def __init__(self, key_string: str = "", brush_name: str = "", size_scale: float = 0.0):
         super().__init__()
-        self._modifier_flags, self._key_code = (
-            _parse_combo(key_string) if key_string else (None, None)
-        )
+        self._modifier_flags, self._key_code = _parse_combo(key_string) if key_string else (None, None)
         self._brush_name = brush_name
         self._size_scale = size_scale
         self._key_active = False
         self._original_preset = None
         self._original_size = None
-        self._paused = False
         if self._key_code is not None and self._brush_name:
             QApplication.instance().installEventFilter(self)
-            register_event_filter(self)
 
     def remove(self):
         QApplication.instance().removeEventFilter(self)
-
-    def pause(self):
-        if not self._paused:
-            QApplication.instance().removeEventFilter(self)
-            self._paused = True
-
-    def resume(self):
-        if self._paused and self._key_code is not None and self._brush_name:
-            QApplication.instance().installEventFilter(self)
-            self._paused = False
 
     def eventFilter(self, _, event):
         t = event.type()
@@ -256,10 +201,7 @@ class TempBrushSetListener(QObject):
             return False
 
         if t == QEvent.KeyPress and not event.isAutoRepeat():
-            if (
-                event.key() == self._key_code
-                and event.modifiers() == self._modifier_flags
-            ):
+            if event.key() == self._key_code and event.modifiers() == self._modifier_flags:
                 if not self._key_active:
                     self._key_active = True
                     self._switch_to_temp_brush()
@@ -307,27 +249,13 @@ class SelectOutlineListener(QObject):
 
     def __init__(self, key_string: str = ""):
         super().__init__()
-        self._modifier_flags, self._key_code = (
-            _parse_combo(key_string) if key_string else (None, None)
-        )
+        self._modifier_flags, self._key_code = _parse_combo(key_string) if key_string else (None, None)
         self._key_active = False
-        self._paused = False
         if self._key_code is not None:
             QApplication.instance().installEventFilter(self)
-            register_event_filter(self)
 
     def remove(self):
         QApplication.instance().removeEventFilter(self)
-
-    def pause(self):
-        if not self._paused:
-            QApplication.instance().removeEventFilter(self)
-            self._paused = True
-
-    def resume(self):
-        if self._paused and self._key_code is not None:
-            QApplication.instance().installEventFilter(self)
-            self._paused = False
 
     def eventFilter(self, _, event):
         t = event.type()
@@ -344,11 +272,7 @@ class SelectOutlineListener(QObject):
                 if action:
                     action.trigger()
 
-        elif (
-            t == QEvent.KeyRelease
-            and not event.isAutoRepeat()
-            and event.key() == self._key_code
-        ):
+        elif t == QEvent.KeyRelease and not event.isAutoRepeat() and event.key() == self._key_code:
             if self._key_active:
                 self._key_active = False
                 action = Krita.instance().action("KritaShape/KisToolBrush")

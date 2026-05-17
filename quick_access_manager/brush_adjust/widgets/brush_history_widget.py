@@ -1,10 +1,9 @@
 from ...compat import (
     QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QApplication,
-    QSize, QEvent, Qt,
+    QSize, QEvent,
     QIcon, QPixmap, QPainter, QBrush, QColor,
 )
 from krita import Krita  # type: ignore
-from ...event_filter_registry import register_event_filter
 
 BRUSH_HISTORY_BACKGROUND_COLOR = "#b0b0b0"
 
@@ -81,17 +80,17 @@ class BrushHistoryWidget(QWidget):
             app = QApplication.instance()
             if app:
                 app.installEventFilter(self)
-                register_event_filter(self)
                 print("Event filter installed on QApplication for brush history")
         except Exception as e:
             print(f"Error installing event filter: {e}")
 
-    def eventFilter(self, _, event):
+    def eventFilter(self, obj, event):
         if event.type() != QEvent.MouseButtonPress:
-            return False
+            return super().eventFilter(obj, event)
+        from ...compat import Qt
         if event.modifiers() == Qt.NoModifier:
             self.check_brush_change()
-        return False
+        return super().eventFilter(obj, event)
 
     def generate_brush_thumbnail(self, brush_preset, size=None):
         """Generate a thumbnail for the brush preset"""

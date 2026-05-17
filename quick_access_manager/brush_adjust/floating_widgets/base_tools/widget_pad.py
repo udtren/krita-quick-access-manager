@@ -22,15 +22,6 @@ except ImportError:
 # Debug flag - set to False to reduce logging
 DEBUG_POSITIONING = False
 
-_DOCKER_EVENT_TYPES = frozenset((
-    QEvent.Move,
-    QEvent.Resize,
-    QEvent.Show,
-    QEvent.Hide,
-    QEvent.WindowActivate,
-    QEvent.WindowDeactivate,
-))
-
 
 class WidgetPadPosition:
     """Configuration class for positioning a widget pad relative to a reference docker"""
@@ -500,8 +491,18 @@ class DockerEventFilter(QWidget):
         super().__init__()
         self.pad = pad
 
-    def eventFilter(self, _, event):
+    def eventFilter(self, obj, event):
         """Monitor docker events and adjust pad position accordingly"""
-        if event.type() in _DOCKER_EVENT_TYPES:
-            self.pad.adjustToView()
-        return False
+        if event.type() in [
+            QEvent.Move,
+            QEvent.Resize,
+            QEvent.Show,
+            QEvent.Hide,
+            QEvent.WindowActivate,
+            QEvent.WindowDeactivate,
+        ]:
+            # Adjust pad position when docker moves, resizes, or visibility changes
+            if hasattr(self.pad, "adjustToView"):
+                self.pad.adjustToView()
+
+        return super().eventFilter(obj, event)
