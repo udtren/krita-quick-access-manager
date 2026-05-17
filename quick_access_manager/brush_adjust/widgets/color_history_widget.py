@@ -1,6 +1,5 @@
-from ...compat import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QApplication, QEvent, Qt, QColor
+from ...compat import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QApplication, QEvent, QColor
 from krita import Krita, ManagedColor  # type: ignore
-from ...event_filter_registry import register_event_filter
 
 COLOR_HISTORY_BACKGROUND_COLOR = "#b0b0b0"
 
@@ -67,17 +66,17 @@ class ColorHistoryWidget(QWidget):
             app = QApplication.instance()
             if app:
                 app.installEventFilter(self)
-                register_event_filter(self)
                 print("Event filter installed on QApplication")
         except Exception as e:
             print(f"Error installing event filter: {e}")
 
-    def eventFilter(self, _, event):
+    def eventFilter(self, obj, event):
         if event.type() != QEvent.MouseButtonPress:
-            return False
+            return super().eventFilter(obj, event)
+        from ...compat import Qt
         if event.modifiers() == Qt.NoModifier:
             self.check_color_change()
-        return False
+        return super().eventFilter(obj, event)
 
     def check_color_change(self):
         """Check if the current foreground color has changed"""

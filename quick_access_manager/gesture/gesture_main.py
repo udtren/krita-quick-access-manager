@@ -11,7 +11,6 @@ from .gesture_actions import execute_gesture
 from .widgets.gesture_preview import GesturePreviewWidget
 from ..utils.logs import write_log
 from ..utils.config_utils import get_gesture_data_dir
-from ..event_filter_registry import register_event_filter
 
 _GESTURE_EVENT_TYPES = frozenset((QEvent.KeyPress, QEvent.KeyRelease, QEvent.MouseMove))
 
@@ -148,7 +147,6 @@ class GestureDetector(QObject):
                 if main_window:
                     QApplication.instance().installEventFilter(self)
                     self.event_filter_installed = True
-                    register_event_filter(self)
                     write_log("✅ Gesture event filter installed successfully")
                     write_log(f"Event filter object: {self}")
                 else:
@@ -185,7 +183,6 @@ class GestureDetector(QObject):
                 if main_window:
                     QApplication.instance().installEventFilter(self)
                     self.event_filter_installed = True
-                    register_event_filter(self)
                     write_log("✅ Gesture event filter installed after window created")
                 else:
                     write_log("⚠️ Still could not get main window")
