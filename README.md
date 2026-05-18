@@ -36,7 +36,7 @@ If you find this tool helpful, you can support its development:
   - [Features](#features)
   - [How to Use](#how-to-use)
   - [Temporarily Disable](#temporarily-disable)
-  - [Preview](#preview)
+  - [Preview](#preview-overlay)
   - [Alias](#alias)
   - [External API](#external-api)
 - [Presets Switcher](#presets-switcher)
@@ -321,6 +321,7 @@ To modify the docker's appearance and behavior, see "Global Config".
 The buttons at the bottom of the docker provide quick show/hide toggles for other Krita dockers (e.g., Tool Options, Layers, Brush Presets).
 
 **Configuration via Settings UI:**
+
 ![docker button config](quick_access_manager/image/docker_button_config.png)
 
 1. Click the "Setting" button in the docker
@@ -442,6 +443,7 @@ Each shortcut button can be individually customized with its own appearance sett
 
 **How to Access:**
 - Hold <kbd>Alt</kbd> and right-click any shortcut button
+
 ![Shortcut Button Config](./quick_access_manager/image/image4.png)
 
 **Available Options:**
@@ -455,7 +457,7 @@ Each shortcut button can be individually customized with its own appearance sett
 
 **Icon Support:**
 To display a button as an icon instead of text:
-1. Place your PNG icon file in `quick_access_manager\config\icon\`
+1. Place your PNG icon file in `krita_resource_folder\quick_access_manager\config\icon\`
 2. Open the button config dialog (<kbd>Alt</kbd> + right-click)
 3. Enter the filename in the "Icon Name" field (e.g., `my_icon.png`)
 4. Configure the grid's "Icon Size" parameter (see "Edit Grid Parameter" below)
