@@ -34,7 +34,7 @@ class ActionsPopup:
                     return json.load(f)
             return {}
         except Exception as e:
-            # print(f"Error loading shortcut grid data: {e}")
+            print(f"Error loading shortcut grid data: {e}")
             return {}
 
     def load_common_config(self):
@@ -125,7 +125,7 @@ class ActionsPopup:
             self.popup_shortcut.setContext(Qt.ApplicationShortcut)
 
         except Exception as e:
-            # print(f"Error setting up actions popup shortcut: {e}")
+            print(f"Error setting up actions popup shortcut: {e}")
 
     def show_popup_at_cursor(self):
         """Show popup window at cursor position"""
@@ -149,7 +149,7 @@ class ActionsPopup:
             self.popup_window.raise_()
 
         except Exception as e:
-            # print(f"Error showing actions popup: {e}")
+            print(f"Error showing actions popup: {e}")
             import traceback
             traceback.print_exc()
 
@@ -447,7 +447,7 @@ class ActionsPopup:
                     elif hasattr(self.parent_docker, "run_krita_action"):
                         self.parent_docker.run_krita_action(action_name)
         except Exception as e:
-            # print(f"Error executing action {action_name}: {e}")
+            print(f"Error executing action {action_name}: {e}")
             import traceback
             traceback.print_exc()
 

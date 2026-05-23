@@ -20,13 +20,13 @@ def load_docker_buttons_config():
         if os.path.exists(config_file):
             with open(config_file, "r") as f:
                 config = json.load(f)
-                # print(
+                print(
                     f"Loaded docker buttons config: {len(config.get('docker_buttons', []))} buttons"
                 )
                 return config
         else:
-            # print(f"Docker buttons config file not found: {config_file}")
-            # print("Creating default config file...")
+            print(f"Docker buttons config file not found: {config_file}")
+            print("Creating default config file...")
 
             # Create the config directory if it doesn't exist
             os.makedirs(config_dir, exist_ok=True)
@@ -38,11 +38,11 @@ def load_docker_buttons_config():
             with open(config_file, "w") as f:
                 json.dump(default_config, f, indent=4)
 
-            # print(f"Created default docker buttons config file: {config_file}")
+            print(f"Created default docker buttons config file: {config_file}")
             return default_config
 
     except Exception as e:
-        # print(f"Error loading docker buttons config: {e}")
+        print(f"Error loading docker buttons config: {e}")
         return get_default_docker_config()
 
 
@@ -88,7 +88,7 @@ def create_docker_buttons(layout, docker_buttons_config, toggle_callback):
     if not docker_buttons:
         return
 
-    # print(f"Creating {len(docker_buttons)} docker buttons")
+    print(f"Creating {len(docker_buttons)} docker buttons")
 
     for button_config in docker_buttons:
         button_icon = button_config.get("button_icon", "")
@@ -114,7 +114,7 @@ def create_docker_buttons(layout, docker_buttons_config, toggle_callback):
                 button.setFixedSize(18, 18)
             else:
                 # Fallback to text if icon not found
-                # print(f"Icon not found: {icon_path}, using text instead")
+                print(f"Icon not found: {icon_path}, using text instead")
                 button.setText(button_config["button_name"])
                 button.setStyleSheet(f"font-size: {get_font_size()}; padding: 2px 8px;")
                 button.setFixedWidth(button_config["button_width"])
@@ -140,7 +140,7 @@ def toggle_docker_by_keywords(keywords, description):
         keywords: List of keywords to match in docker title
         description: Description for logging purposes
     """
-    # print(f"Toggling {description}")
+    print(f"Toggling {description}")
 
     app = Krita.instance()
     try:
@@ -154,14 +154,14 @@ def toggle_docker_by_keywords(keywords, description):
                 if all(keyword.lower() in docker_title for keyword in keywords):
                     if docker.isVisible():
                         docker.hide()
-                        # print(f"Hid {description}: {docker.windowTitle()}")
+                        print(f"Hid {description}: {docker.windowTitle()}")
                     else:
                         docker.show()
                         docker.raise_()
-                        # print(f"Showed {description}: {docker.windowTitle()}")
+                        print(f"Showed {description}: {docker.windowTitle()}")
                     return
 
-        # print(f"Could not find {description}")
+        print(f"Could not find {description}")
 
     except Exception as e:
-        # print(f"Error toggling {description}: {e}")
+        print(f"Error toggling {description}: {e}")

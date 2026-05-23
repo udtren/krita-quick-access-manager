@@ -410,7 +410,7 @@ class ShortcutAccessDockerWidget(QDockWidget):
         try:
             save_shortcut_tabs_data(self.data_file, tabs_data)
         except Exception as e:
-            # print(f"Error saving shortcut tabs data: {e}")
+            print(f"Error saving shortcut tabs data: {e}")
 
     def restore_grids_from_file(self):
         self.clear_all_grids()

@@ -51,7 +51,7 @@ class PresetSwitchManager:
             self._shortcut.setContext(Qt.ApplicationShortcut)
             self._shortcut.activated.connect(self.show_preset_switch_popup)
         except Exception as e:
-            # print(f"PresetSwitch: error setting up shortcut: {e}")
+            print(f"PresetSwitch: error setting up shortcut: {e}")
 
     # ------------------------------------------------------------------
     # Function 1: Save current brush preset config
@@ -197,7 +197,7 @@ class _PresetSwitchPopup(QWidget):
             preset.fromXML(xml)
             self._view.setCurrentBrushPreset(self._resource)
         except Exception as e:
-            # print(f"PresetSwitch: error applying config: {e}")
+            print(f"PresetSwitch: error applying config: {e}")
         self.close()
 
     def leaveEvent(self, event):

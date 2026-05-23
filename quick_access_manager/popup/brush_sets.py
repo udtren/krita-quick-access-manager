@@ -42,7 +42,7 @@ class BrushSetsPopup:
             self.popup_shortcut.setContext(Qt.ApplicationShortcut)
 
         except Exception as e:
-            # print(f"Error setting up popup shortcut: {e}")
+            print(f"Error setting up popup shortcut: {e}")
 
     def show_popup_at_cursor(self):
         """Show popup window at cursor position"""

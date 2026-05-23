@@ -22,7 +22,7 @@ class BrushHistoryWidget(QWidget):
         self.brush_buttons = []
         self.init_ui()
 
-        # print(
+        print(
             f"BrushHistoryWidget initialized with {self.BRUSHES_PER_ROW} brushes per row (2 rows, {self.TOTAL_BRUSHES} total), icon size: {icon_size}"
         )  # Debug output
 
@@ -80,9 +80,9 @@ class BrushHistoryWidget(QWidget):
             app = QApplication.instance()
             if app:
                 app.installEventFilter(self)
-                # print("Event filter installed on QApplication for brush history")
+                print("Event filter installed on QApplication for brush history")
         except Exception as e:
-            # print(f"Error installing event filter: {e}")
+            print(f"Error installing event filter: {e}")
 
     def eventFilter(self, obj, event):
         if event.type() != QEvent.MouseButtonPress:
@@ -133,7 +133,7 @@ class BrushHistoryWidget(QWidget):
             return QIcon(pixmap)
 
         except Exception as e:
-            # print(f"Error generating brush thumbnail: {e}")
+            print(f"Error generating brush thumbnail: {e}")
             # Return a default icon
             pixmap = QPixmap(size, size)
             pixmap.fill(QColor(150, 150, 150))
@@ -148,30 +148,30 @@ class BrushHistoryWidget(QWidget):
                 current_preset = view.currentBrushPreset()
                 if current_preset:
                     brush_name = current_preset.name()
-                    # print(f"Current brush detected: {brush_name}")  # Debug output
+                    print(f"Current brush detected: {brush_name}")  # Debug output
 
                     # Check if this brush is different from the last one in history
                     if not self.brush_history or self.brush_history[0][0] != brush_name:
-                        # print(
+                        print(
                             f"Brush changed, adding to history: {brush_name}"
                         )  # Debug output
                         self.add_brush_to_history(brush_name, current_preset)
                     else:
-                        # print(f"Same brush as last: {brush_name}")  # Debug output
+                        print(f"Same brush as last: {brush_name}")  # Debug output
             except Exception as e:
-                # print(f"Error getting current brush: {e}")
+                print(f"Error getting current brush: {e}")
                 import traceback
 
                 traceback.print_exc()
 
     def add_brush_to_history(self, brush_name, brush_preset):
         """Add a brush to the history and update display"""
-        # print(f"Adding brush to history: {brush_name}")  # Debug output
+        print(f"Adding brush to history: {brush_name}")  # Debug output
 
         # Remove brush if it already exists in history
         for i, (name, preset) in enumerate(self.brush_history):
             if name == brush_name:
-                # print(
+                print(
                     f"Removing existing brush from position {i}: {name}"
                 )  # Debug output
                 self.brush_history.pop(i)
@@ -179,25 +179,25 @@ class BrushHistoryWidget(QWidget):
 
         # Add to front of history
         self.brush_history.insert(0, (brush_name, brush_preset))
-        # print(f"Added brush to front: {brush_name}")  # Debug output
+        print(f"Added brush to front: {brush_name}")  # Debug output
 
         # Limit history size
         if len(self.brush_history) > self.TOTAL_BRUSHES:
             removed = self.brush_history[self.TOTAL_BRUSHES :]
             self.brush_history = self.brush_history[: self.TOTAL_BRUSHES]
-            # print(
+            print(
                 f"Trimmed history, removed: {[b[0] for b in removed]}"
             )  # Debug output
 
         # Update button display
         self.update_brush_buttons()
-        # print(
+        print(
             f"Brush history now has {len(self.brush_history)} brushes: {[b[0] for b in self.brush_history]}"
         )  # Debug output
 
     def update_brush_buttons(self):
         """Update the brush buttons to show current history"""
-        # print(
+        print(
             f"Updating brush buttons with {len(self.brush_history)} brushes"
         )  # Debug output
         for i, btn in enumerate(self.brush_buttons):
@@ -212,7 +212,7 @@ class BrushHistoryWidget(QWidget):
                     f"border: 1px solid #888; border-radius: 4px; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
                 )
                 btn.setToolTip(f"Brush: {brush_name}")
-                # print(f"Button {i}: {brush_name} (with thumbnail)")  # Debug output
+                print(f"Button {i}: {brush_name} (with thumbnail)")  # Debug output
             else:
                 btn.setIcon(QIcon())  # Clear icon
                 btn.setText("")
@@ -220,13 +220,13 @@ class BrushHistoryWidget(QWidget):
                     f"border: 1px solid #888; border-radius: 4px; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
                 )
                 btn.setToolTip("")
-                # print(f"Button {i}: empty")  # Debug output
+                print(f"Button {i}: empty")  # Debug output
 
     def on_brush_clicked(self, index):
         """Handle brush button click to set brush preset"""
         if index < len(self.brush_history):
             brush_name, brush_preset = self.brush_history[index]
-            # print(f"Clicking brush: {brush_name}")  # Debug output
+            print(f"Clicking brush: {brush_name}")  # Debug output
 
             app = Krita.instance()
             if app.activeWindow() and app.activeWindow().activeView():
@@ -238,18 +238,18 @@ class BrushHistoryWidget(QWidget):
                     # Move this brush to front of history since it was used
                     self.add_brush_to_history(brush_name, brush_preset)
 
-                    # print(f"Successfully set brush to: {brush_name}")
+                    print(f"Successfully set brush to: {brush_name}")
                 except Exception as e:
-                    # print(f"Error setting brush preset: {e}")
+                    print(f"Error setting brush preset: {e}")
 
     def force_brush_update(self):
         """Force an immediate brush history update"""
-        # print("Force brush update called")  # Debug output
+        print("Force brush update called")  # Debug output
         self.check_brush_change()
 
     def add_test_brush(self):
         """Add a test brush to verify the widget is working"""
-        # print("Adding test brush")  # Debug output
+        print("Adding test brush")  # Debug output
         app = Krita.instance()
         if app.activeWindow() and app.activeWindow().activeView():
             view = app.activeWindow().activeView()
@@ -258,13 +258,13 @@ class BrushHistoryWidget(QWidget):
                 if current_preset:
                     test_name = f"Test_{current_preset.name()}"
                     self.add_brush_to_history(test_name, current_preset)
-                    # print(f"Added test brush: {test_name}")
+                    print(f"Added test brush: {test_name}")
                 else:
-                    # print("No current brush preset available")
+                    print("No current brush preset available")
             except Exception as e:
-                # print(f"Error adding test brush: {e}")
+                print(f"Error adding test brush: {e}")
         else:
-            # print("No active window or view available")
+            print("No active window or view available")
 
     def closeEvent(self, event):
         """Clean up event filter when widget is closed"""
@@ -272,7 +272,7 @@ class BrushHistoryWidget(QWidget):
             app = QApplication.instance()
             if app:
                 app.removeEventFilter(self)
-                # print("Event filter removed from QApplication for brush history")
+                print("Event filter removed from QApplication for brush history")
         except Exception as e:
-            # print(f"Error removing event filter: {e}")
+            print(f"Error removing event filter: {e}")
         super().closeEvent(event)

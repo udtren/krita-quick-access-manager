@@ -401,7 +401,7 @@ class GestureConfigDialog(QDialog):
 
                 self.add_config_tab(tab_name, config_data)
             except Exception as e:
-                # print(f"Error loading config {json_file}: {e}")
+                print(f"Error loading config {json_file}: {e}")
 
     def update_indicator(self):
         """Update the status indicator based on gesture manager state"""
@@ -519,7 +519,7 @@ Example:
                 alias_dict = json.loads(alias_json)
                 self.gesture_settings["alias"] = alias_dict
             except Exception as e:
-                # print(f"Error parsing alias settings JSON: {e}")
+                print(f"Error parsing alias settings JSON: {e}")
                 self.gesture_settings["alias"] = {}
             self.save_gesture_settings()
 
@@ -573,7 +573,7 @@ Example:
                     json.dump(self.gesture_settings, f, indent=4)
                 self.gesture_alias = {}
         except Exception as e:
-            # print(f"Error loading gesture settings: {e}")
+            print(f"Error loading gesture settings: {e}")
             self.gesture_settings = {
                 "enabled": True,
                 "minimum_pixels_to_move": 20,
@@ -591,7 +591,7 @@ Example:
             refresh_gesture_setting(gesture_alias)
             write_log("Gesture settings saved and refreshed.")
         except Exception as e:
-            # print(f"Error saving gesture settings: {e}")
+            print(f"Error saving gesture settings: {e}")
 
     # ========================================================================
 
@@ -727,7 +727,7 @@ Example:
                 with open(config_info["path"], "w", encoding="utf-8") as f:
                     json.dump(config_info["data"], f, indent=4)
             except Exception as e:
-                # print(f"Error saving config {config_name}: {e}")
+                print(f"Error saving config {config_name}: {e}")
 
         # Reload gesture configurations after saving
         reload_gesture_configs()

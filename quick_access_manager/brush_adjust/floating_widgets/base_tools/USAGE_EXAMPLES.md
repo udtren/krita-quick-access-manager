@@ -207,7 +207,7 @@ from krita import Krita
 app = Krita.instance()
 if app.activeWindow():
     for docker in app.activeWindow().dockers():
-        # print(f"{docker.windowTitle()}: {docker.objectName()}")
+        print(f"{docker.windowTitle()}: {docker.objectName()}")
 ```
 
 ## Debugging
@@ -218,4 +218,4 @@ Enable debug logging to see positioning calculations:
 DEBUG_POSITIONING = True
 ```
 
-This will # print detailed information about docker detection, positioning calculations, and event handling.
+This will print detailed information about docker detection, positioning calculations, and event handling.

@@ -377,7 +377,7 @@ class ColorSelectorPopup:
             self.popup_shortcut.activated.connect(self.show_popup_at_cursor)
             self.popup_shortcut.setContext(Qt.ApplicationShortcut)
         except Exception as e:
-            # print(f"Error setting up color selector popup shortcut: {e}")
+            print(f"Error setting up color selector popup shortcut: {e}")
 
     def show_popup_at_cursor(self):
         """Toggle the popup at the current cursor position."""

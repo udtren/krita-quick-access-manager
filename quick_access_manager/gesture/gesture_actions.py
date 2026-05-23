@@ -21,11 +21,11 @@ def select_brush_preset_and_close(preset):
         app = Krita.instance()
         if app.activeWindow() and app.activeWindow().activeView():
             app.activeWindow().activeView().setCurrentBrushPreset(preset)
-            # print(f" Selected brush preset: {preset.name()}")
+            print(f" Selected brush preset: {preset.name()}")
         else:
-            # print("L No active window/view found")
+            print("L No active window/view found")
     except Exception as e:
-        # print(f"L Error selecting brush preset: {e}")
+        print(f"L Error selecting brush preset: {e}")
 
 
 def select_brush_by_name(brush_name):
@@ -47,10 +47,10 @@ def select_brush_by_name(brush_name):
             select_brush_preset_and_close(preset)
             return True
         else:
-            # print(f"L Brush preset '{brush_name}' not found")
+            print(f"L Brush preset '{brush_name}' not found")
             return False
     except Exception as e:
-        # print(f"L Error selecting brush by name: {e}")
+        print(f"L Error selecting brush by name: {e}")
         return False
 
 
@@ -65,14 +65,14 @@ def execute_action_by_name_and_close(action_name):
         bool: True if successful, False otherwise
     """
     try:
-        # print(f"Attempting to execute action: '{action_name}'")
+        print(f"Attempting to execute action: '{action_name}'")
 
         # Use the ActionManager that works in shortcut_manager.py
         if ActionManager.run_action(action_name):
-            # print(f" Successfully executed action via ActionManager: {action_name}")
+            print(f" Successfully executed action via ActionManager: {action_name}")
             return True
         else:
-            # print(f"L ActionManager could not execute action: '{action_name}'")
+            print(f"L ActionManager could not execute action: '{action_name}'")
 
             # Fallback: Try the old method
             app = Krita.instance()
@@ -81,17 +81,17 @@ def execute_action_by_name_and_close(action_name):
                 action = window.action(action_name)
                 if action:
                     action.trigger()
-                    # print(f" Successfully executed action via window.action: {action_name}")
+                    print(f" Successfully executed action via window.action: {action_name}")
                     return True
                 else:
-                    # print(f"L Action '{action_name}' not found in Krita's action collection")
+                    print(f"L Action '{action_name}' not found in Krita's action collection")
                     return False
             else:
-                # print("L No active window found")
+                print("L No active window found")
                 return False
 
     except Exception as e:
-        # print(f"L Error executing action {action_name}: {e}")
+        print(f"L Error executing action {action_name}: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -112,7 +112,7 @@ def toggle_docker_by_keywords(keywords, description=None):
     if description is None:
         description = f"Docker with keywords: {keywords}"
 
-    # print(f"Toggling {description}")
+    print(f"Toggling {description}")
 
     app = Krita.instance()
     try:
@@ -126,18 +126,18 @@ def toggle_docker_by_keywords(keywords, description=None):
                 if all(keyword.lower() in docker_title for keyword in keywords):
                     if docker.isVisible():
                         docker.hide()
-                        # print(f"Hid {description}: {docker.windowTitle()}")
+                        print(f"Hid {description}: {docker.windowTitle()}")
                     else:
                         docker.show()
                         docker.raise_()
-                        # print(f"Showed {description}: {docker.windowTitle()}")
+                        print(f"Showed {description}: {docker.windowTitle()}")
                     return True
 
-        # print(f"Could not find {description}")
+        print(f"Could not find {description}")
         return False
 
     except Exception as e:
-        # print(f"Error toggling {description}: {e}")
+        print(f"Error toggling {description}: {e}")
         return False
 
 
@@ -169,7 +169,7 @@ def execute_gesture(gesture_config):
         bool: True if successful, False otherwise
     """
     if not gesture_config:
-        # print("L No gesture configuration provided")
+        print("L No gesture configuration provided")
         return False
 
     gesture_type = gesture_config.get('gesture_type')
@@ -180,7 +180,7 @@ def execute_gesture(gesture_config):
         if brush_name:
             return select_brush_by_name(brush_name)
         else:
-            # print("L No brush name in parameters")
+            print("L No brush name in parameters")
             return False
 
     elif gesture_type == 'action':
@@ -188,7 +188,7 @@ def execute_gesture(gesture_config):
         if action_id:
             return execute_action_by_name_and_close(action_id)
         else:
-            # print("L No action_id in parameters")
+            print("L No action_id in parameters")
             return False
 
     elif gesture_type == 'docker_toggle':
@@ -196,9 +196,9 @@ def execute_gesture(gesture_config):
         if docker_name:
             return toggle_docker_by_name(docker_name)
         else:
-            # print("L No docker_name in parameters")
+            print("L No docker_name in parameters")
             return False
 
     else:
-        # print(f"L Unknown gesture type: {gesture_type}")
+        print(f"L Unknown gesture type: {gesture_type}")
         return False

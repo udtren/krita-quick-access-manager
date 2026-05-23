@@ -153,7 +153,7 @@ class LayerMonitorMixin:
                 activeNode.setOpacity(opacity_int)
                 activeDoc.refreshProjection()
             except Exception as e:
-                # print(f"Error setting layer opacity: {e}")
+                print(f"Error setting layer opacity: {e}")
 
     def on_layer_blend_mode_changed(self, text):
         """Handle layer blend mode change"""
@@ -172,6 +172,6 @@ class LayerMonitorMixin:
                 try:
                     activeNode.setBlendingMode(layer_blend_mode)
                     activeDoc.refreshProjection()
-                    # print(f"Set layer blend mode to: {layer_blend_mode}")
+                    print(f"Set layer blend mode to: {layer_blend_mode}")
                 except Exception as e:
-                    # print(f"Error setting layer blend mode: {e}")
+                    print(f"Error setting layer blend mode: {e}")
