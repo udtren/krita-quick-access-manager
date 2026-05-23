@@ -51,8 +51,8 @@ def save_common_config(config):
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=4, ensure_ascii=False)
         return True
-    except Exception as e:
-        print(f"Error saving common config: {e}")
+    except Exception:
+        # print(f"Error saving common config: {e}")
         return False
 
 
@@ -160,15 +160,17 @@ def load_tabs_data(data_file, preset_dict):
                         for name in grid_data.get("brush_presets", [])
                         if name in preset_dict
                     ]
-                    grids.append({
-                        "container": None,
-                        "widget": None,
-                        "layout": None,
-                        "name_label": None,
-                        "name": grid_name,
-                        "brush_presets": brush_presets,
-                        "is_active": False,
-                    })
+                    grids.append(
+                        {
+                            "container": None,
+                            "widget": None,
+                            "layout": None,
+                            "name_label": None,
+                            "name": grid_name,
+                            "brush_presets": brush_presets,
+                            "is_active": False,
+                        }
+                    )
                 tabs.append({"name": tab_name, "grids": grids, "layout": None})
         except Exception:
             pass
@@ -296,12 +298,18 @@ def load_shortcut_tabs_data(data_file):
                         s if isinstance(s, dict) else {"actionName": s}
                         for s in raw_shortcuts
                     ]
-                    grids.append({
-                        "name": grid_data.get("name", f"Shortcut Grid {len(grids) + 1}"),
-                        "max_shortcut_per_row": grid_data.get("max_shortcut_per_row", ""),
-                        "icon_size": grid_data.get("icon_size", ""),
-                        "shortcuts": shortcuts,
-                    })
+                    grids.append(
+                        {
+                            "name": grid_data.get(
+                                "name", f"Shortcut Grid {len(grids) + 1}"
+                            ),
+                            "max_shortcut_per_row": grid_data.get(
+                                "max_shortcut_per_row", ""
+                            ),
+                            "icon_size": grid_data.get("icon_size", ""),
+                            "shortcuts": shortcuts,
+                        }
+                    )
                 tabs.append({"name": tab_name, "grids": grids})
         except Exception:
             pass

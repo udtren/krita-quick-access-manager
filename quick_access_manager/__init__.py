@@ -40,11 +40,11 @@ class QuickAccessManagerExtension(Extension):
             try:
                 if is_gesture_enabled():
                     initialize_gesture_system()
-                    print("✅ Gesture system initialized")
+                    # print("✅ Gesture system initialized")
                 else:
-                    print("⏸️ Gesture system is disabled")
+                    # print("⏸️ Gesture system is disabled")
             except Exception as e:
-                print(f"❌ Error initializing gesture system: {e}")
+                # print(f"❌ Error initializing gesture system: {e}")
 
     def createActions(self, window):
         pass
@@ -53,9 +53,9 @@ class QuickAccessManagerExtension(Extension):
         """Cleanup when extension is destroyed"""
         try:
             shutdown_gesture_system()
-            print("✅ Gesture system shutdown")
+            # print("✅ Gesture system shutdown")
         except Exception as e:
-            print(f"❌ Error shutting down gesture system: {e}")
+            # print(f"❌ Error shutting down gesture system: {e}")
 
 
 # -------------------

@@ -16,7 +16,7 @@ try:
 except ImportError:
     # Fallback if logging utility not available
     def write_log(message):
-        print(message)
+        # print(message)
 
 
 # Debug flag - set to False to reduce logging

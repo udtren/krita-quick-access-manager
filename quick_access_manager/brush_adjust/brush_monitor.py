@@ -250,7 +250,7 @@ class BrushMonitorMixin:
             try:
                 view.setBrushSize(float(value))
             except Exception as e:
-                print(f"Error setting brush size: {e}")
+                # print(f"Error setting brush size: {e}")
 
     def apply_opacity_change(self):
         """Apply the pending opacity change to Krita"""
@@ -267,7 +267,7 @@ class BrushMonitorMixin:
             try:
                 view.setPaintingOpacity(opacity_float)
             except Exception as e:
-                print(f"Error setting brush opacity: {e}")
+                # print(f"Error setting brush opacity: {e}")
 
     def on_flow_changed_debounced(self, value):
         """Handle flow slider with debouncing"""
@@ -298,7 +298,7 @@ class BrushMonitorMixin:
             try:
                 view.setPaintingFlow(flow_float)
             except Exception as e:
-                print(f"Error setting brush flow: {e}")
+                # print(f"Error setting brush flow: {e}")
 
     def on_rotation_changed(self, value):
         """Handle brush rotation change"""
@@ -314,7 +314,7 @@ class BrushMonitorMixin:
             try:
                 view.setBrushRotation(float(value))
             except Exception as e:
-                print(f"Error setting brush rotation: {e}")
+                # print(f"Error setting brush rotation: {e}")
 
     def on_blend_mode_changed(self, text):
         """Handle blend mode change"""
@@ -331,19 +331,19 @@ class BrushMonitorMixin:
                 view = app.activeWindow().activeView()
                 try:
                     view.setCurrentBlendingMode(blend_mode)
-                    print(f"Set blend mode to: {blend_mode}")
+                    # print(f"Set blend mode to: {blend_mode}")
                 except Exception as e:
-                    print(f"Error setting blend mode: {e}")
+                    # print(f"Error setting blend mode: {e}")
 
     def reset_brush_settings(self):
         """Reset brush settings by triggering Krita's reload preset action"""
-        print("Triggering Krita's reload preset action")
+        # print("Triggering Krita's reload preset action")
 
         app = Krita.instance()
         try:
             # Trigger Krita's built-in reload preset action
             app.action("reload_preset_action").trigger()
-            print("Successfully triggered reload_preset_action")
+            # print("Successfully triggered reload_preset_action")
 
             # Clear tracked values to force UI refresh after reload
             self.current_brush_name = None
@@ -357,6 +357,6 @@ class BrushMonitorMixin:
             QTimer.singleShot(150, self.update_from_current_brush)
 
         except Exception as e:
-            print(f"Error triggering reload_preset_action: {e}")
+            # print(f"Error triggering reload_preset_action: {e}")
             # Fallback - just refresh the UI
             self.update_from_current_brush()

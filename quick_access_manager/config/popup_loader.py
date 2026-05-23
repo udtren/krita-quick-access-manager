@@ -46,7 +46,7 @@ class PopupConfigLoader:
                 }
                 self._save_config()
         except Exception as e:
-            print(f"Error loading popup config: {e}")
+            # print(f"Error loading popup config: {e}")
             # Fallback to defaults
             self._config = {
                 "actions_popup_shortcut": "Tab",
@@ -69,7 +69,7 @@ class PopupConfigLoader:
                 with open(self._config_path, "w", encoding="utf-8") as f:
                     json.dump(self._config, f, indent=4)
         except Exception as e:
-            print(f"Error saving popup config: {e}")
+            # print(f"Error saving popup config: {e}")
 
     def get_actions_popup_shortcut(self):
         """Get the shortcut key sequence for actions popup"""
@@ -211,7 +211,7 @@ class PopupConfigLoader:
             # Try QKeySequence parsing (handles combinations like "Ctrl+Tab")
             return QKeySequence(shortcut_str)
         except Exception as e:
-            print(f"Error parsing shortcut '{shortcut_str}': {e}")
+            # print(f"Error parsing shortcut '{shortcut_str}': {e}")
             # Return default Tab key on error
             return QKeySequence(Qt.Key_Tab)
 
