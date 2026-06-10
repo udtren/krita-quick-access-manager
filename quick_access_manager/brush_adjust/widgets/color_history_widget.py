@@ -1,4 +1,12 @@
-from ...compat import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QApplication, QEvent, QColor
+from ...compat import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QApplication,
+    QEvent,
+    QColor,
+)
 from krita import Krita, ManagedColor  # type: ignore
 
 COLOR_HISTORY_BACKGROUND_COLOR = "#b0b0b0"
@@ -74,6 +82,7 @@ class ColorHistoryWidget(QWidget):
         if event.type() != QEvent.MouseButtonPress:
             return super().eventFilter(obj, event)
         from ...compat import Qt
+
         if event.modifiers() == Qt.NoModifier:
             self.check_color_change()
         return super().eventFilter(obj, event)
@@ -100,7 +109,7 @@ class ColorHistoryWidget(QWidget):
                         # Add to history if it's different from the last color
                         if not self.color_history or self.color_history[0] != color_rgb:
                             self.add_color_to_history(color_rgb)
-            except Exception as e:
+            except Exception:
                 # Try alternative method
                 try:
                     fg_color = view.foregroundColor()
@@ -121,7 +130,7 @@ class ColorHistoryWidget(QWidget):
 
     def add_color_to_history(self, color_rgb):
         """Add a color to the history and update display"""
-        print(f"Adding color to history: RGB{color_rgb}")  # Debug output
+        # print(f"Adding color to history: RGB{color_rgb}")  # Debug output
 
         # Remove color if it already exists in history
         if color_rgb in self.color_history:
@@ -136,7 +145,7 @@ class ColorHistoryWidget(QWidget):
 
         # Update button colors
         self.update_color_buttons()
-        print(f"Color history now has {len(self.color_history)} colors")  # Debug output
+        # print(f"Color history now has {len(self.color_history)} colors")  # Debug output
 
     def update_color_buttons(self):
         """Update the color buttons to show current history"""
@@ -157,7 +166,7 @@ class ColorHistoryWidget(QWidget):
         """Handle color button click to set foreground color"""
         if index < len(self.color_history):
             r, g, b = self.color_history[index]
-            print(f"Clicking color: RGB({r}, {g}, {b})")  # Debug output
+            # print(f"Clicking color: RGB({r}, {g}, {b})")  # Debug output
 
             app = Krita.instance()
             if app.activeWindow() and app.activeWindow().activeView():
@@ -169,17 +178,17 @@ class ColorHistoryWidget(QWidget):
                     # Set components in the correct order: Blue, Green, Red, Alpha (BGR order for Krita)
                     color.setComponents([b / 255.0, g / 255.0, r / 255.0, 1.0])
                     view.setForeGroundColor(color)
-                    print(f"Successfully set foreground color to RGB({r}, {g}, {b})")
+                    # print(f"Successfully set foreground color to RGB({r}, {g}, {b})")
 
-                except Exception as e:
-                    print(f"Failed to set foreground color: {e}")
+                except Exception:
+                    # print(f"Failed to set foreground color: {e}")
                     # Fallback: try with QColor
                     try:
                         color = ManagedColor("RGBA", "U8", "")
                         qcolor = QColor(r, g, b)
                         color.fromQColor(qcolor)
                         view.setForeGroundColor(color)
-                        print(f"Successfully set color using QColor fallback")
+                        # print("Successfully set color using QColor fallback")
                     except Exception as e2:
                         print(f"Fallback also failed: {e2}")
 
@@ -197,7 +206,7 @@ class ColorHistoryWidget(QWidget):
             random.randint(0, 255),
         )
         self.add_color_to_history(test_color)
-        print(f"Added test color: RGB{test_color}")
+        # print(f"Added test color: RGB{test_color}")
 
     def closeEvent(self, event):
         """Clean up event filter when widget is closed"""
@@ -205,7 +214,7 @@ class ColorHistoryWidget(QWidget):
             app = QApplication.instance()
             if app:
                 app.removeEventFilter(self)
-                print("Event filter removed from QApplication")
+                # print("Event filter removed from QApplication")
         except Exception as e:
             print(f"Error removing event filter: {e}")
         super().closeEvent(event)

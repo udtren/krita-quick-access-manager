@@ -1,7 +1,16 @@
 from ...compat import (
-    QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QApplication,
-    QSize, QEvent,
-    QIcon, QPixmap, QPainter, QBrush, QColor,
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QPushButton,
+    QApplication,
+    QSize,
+    QEvent,
+    QIcon,
+    QPixmap,
+    QPainter,
+    QBrush,
+    QColor,
 )
 from krita import Krita  # type: ignore
 
@@ -22,9 +31,9 @@ class BrushHistoryWidget(QWidget):
         self.brush_buttons = []
         self.init_ui()
 
-        print(
-            f"BrushHistoryWidget initialized with {self.BRUSHES_PER_ROW} brushes per row (2 rows, {self.TOTAL_BRUSHES} total), icon size: {icon_size}"
-        )  # Debug output
+        # print(
+        #     f"BrushHistoryWidget initialized with {self.BRUSHES_PER_ROW} brushes per row (2 rows, {self.TOTAL_BRUSHES} total), icon size: {icon_size}"
+        # )  # Debug output
 
         # Install event filter on QApplication to monitor mouse clicks
         self.install_event_filter()
@@ -88,6 +97,7 @@ class BrushHistoryWidget(QWidget):
         if event.type() != QEvent.MouseButtonPress:
             return super().eventFilter(obj, event)
         from ...compat import Qt
+
         if event.modifiers() == Qt.NoModifier:
             self.check_brush_change()
         return super().eventFilter(obj, event)
@@ -148,58 +158,59 @@ class BrushHistoryWidget(QWidget):
                 current_preset = view.currentBrushPreset()
                 if current_preset:
                     brush_name = current_preset.name()
-                    print(f"Current brush detected: {brush_name}")  # Debug output
+                    # print(f"Current brush detected: {brush_name}")  # Debug output
 
                     # Check if this brush is different from the last one in history
                     if not self.brush_history or self.brush_history[0][0] != brush_name:
-                        print(
-                            f"Brush changed, adding to history: {brush_name}"
-                        )  # Debug output
+                        # print(
+                        #     f"Brush changed, adding to history: {brush_name}"
+                        # )  # Debug output
                         self.add_brush_to_history(brush_name, current_preset)
                     else:
-                        print(f"Same brush as last: {brush_name}")  # Debug output
-            except Exception as e:
-                print(f"Error getting current brush: {e}")
+                        pass
+                        # print(f"Same brush as last: {brush_name}")  # Debug output
+            except Exception:
+                # print(f"Error getting current brush: {e}")
                 import traceback
 
                 traceback.print_exc()
 
     def add_brush_to_history(self, brush_name, brush_preset):
         """Add a brush to the history and update display"""
-        print(f"Adding brush to history: {brush_name}")  # Debug output
+        # print(f"Adding brush to history: {brush_name}")  # Debug output
 
         # Remove brush if it already exists in history
         for i, (name, preset) in enumerate(self.brush_history):
             if name == brush_name:
-                print(
-                    f"Removing existing brush from position {i}: {name}"
-                )  # Debug output
+                # print(
+                #     f"Removing existing brush from position {i}: {name}"
+                # )  # Debug output
                 self.brush_history.pop(i)
                 break
 
         # Add to front of history
         self.brush_history.insert(0, (brush_name, brush_preset))
-        print(f"Added brush to front: {brush_name}")  # Debug output
+        # print(f"Added brush to front: {brush_name}")  # Debug output
 
         # Limit history size
         if len(self.brush_history) > self.TOTAL_BRUSHES:
             removed = self.brush_history[self.TOTAL_BRUSHES :]
             self.brush_history = self.brush_history[: self.TOTAL_BRUSHES]
-            print(
-                f"Trimmed history, removed: {[b[0] for b in removed]}"
-            )  # Debug output
+            # print(
+            #     f"Trimmed history, removed: {[b[0] for b in removed]}"
+            # )  # Debug output
 
         # Update button display
         self.update_brush_buttons()
-        print(
-            f"Brush history now has {len(self.brush_history)} brushes: {[b[0] for b in self.brush_history]}"
-        )  # Debug output
+        # print(
+        #     f"Brush history now has {len(self.brush_history)} brushes: {[b[0] for b in self.brush_history]}"
+        # )  # Debug output
 
     def update_brush_buttons(self):
         """Update the brush buttons to show current history"""
-        print(
-            f"Updating brush buttons with {len(self.brush_history)} brushes"
-        )  # Debug output
+        # print(
+        #     f"Updating brush buttons with {len(self.brush_history)} brushes"
+        # )  # Debug output
         for i, btn in enumerate(self.brush_buttons):
             if i < len(self.brush_history):
                 brush_name, brush_preset = self.brush_history[i]
@@ -212,7 +223,7 @@ class BrushHistoryWidget(QWidget):
                     f"border: 1px solid #888; border-radius: 4px; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
                 )
                 btn.setToolTip(f"Brush: {brush_name}")
-                print(f"Button {i}: {brush_name} (with thumbnail)")  # Debug output
+                # print(f"Button {i}: {brush_name} (with thumbnail)")  # Debug output
             else:
                 btn.setIcon(QIcon())  # Clear icon
                 btn.setText("")
@@ -220,13 +231,13 @@ class BrushHistoryWidget(QWidget):
                     f"border: 1px solid #888; border-radius: 4px; background-color: {BRUSH_HISTORY_BACKGROUND_COLOR};"
                 )
                 btn.setToolTip("")
-                print(f"Button {i}: empty")  # Debug output
+                # print(f"Button {i}: empty")  # Debug output
 
     def on_brush_clicked(self, index):
         """Handle brush button click to set brush preset"""
         if index < len(self.brush_history):
             brush_name, brush_preset = self.brush_history[index]
-            print(f"Clicking brush: {brush_name}")  # Debug output
+            # print(f"Clicking brush: {brush_name}")  # Debug output
 
             app = Krita.instance()
             if app.activeWindow() and app.activeWindow().activeView():
@@ -244,12 +255,12 @@ class BrushHistoryWidget(QWidget):
 
     def force_brush_update(self):
         """Force an immediate brush history update"""
-        print("Force brush update called")  # Debug output
+        # print("Force brush update called")  # Debug output
         self.check_brush_change()
 
     def add_test_brush(self):
         """Add a test brush to verify the widget is working"""
-        print("Adding test brush")  # Debug output
+        # print("Adding test brush")  # Debug output
         app = Krita.instance()
         if app.activeWindow() and app.activeWindow().activeView():
             view = app.activeWindow().activeView()
