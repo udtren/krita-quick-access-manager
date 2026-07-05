@@ -178,17 +178,25 @@ class ColorSelectorPopupWindow(QFrame):
         super().showEvent(event)
         w = self._popup_loader.get_color_selector_popup_width()
         h = self._popup_loader.get_color_selector_popup_height()
-        panel_w = self._popup_loader.get_color_selector_controls_panel_width()
-        total_w = w + panel_w
-        # Pin the controls panel to exactly 1/4 of the total width so the
-        # left (color selector) side always keeps the other 3/4, rather than
-        # leaving the split to whatever slack Qt happens to distribute.
-        self.controls_widget.setFixedWidth(total_w // 3)
-        total_h = max(h, self.controls_widget.sizeHint().height())
+
+        panel_enabled = self._popup_loader.get_color_selector_controls_panel_enabled()
+        self.controls_widget.setVisible(panel_enabled)
+        if panel_enabled:
+            panel_w = self._popup_loader.get_color_selector_controls_panel_width()
+            total_w = w + panel_w
+            # Pin the controls panel to exactly 1/4 of the total width so the
+            # left (color selector) side always keeps the other 3/4, rather
+            # than leaving the split to whatever slack Qt happens to distribute.
+            self.controls_widget.setFixedWidth(total_w // 3)
+            total_h = max(h, self.controls_widget.sizeHint().height())
+            self.controls_widget.start_monitoring()
+        else:
+            total_w, total_h = w, h
+            self.controls_widget.stop_monitoring()
         self.resize(total_w, total_h)
+
         self._pollKritaColor()  # sync to current Krita color on open
         self._poll_timer.start()
-        self.controls_widget.start_monitoring()
 
     def hideEvent(self, event):
         super().hideEvent(event)

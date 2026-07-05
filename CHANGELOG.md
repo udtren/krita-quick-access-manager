@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-07-05
+### Added
+- **HueSVC / BrushLayer Control Popup**: the color selector popup (`color_selector/color_selector_popup.py`) now embeds a brush/layer adjustment panel on its right side, so brush size/opacity/flow/blend mode/rotation and layer opacity/blend mode can be adjusted without opening the Quick Brush Adjustments docker
+  - `brush_adjust/controls_builder.py`: extracted the slider/dropdown/rotation/reset construction previously inline in `BrushAdjustmentWidget.init_ui()` into `create_brush_layer_controls()` (widget creation) plus two arrangement functions — `build_docker_controls_layout()` (existing docker layout, unchanged behaviour) and `build_popup_controls_layout()` (new stacked layout: size → opacity → flow → blend combo → rotation dial + reset button → layer opacity → layer blend combo)
+  - `brush_adjust/popup_controls_widget.py`: new `BrushLayerControlsWidget`, mixing in only `BrushMonitorMixin`/`LayerMonitorMixin` (no history widgets, docker toggle buttons, or global key listeners); `start_monitoring()` / `stop_monitoring()` pause its polling timers while the popup is hidden
+  - `color_selector_popup.py`: root layout changed to `QHBoxLayout` (color selector left, controls panel right, vertically centered); panel is pinned to exactly 1/3 of the popup's total width so the color selector keeps the other 2/3
+  - New `popup.json` settings (Settings → Popup tab → *[Color Selector Popup]*): `color_selector_controls_panel_width` (extra width added for the panel, default 220) and `color_selector_controls_panel_enabled` (checkbox to hide the panel entirely, default enabled)
+  - Any slider/dropdown disabled via Settings → Quick Adjust tab is hidden in the popup panel too, since both share the same `quick_adjust_docker.json` config
+
+### Fixed
+- Color selector popup no longer closes when opening the blend mode / layer blend mode dropdown list — `leaveEvent` now ignores the mouse-leave while `QApplication.activePopupWidget()` is set (the combo box's own dropdown)
+
 ## 2026-05-09
 ### Added
 - **Performance Mode** (`__init__.py`, `dialogs/tabs/main_tab.py`, `utils/data_manager.py`): new **Performance** section in the Settings → Main tab with an *Enable Performance Mode* checkbox
