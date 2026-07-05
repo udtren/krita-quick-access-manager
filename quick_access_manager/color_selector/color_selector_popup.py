@@ -18,6 +18,7 @@ from ..compat import (
 from .color_selector_dock import HueBar, SVBox, ChannelBar, FgBgColorWidget
 from ..config.popup_loader import PopupConfigLoader
 from ..brush_adjust.popup_controls_widget import BrushLayerControlsWidget
+from ..brush_adjust.widgets.brush_toggle_widget import BrushToggleWidget
 
 
 class ColorSelectorPopupWindow(QFrame):
@@ -147,9 +148,12 @@ class ColorSelectorPopupWindow(QFrame):
         # doesn't trigger leaveEvent) ──
         controls_layout = QVBoxLayout()
         controls_layout.setContentsMargins(0, 0, 0, 0)
+        controls_layout.setSpacing(6)
         self.controls_widget = BrushLayerControlsWidget()
+        self.toggle_widget = BrushToggleWidget()
         controls_layout.addStretch()
         controls_layout.addWidget(self.controls_widget)
+        controls_layout.addWidget(self.toggle_widget)
         controls_layout.addStretch()
         root_layout.addLayout(controls_layout)
 
@@ -181,6 +185,7 @@ class ColorSelectorPopupWindow(QFrame):
 
         panel_enabled = self._popup_loader.get_color_selector_controls_panel_enabled()
         self.controls_widget.setVisible(panel_enabled)
+        self.toggle_widget.setVisible(panel_enabled)
         if panel_enabled:
             panel_w = self._popup_loader.get_color_selector_controls_panel_width()
             total_w = w + panel_w
@@ -188,8 +193,14 @@ class ColorSelectorPopupWindow(QFrame):
             # left (color selector) side always keeps the other 3/4, rather
             # than leaving the split to whatever slack Qt happens to distribute.
             self.controls_widget.setFixedWidth(total_w // 3)
-            total_h = max(h, self.controls_widget.sizeHint().height())
+            self.toggle_widget.setFixedWidth(total_w // 3)
+            panel_h = (
+                self.controls_widget.sizeHint().height()
+                + self.toggle_widget.sizeHint().height()
+            )
+            total_h = max(h, panel_h)
             self.controls_widget.start_monitoring()
+            self.toggle_widget.refresh_from_current_brush()
         else:
             total_w, total_h = w, h
             self.controls_widget.stop_monitoring()
