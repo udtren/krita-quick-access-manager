@@ -14,7 +14,6 @@ import os
 from ..compat import (
     QVBoxLayout,
     QHBoxLayout,
-    QGridLayout,
     QLabel,
     QSlider,
     QPushButton,
@@ -267,50 +266,39 @@ def build_docker_controls_layout(widget, brush_config, layer_config, blender_mod
 
 
 def build_popup_controls_layout(widget, brush_config, layer_config, blender_modes):
-    """Assemble controls into the color selector popup's grid layout:
+    """Assemble controls into the color selector popup's stacked layout:
         size slider
-        opacity slider       | layer opacity slider
-        flow slider          | layer blending mode dropdown
+        opacity slider
+        flow slider
         blending mode dropdown
-        rotation circle       | reset button
+        rotation circle | reset button
+        layer opacity slider
+        layer blending mode dropdown
     """
     rows = create_brush_layer_controls(widget, brush_config, layer_config, blender_modes)
 
-    grid = QGridLayout()
-    grid.setVerticalSpacing(6)
-    grid.setHorizontalSpacing(10)
-    grid.setColumnStretch(0, 1)
-    grid.setColumnStretch(1, 1)
+    layout = QVBoxLayout()
+    layout.setSpacing(6)
 
-    row = 0
     if rows["size"] is not None:
-        grid.addLayout(rows["size"], row, 0, 1, 2)
-        row += 1
-
+        layout.addLayout(rows["size"])
     if rows["opacity"] is not None:
-        grid.addLayout(rows["opacity"], row, 0)
-    if rows["layer_opacity"] is not None:
-        grid.addLayout(rows["layer_opacity"], row, 1)
-    if rows["opacity"] is not None or rows["layer_opacity"] is not None:
-        row += 1
-
+        layout.addLayout(rows["opacity"])
     if rows["flow"] is not None:
-        grid.addLayout(rows["flow"], row, 0)
-    if widget.layer_blend_combo is not None:
-        grid.addWidget(widget.layer_blend_combo, row, 1)
-    if rows["flow"] is not None or widget.layer_blend_combo is not None:
-        row += 1
-
+        layout.addLayout(rows["flow"])
     if widget.blend_combo is not None:
-        grid.addWidget(widget.blend_combo, row, 0, 1, 2)
-        row += 1
+        layout.addWidget(widget.blend_combo)
 
     rotation_layout = QHBoxLayout()
     rotation_layout.addWidget(widget.rotation_widget)
     rotation_layout.addWidget(widget.rotation_value_label)
-    grid.addLayout(rotation_layout, row, 0)
     if widget.reset_btn is not None:
-        grid.addWidget(widget.reset_btn, row, 1)
-    row += 1
+        rotation_layout.addWidget(widget.reset_btn)
+    layout.addLayout(rotation_layout)
 
-    return grid
+    if rows["layer_opacity"] is not None:
+        layout.addLayout(rows["layer_opacity"])
+    if widget.layer_blend_combo is not None:
+        layout.addWidget(widget.layer_blend_combo)
+
+    return layout

@@ -1,19 +1,32 @@
 from krita import Krita, ManagedColor
 from ..compat import (
-    QFrame, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QShortcut,
-    QColor, QCursor, QFont, QIntValidator,
-    Qt, QTimer,
+    QApplication,
+    QFrame,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QShortcut,
+    QColor,
+    QCursor,
+    QFont,
+    QIntValidator,
+    Qt,
+    QTimer,
 )
 
 from .color_selector_dock import HueBar, SVBox, ChannelBar, FgBgColorWidget
 from ..config.popup_loader import PopupConfigLoader
+from ..brush_adjust.popup_controls_widget import BrushLayerControlsWidget
 
 
 class ColorSelectorPopupWindow(QFrame):
     """Frameless popup window containing the full color selector UI."""
 
     def __init__(self, parent=None):
-        super().__init__(parent, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        super().__init__(
+            parent, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        )
         self.setAttribute(Qt.WA_DeleteOnClose, False)
 
         self._popup_loader = PopupConfigLoader()
@@ -24,9 +37,14 @@ class ColorSelectorPopupWindow(QFrame):
         self._r, self._g, self._b = color.red(), color.green(), color.blue()
         self._bg_r, self._bg_g, self._bg_b = 255, 255, 255
 
-        outer_layout = QVBoxLayout(self)
-        outer_layout.setContentsMargins(6, 6, 6, 6)
+        root_layout = QHBoxLayout(self)
+        root_layout.setContentsMargins(6, 6, 6, 6)
+        root_layout.setSpacing(6)
+
+        outer_layout = QVBoxLayout()
+        outer_layout.setContentsMargins(0, 0, 0, 0)
         outer_layout.setSpacing(6)
+        root_layout.addLayout(outer_layout)
 
         # ── FG/BG color swatch ──
         fg_bg_layout = QHBoxLayout()
@@ -63,16 +81,21 @@ class ColorSelectorPopupWindow(QFrame):
         channels_layout.setContentsMargins(0, 0, 0, 0)
         channels_layout.setAlignment(Qt.AlignTop)
 
-        for ch in ('H', 'S', 'V', 'R', 'G', 'B'):
+        for ch in ("H", "S", "V", "R", "G", "B"):
             row = QHBoxLayout()
             row.setSpacing(4)
 
             bar = ChannelBar(ch)
 
-            if ch == 'H':
+            if ch == "H":
                 max_val = 359
-            elif ch in ('R', 'G', 'B'):
-                max_val = 255 if self._popup_loader.get_color_selector_rgb_display_mode() == "value" else 100
+            elif ch in ("R", "G", "B"):
+                max_val = (
+                    255
+                    if self._popup_loader.get_color_selector_rgb_display_mode()
+                    == "value"
+                    else 100
+                )
             else:
                 max_val = 100
             val_edit = QLineEdit("0")
@@ -103,13 +126,32 @@ class ColorSelectorPopupWindow(QFrame):
 
             self.channel_bars[ch] = bar
             self.channel_labels[ch] = val_edit
-            bar.valueChanged.connect(lambda val, c=ch: self._onChannelChanged(
-                c,
-                round(val * 255 / 100) if c in ('R', 'G', 'B') and self._popup_loader.get_color_selector_rgb_display_mode() == "value" else val,
-                debounce=True
-            ))
+            bar.valueChanged.connect(
+                lambda val, c=ch: self._onChannelChanged(
+                    c,
+                    (
+                        round(val * 255 / 100)
+                        if c in ("R", "G", "B")
+                        and self._popup_loader.get_color_selector_rgb_display_mode()
+                        == "value"
+                        else val
+                    ),
+                    debounce=True,
+                )
+            )
 
         outer_layout.addLayout(channels_layout)
+
+        # ── Right: brush/layer adjustment controls (vertically centered so
+        # hovering the popup's full height stays inside its bounds and
+        # doesn't trigger leaveEvent) ──
+        controls_layout = QVBoxLayout()
+        controls_layout.setContentsMargins(0, 0, 0, 0)
+        self.controls_widget = BrushLayerControlsWidget()
+        controls_layout.addStretch()
+        controls_layout.addWidget(self.controls_widget)
+        controls_layout.addStretch()
+        root_layout.addLayout(controls_layout)
 
         # Connect top picker signals
         self.hue_bar.hueChanged.connect(self._onHueBarChanged)
@@ -117,7 +159,9 @@ class ColorSelectorPopupWindow(QFrame):
 
         # Poll Krita foreground color (interval configurable)
         self._poll_timer = QTimer(self)
-        self._poll_timer.setInterval(self._popup_loader.get_color_selector_poll_interval())
+        self._poll_timer.setInterval(
+            self._popup_loader.get_color_selector_poll_interval()
+        )
         self._poll_timer.timeout.connect(self._pollKritaColor)
 
         # Debounce timer for bar dragging
@@ -134,23 +178,39 @@ class ColorSelectorPopupWindow(QFrame):
         super().showEvent(event)
         w = self._popup_loader.get_color_selector_popup_width()
         h = self._popup_loader.get_color_selector_popup_height()
-        self.resize(w, h)
-        self._pollKritaColor()   # sync to current Krita color on open
+        panel_w = self._popup_loader.get_color_selector_controls_panel_width()
+        total_w = w + panel_w
+        # Pin the controls panel to exactly 1/4 of the total width so the
+        # left (color selector) side always keeps the other 3/4, rather than
+        # leaving the split to whatever slack Qt happens to distribute.
+        self.controls_widget.setFixedWidth(total_w // 3)
+        total_h = max(h, self.controls_widget.sizeHint().height())
+        self.resize(total_w, total_h)
+        self._pollKritaColor()  # sync to current Krita color on open
         self._poll_timer.start()
+        self.controls_widget.start_monitoring()
 
     def hideEvent(self, event):
         super().hideEvent(event)
         self._poll_timer.stop()
         self._debounce_timer.stop()
+        self.controls_widget.stop_monitoring()
 
     def leaveEvent(self, event):
         super().leaveEvent(event)
+        # A combo box's dropdown list is a separate top-level popup that
+        # often extends outside this frame's bounds - moving the mouse into
+        # it fires a genuine leaveEvent here. Don't close the popup for that.
+        if QApplication.activePopupWidget() is not None:
+            return
         self.hide()
 
     # ── Sync helpers ─────────────────────────────────────────────
 
     def _updateChannelBars(self):
-        def d(x): return round(x * 100 / 255)
+        def d(x):
+            return round(x * 100 / 255)
+
         s100, v100 = d(self._s), d(self._v)
         r100, g100, b100 = d(self._r), d(self._g), d(self._b)
         for bar in self.channel_bars.values():
@@ -159,12 +219,12 @@ class ColorSelectorPopupWindow(QFrame):
         r_disp = self._r if rgb_mode == "value" else r100
         g_disp = self._g if rgb_mode == "value" else g100
         b_disp = self._b if rgb_mode == "value" else b100
-        self.channel_labels['H'].setText(str(self._h))
-        self.channel_labels['S'].setText(str(s100))
-        self.channel_labels['V'].setText(str(v100))
-        self.channel_labels['R'].setText(str(r_disp))
-        self.channel_labels['G'].setText(str(g_disp))
-        self.channel_labels['B'].setText(str(b_disp))
+        self.channel_labels["H"].setText(str(self._h))
+        self.channel_labels["S"].setText(str(s100))
+        self.channel_labels["V"].setText(str(v100))
+        self.channel_labels["R"].setText(str(r_disp))
+        self.channel_labels["G"].setText(str(g_disp))
+        self.channel_labels["B"].setText(str(b_disp))
         self.fg_bg_widget.setColors(
             QColor(self._r, self._g, self._b),
             QColor(self._bg_r, self._bg_g, self._bg_b),
@@ -247,21 +307,23 @@ class ColorSelectorPopupWindow(QFrame):
         r, g, b = self._r, self._g, self._b
         use_rgb = False
 
-        def i(x): return round(x * 255 / 100)  # display (0-100) → internal (0-255)
+        def i(x):
+            return round(x * 255 / 100)  # display (0-100) → internal (0-255)
+
         rgb_mode = self._popup_loader.get_color_selector_rgb_display_mode()
-        if channel == 'H':
+        if channel == "H":
             h = value
-        elif channel == 'S':
+        elif channel == "S":
             s = i(value)
-        elif channel == 'V':
+        elif channel == "V":
             v = i(value)
-        elif channel == 'R':
+        elif channel == "R":
             r = value if rgb_mode == "value" else i(value)
             use_rgb = True
-        elif channel == 'G':
+        elif channel == "G":
             g = value if rgb_mode == "value" else i(value)
             use_rgb = True
-        elif channel == 'B':
+        elif channel == "B":
             b = value if rgb_mode == "value" else i(value)
             use_rgb = True
 
@@ -283,13 +345,13 @@ class ColorSelectorPopupWindow(QFrame):
         self._poll_timer.start()
 
     def _stepChannel(self, ch, delta):
-        if ch == 'H':
+        if ch == "H":
             current, max_val = self._h, 359
-        elif ch in ('S', 'V'):
-            internal = {'S': self._s, 'V': self._v}[ch]
+        elif ch in ("S", "V"):
+            internal = {"S": self._s, "V": self._v}[ch]
             current, max_val = round(internal * 100 / 255), 100
         else:  # R, G, B
-            internal = {'R': self._r, 'G': self._g, 'B': self._b}[ch]
+            internal = {"R": self._r, "G": self._g, "B": self._b}[ch]
             if self._popup_loader.get_color_selector_rgb_display_mode() == "value":
                 current, max_val = internal, 255
             else:
@@ -303,10 +365,14 @@ class ColorSelectorPopupWindow(QFrame):
         except ValueError:
             self._updateChannelBars()
             return
-        if ch == 'H':
+        if ch == "H":
             max_val = 359
-        elif ch in ('R', 'G', 'B'):
-            max_val = 255 if self._popup_loader.get_color_selector_rgb_display_mode() == "value" else 100
+        elif ch in ("R", "G", "B"):
+            max_val = (
+                255
+                if self._popup_loader.get_color_selector_rgb_display_mode() == "value"
+                else 100
+            )
         else:
             max_val = 100
         self._onChannelChanged(ch, max(0, min(max_val, val)))
@@ -328,12 +394,18 @@ class ColorSelectorPopupWindow(QFrame):
         canvas = view.canvas()
         qcolor_new_fg = mc_bg.colorForCanvas(canvas)
         if qcolor_new_fg and qcolor_new_fg.isValid():
-            color = QColor(qcolor_new_fg.red(), qcolor_new_fg.green(), qcolor_new_fg.blue())
+            color = QColor(
+                qcolor_new_fg.red(), qcolor_new_fg.green(), qcolor_new_fg.blue()
+            )
             h = color.hsvHue() if color.hsvHue() != -1 else self._h
             self._applyHSV(h, color.hsvSaturation(), color.value(), push=False)
         qcolor_new_bg = mc_fg.colorForCanvas(canvas)
         if qcolor_new_bg and qcolor_new_bg.isValid():
-            self._bg_r, self._bg_g, self._bg_b = qcolor_new_bg.red(), qcolor_new_bg.green(), qcolor_new_bg.blue()
+            self._bg_r, self._bg_g, self._bg_b = (
+                qcolor_new_bg.red(),
+                qcolor_new_bg.green(),
+                qcolor_new_bg.blue(),
+            )
         self.fg_bg_widget.setColors(
             QColor(self._r, self._g, self._b),
             QColor(self._bg_r, self._bg_g, self._bg_b),
@@ -370,7 +442,11 @@ class ColorSelectorPopup:
         """Register the global shortcut to open/close the popup."""
         try:
             app = Krita.instance()
-            main_window = app.activeWindow().qwindow() if app.activeWindow() else self.parent_docker
+            main_window = (
+                app.activeWindow().qwindow()
+                if app.activeWindow()
+                else self.parent_docker
+            )
 
             shortcut_key = self.popup_loader.get_color_selector_popup_shortcut()
             self.popup_shortcut = QShortcut(shortcut_key, main_window)
@@ -393,11 +469,12 @@ class ColorSelectorPopup:
             h = self.popup_window.height()
             cursor_pos = QCursor.pos()
             self.popup_window.move(
-                cursor_pos.x() - w // 2,
-                cursor_pos.y() - h // 2,
+                cursor_pos.x() - w // 4,
+                cursor_pos.y() - h // 3,
             )
             self.popup_window.show()
             self.popup_window.raise_()
         except Exception:
             import traceback
+
             traceback.print_exc()

@@ -86,6 +86,8 @@ class PopupTab:
 
         _int_row("Popup Width", "color_selector_popup_width", self.popup_loader.get_color_selector_popup_width)
         _int_row("Popup Height", "color_selector_popup_height", self.popup_loader.get_color_selector_popup_height)
+        _int_row("Brush/Layer Controls Panel Width", "color_selector_controls_panel_width",
+                 self.popup_loader.get_color_selector_controls_panel_width)
         _int_row("Value Font Size", "color_selector_value_font_size", self.popup_loader.get_color_selector_value_font_size)
         _int_row("Foreground Color Check Interval (ms)", "color_selector_poll_interval", self.popup_loader.get_color_selector_poll_interval)
 
@@ -111,6 +113,7 @@ class PopupTab:
             "grid_label_width": self.popup_loader.set_grid_label_width,
             "color_selector_popup_width": self.popup_loader.set_color_selector_popup_width,
             "color_selector_popup_height": self.popup_loader.set_color_selector_popup_height,
+            "color_selector_controls_panel_width": self.popup_loader.set_color_selector_controls_panel_width,
             "color_selector_value_font_size": self.popup_loader.set_color_selector_value_font_size,
             "color_selector_poll_interval": self.popup_loader.set_color_selector_poll_interval,
         }
