@@ -183,28 +183,40 @@ class ColorSelectorPopupWindow(QFrame):
         w = self._popup_loader.get_color_selector_popup_width()
         h = self._popup_loader.get_color_selector_popup_height()
 
-        panel_enabled = self._popup_loader.get_color_selector_controls_panel_enabled()
-        self.controls_widget.setVisible(panel_enabled)
-        self.toggle_widget.setVisible(panel_enabled)
+        controls_enabled = (
+            self._popup_loader.get_color_selector_controls_panel_enabled()
+        )
+        toggle_enabled = self._popup_loader.get_color_selector_toggle_panel_enabled()
+        panel_enabled = controls_enabled or toggle_enabled
+
+        self.controls_widget.setVisible(controls_enabled)
+        self.toggle_widget.setVisible(toggle_enabled)
+
         if panel_enabled:
             panel_w = self._popup_loader.get_color_selector_controls_panel_width()
             total_w = w + panel_w
-            # Pin the controls panel to exactly 1/4 of the total width so the
-            # left (color selector) side always keeps the other 3/4, rather
-            # than leaving the split to whatever slack Qt happens to distribute.
-            self.controls_widget.setFixedWidth(total_w // 3)
-            self.toggle_widget.setFixedWidth(total_w // 3)
-            panel_h = (
-                self.controls_widget.sizeHint().height()
-                + self.toggle_widget.sizeHint().height()
-            )
+            # Pin each visible panel section to exactly 1/3 of the total
+            # width so the left (color selector) side always keeps the
+            # other 2/3, rather than leaving the split to whatever slack Qt
+            # happens to distribute.
+            panel_h = 0
+            if controls_enabled:
+                self.controls_widget.setFixedWidth(total_w // 3)
+                panel_h += self.controls_widget.sizeHint().height()
+            if toggle_enabled:
+                self.toggle_widget.setFixedWidth(total_w // 3)
+                panel_h += self.toggle_widget.sizeHint().height()
             total_h = max(h, panel_h)
-            self.controls_widget.start_monitoring()
-            self.toggle_widget.refresh_from_current_brush()
         else:
             total_w, total_h = w, h
-            self.controls_widget.stop_monitoring()
         self.resize(total_w, total_h)
+
+        if controls_enabled:
+            self.controls_widget.start_monitoring()
+        else:
+            self.controls_widget.stop_monitoring()
+        if toggle_enabled:
+            self.toggle_widget.refresh_from_current_brush()
 
         self._pollKritaColor()  # sync to current Krita color on open
         self._poll_timer.start()

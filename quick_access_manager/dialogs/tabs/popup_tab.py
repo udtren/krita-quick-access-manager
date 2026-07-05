@@ -163,6 +163,17 @@ class PopupTab:
         layout.addLayout(hl)
         self.popup_fields["color_selector_controls_panel_enabled"] = checkbox
 
+        hl = QHBoxLayout()
+        label = QLabel("Show Brush Toggle Controls Panel")
+        label.setAlignment(Qt.AlignLeft)
+        checkbox = QCheckBox()
+        checkbox.setChecked(self.popup_loader.get_color_selector_toggle_panel_enabled())
+        hl.addWidget(label)
+        hl.addStretch()
+        hl.addWidget(checkbox)
+        layout.addLayout(hl)
+        self.popup_fields["color_selector_toggle_panel_enabled"] = checkbox
+
         layout.addStretch()
 
     def save(self):
@@ -191,6 +202,10 @@ class PopupTab:
                 )
             elif key == "color_selector_controls_panel_enabled":
                 self.popup_loader.set_color_selector_controls_panel_enabled(
+                    edit.isChecked()
+                )
+            elif key == "color_selector_toggle_panel_enabled":
+                self.popup_loader.set_color_selector_toggle_panel_enabled(
                     edit.isChecked()
                 )
             elif key in _int_setters:

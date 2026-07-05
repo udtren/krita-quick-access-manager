@@ -15,6 +15,7 @@ import xml.etree.ElementTree as ET
 from krita import Krita, Preset
 
 from ...compat import QWidget, QGridLayout, QPushButton
+from ...config.quick_adjust_docker_loader import get_font_size
 
 # (display label, xml param name, paired sub-param name or "")
 PROPERTIES = [
@@ -46,7 +47,7 @@ class BrushToggleWidget(QWidget):
             btn = QPushButton(label)
             btn.setCheckable(True)
             btn.setStyleSheet(
-                "QPushButton { font-weight: bold; }"
+                f"QPushButton {{ font-weight: bold; font-size: {get_font_size()}; }}"
                 "QPushButton:checked { background-color: #2ecc71; }"
             )
             btn.toggled.connect(
