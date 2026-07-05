@@ -7,24 +7,18 @@ from ..compat import (
     QVBoxLayout,
     QHBoxLayout,
     QLabel,
-    QSlider,
-    QPushButton,
-    QComboBox,
     QDockWidget,
     Qt,
     QTimer,
-    QIcon,
-    QPixmap,
 )
-import os
 
 # Import widgets from the widgets2 package
 from .widgets import (
     ColorHistoryWidget,
-    CircularRotationWidget,
     BrushHistoryWidget,
     ControlButtonWidget,
 )
+from .controls_builder import build_docker_controls_layout
 
 # Import configuration loader
 from ..config.quick_adjust_docker_loader import (
@@ -35,7 +29,6 @@ from ..config.quick_adjust_docker_loader import (
     get_blender_mode_list,
     get_docker_toggle_section,
     get_font_size,
-    get_number_size,
     get_color_history_total,
     get_color_history_icon_size,
     get_brush_history_total,
@@ -46,14 +39,12 @@ from ..config.quick_adjust_docker_loader import (
     get_temp_brush_sets,
 )
 
-
 # Import local modules
 from .docker_buttons import (
     load_docker_buttons_config,
     create_docker_buttons,
     toggle_docker_by_keywords,
 )
-from .utils_adjust import brush_size_to_slider
 from .brush_monitor import BrushMonitorMixin
 from .layer_monitor import LayerMonitorMixin
 from .alt_erase_listener import (
@@ -144,218 +135,13 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
         main_layout = QHBoxLayout()
         main_layout.setSpacing(10)
 
-        # Left side: Size and Opacity controls in vertical layout
-        left_layout = QVBoxLayout()
-        left_layout.setSpacing(6)
-
-        # ============================================
-        # Size row: Slider | Value (conditionally created)
-        # ============================================
-        size_config = self.brush_config.get("size_slider", {})
-        if size_config.get("enabled", True):
-            size_layout = QHBoxLayout()
-            size_layout.setSpacing(6)
-
-            self.size_slider = QSlider(Qt.Horizontal)
-            self.size_slider.setMinimum(0)
-            self.size_slider.setMaximum(100)  # Use 0-100 range for internal scaling
-            self.size_slider.setValue(brush_size_to_slider(10))
-            self.size_slider.valueChanged.connect(self.on_size_slider_changed_debounced)
-
-            number_size = size_config.get("number_size", get_number_size())
-            self.size_value_label = QLabel("10")
-            self.size_value_label.setStyleSheet(f"font-size: {number_size};")
-            self.size_value_label.setAlignment(Qt.AlignCenter)
-            self.size_value_label.setFixedWidth(35)
-
-            size_layout.addWidget(self.size_slider, 1)
-            size_layout.addWidget(self.size_value_label)
-        else:
-            self.size_slider = None
-            self.size_value_label = None
-
-        # ============================================
-        # Brush Section: Opacity Slider, Flow Slider, Blend Mode (conditionally created)
-        # ============================================
-        brush_and_layer_layout = QHBoxLayout()
-        brush_section_layout = QVBoxLayout()
-
-        opacity_config = self.brush_config.get("opacity_slider", {})
-        if opacity_config.get("enabled", True):
-            brush_opacity_layout = QHBoxLayout()
-
-            self.opacity_slider = QSlider(Qt.Horizontal)
-            self.opacity_slider.setMinimum(0)
-            self.opacity_slider.setMaximum(100)
-            self.opacity_slider.setValue(100)
-            self.opacity_slider.valueChanged.connect(self.on_opacity_changed_debounced)
-
-            number_size = opacity_config.get("number_size", get_number_size())
-            self.opacity_value_label = QLabel("100%")
-            self.opacity_value_label.setStyleSheet(f"font-size: {number_size};")
-            self.opacity_value_label.setAlignment(Qt.AlignCenter)
-            self.opacity_value_label.setFixedWidth(35)
-
-            brush_opacity_layout.addWidget(self.opacity_slider, 1)
-            brush_opacity_layout.addWidget(self.opacity_value_label)
-        else:
-            self.opacity_slider = None
-            self.opacity_value_label = None
-
-        # Flow slider (under opacity slider)
-        flow_config = self.brush_config.get("flow_slider", {})
-        if flow_config.get("enabled", True):
-            brush_flow_layout = QHBoxLayout()
-
-            self.flow_slider = QSlider(Qt.Horizontal)
-            self.flow_slider.setMinimum(0)
-            self.flow_slider.setMaximum(100)
-            self.flow_slider.setValue(100)
-            self.flow_slider.valueChanged.connect(self.on_flow_changed_debounced)
-
-            number_size = flow_config.get("number_size", get_number_size())
-            self.flow_value_label = QLabel("100%")
-            self.flow_value_label.setStyleSheet(f"font-size: {number_size};")
-            self.flow_value_label.setAlignment(Qt.AlignCenter)
-            self.flow_value_label.setFixedWidth(35)
-
-            brush_flow_layout.addWidget(self.flow_slider, 1)
-            brush_flow_layout.addWidget(self.flow_value_label)
-        else:
-            self.flow_slider = None
-            self.flow_value_label = None
-
-        # Brush blend mode and reset button
-        brush_blend_reset_layout = QHBoxLayout()
-
-        # Only create blend combo if opacity slider is enabled
-        if opacity_config.get("enabled", True):
-            self.blend_combo = QComboBox()
-            self.blend_combo.setStyleSheet(f"font-size: {get_font_size()};")
-            self.blend_combo.setEditable(True)
-            self.blend_combo.setMaximumWidth(150)
-            # Add blending modes from configuration
-            for mode in self.blender_modes:
-                self.blend_combo.addItem(mode.replace("_", " ").title(), mode)
-
-            self.blend_combo.currentTextChanged.connect(self.on_blend_mode_changed)
-
-            # ============================================
-            # Reset Button
-            # ============================================
-            self.reset_btn = QPushButton()
-            icon_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), "image", "refresh.png"
-            )
-            if os.path.exists(icon_path):
-                icon = QIcon(icon_path)
-                self.reset_btn.setIcon(icon)
-                self.reset_btn.setIconSize(QPixmap(16, 16).size())
-            else:
-                self.reset_btn.setText("Reset")
-                self.reset_btn.setStyleSheet(
-                    f"font-size: {get_font_size()}; padding: 2px 8px;"
-                )
-            self.reset_btn.setFixedSize(24, 24)
-            self.reset_btn.setToolTip("Reset brush settings")
-            self.reset_btn.clicked.connect(self.reset_brush_settings)
-        else:
-            self.blend_combo = None
-            self.reset_btn = None
-
-        # ============================================
-        # Layer Section: Opacity Slider, Blend Mode (conditionally created)
-        # ============================================
-        layer_section_layout = QVBoxLayout()
-
-        layer_opacity_config = self.layer_config.get("opacity_slider", {})
-        if layer_opacity_config.get("enabled", True):
-            layer_opacity_layout = QHBoxLayout()
-
-            self.layer_opacity_slider = QSlider(Qt.Horizontal)
-            self.layer_opacity_slider.setMinimum(0)
-            self.layer_opacity_slider.setMaximum(100)
-            self.layer_opacity_slider.setValue(100)
-            self.layer_opacity_slider.valueChanged.connect(
-                self.on_layer_opacity_changed_debounced
-            )
-
-            number_size = layer_opacity_config.get("number_size", get_number_size())
-            self.layer_opacity_value_label = QLabel("100%")
-            self.layer_opacity_value_label.setStyleSheet(f"font-size: {number_size};")
-            self.layer_opacity_value_label.setAlignment(Qt.AlignCenter)
-            self.layer_opacity_value_label.setFixedWidth(35)
-
-            layer_opacity_layout.addWidget(self.layer_opacity_slider, 1)
-            layer_opacity_layout.addWidget(self.layer_opacity_value_label)
-        else:
-            self.layer_opacity_slider = None
-            self.layer_opacity_value_label = None
-
-        # Only create layer blend combo if layer opacity slider is enabled
-        if layer_opacity_config.get("enabled", True):
-            self.layer_blend_combo = QComboBox()
-            self.layer_blend_combo.setStyleSheet(f"font-size: {get_font_size()};")
-            self.layer_blend_combo.setEditable(True)
-            self.layer_blend_combo.setMaximumWidth(150)
-            # Add blending modes from configuration
-            for mode in self.blender_modes:
-                self.layer_blend_combo.addItem(mode.replace("_", " ").title(), mode)
-
-            self.layer_blend_combo.currentTextChanged.connect(
-                self.on_layer_blend_mode_changed
-            )
-        else:
-            self.layer_blend_combo = None
-
-        # ============================================
-        # Assemble each section
-        # ============================================
-
-        # Assemble brush section
-        if opacity_config.get("enabled", True):
-            brush_section_layout.addLayout(brush_opacity_layout)
-        if flow_config.get("enabled", True):
-            brush_section_layout.addLayout(brush_flow_layout)
-        if self.blend_combo is not None:
-            brush_blend_reset_layout.addWidget(self.blend_combo)
-            brush_blend_reset_layout.addWidget(self.reset_btn)
-        brush_section_layout.addLayout(brush_blend_reset_layout)
-        brush_section_layout.addStretch()
-
-        # Assemble layer section
-        if layer_opacity_config.get("enabled", True):
-            layer_section_layout.addLayout(layer_opacity_layout)
-        if self.layer_blend_combo is not None:
-            layer_section_layout.addWidget(self.layer_blend_combo)
-        layer_section_layout.addStretch()
-
-        brush_and_layer_layout.addLayout(brush_section_layout)
-        brush_and_layer_layout.addLayout(layer_section_layout)
-
-        # Assemble left layout
-        if size_config.get("enabled", True):
-            left_layout.addLayout(size_layout)
-        left_layout.addLayout(brush_and_layer_layout)
-        left_layout.addStretch()
-
-        # ============================================
-        # Rotation widget - always enabled as floating widget (not added to docker layout)
-        # ============================================
-        rotation_config = self.brush_config.get("rotation_slider", {})
-        # Always create rotation widget for floating display
-        self.rotation_widget = CircularRotationWidget()
-        self.rotation_widget.setValue(0)
-        self.rotation_widget.valueChanged.connect(self.on_rotation_changed)
-
-        number_size = rotation_config.get("number_size", get_number_size())
-        self.rotation_value_label = QLabel("0°")
-        self.rotation_value_label.setStyleSheet(f"font-size: {number_size};")
-        self.rotation_value_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-        self.rotation_value_label.setFixedWidth(35)
-
-        # Note: rotation_widget and rotation_value_label are NOT added to any layout here
-        # They will be used by the floating rotation widget instead
+        # Left side: Size/Opacity/Flow/Blend/Layer controls, built by the
+        # shared builder so the docker and the color selector popup can't
+        # drift apart. The rotation widget is created but not placed here -
+        # this docker reparents it into a separate floating pad instead.
+        left_layout = build_docker_controls_layout(
+            self, self.brush_config, self.layer_config, self.blender_modes
+        )
 
         # ============================================
         # Add left layout to main layout (no right layout needed)
