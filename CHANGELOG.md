@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-07-07
+### Added
+- **Brush pressure-toggle panel** (`brush_adjust/widgets/brush_toggle_widget.py`): new `BrushToggleWidget`, embedded below the brush/layer controls in the color selector popup's right panel — 4 bold buttons (Size/Opacity/Flow/Rotation) that toggle pen-pressure sensitivity on the active brush preset, turning green while enabled
+  - Edits the preset XML directly (`Preset(view.currentBrushPreset()).toXML()` → `xml.etree.ElementTree` → flip the target `<param>` text between `"true"`/`"false"` → `preset.fromXML(...)`), the same technique the sibling CompactBrushToggler plugin uses, including its malformed-`PatternMD5` CDATA workaround
+  - Toggles `PressureSize`, `OpacityUseCurve`, `FlowUseCurve`, `PressureRotation`; `PressureSize`/`PressureRotation` each also update their paired `SizeUseCurve`/`RotationUseCurve` sub-param
+  - `refresh_from_current_brush()` re-syncs button states on construction and on every popup `showEvent`, so switching brushes between opens doesn't leave stale states
+  - Font size now pulled from `get_font_size()` (`config/quick_adjust_docker_loader.py`), matching the rest of the Quick Adjust controls
+- **Independent panel visibility settings** (`popup_tab.py`, `popup_loader.py`): the old single "Show Brush/Layer Controls Panel" checkbox is now two independent settings — `color_selector_controls_panel_enabled` (sliders/dropdowns panel, default **on**) and `color_selector_toggle_panel_enabled` (new pressure-toggle panel, default **off**) — each shown/hidden and sized on its own in `color_selector_popup.py`'s `showEvent`
+
 ## 2026-07-05
 ### Added
 - **HueSVC / BrushLayer Control Popup**: the color selector popup (`color_selector/color_selector_popup.py`) now embeds a brush/layer adjustment panel on its right side, so brush size/opacity/flow/blend mode/rotation and layer opacity/blend mode can be adjusted without opening the Quick Brush Adjustments docker

@@ -407,14 +407,17 @@ See [HueSVC / BrushLayer Control Popup](#huesvc--brushlayer-control-popup) below
 ## HueSVC / BrushLayer Control Popup
 ![alt text](quick_access_manager/image/huesvc_popup.png)
 
-The HueSVC popup (see above) also bundles the sliders and dropdowns from the [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker) into a single panel on the right side.
+The HueSVC popup (see above) also bundles the sliders and dropdowns from the [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker) into a panel on the right side, plus an optional brush pressure-toggle panel below it.
 
+**Right panel (top to bottom):**
+- **Brush/Layer Controls** — the same size/opacity/flow/blend mode/rotation/reset/layer opacity/layer blend mode controls as the Quick Adjust docker
+- **Brush Toggle Controls** — 4 buttons toggling pen-pressure sensitivity on the current brush preset: **Size**, **Opacity**, **Flow**, **Rotation**. States refresh automatically every time the popup opens, so switching brushes never leaves stale toggle states.
 
-**Notes:**
-- Any slider/dropdown disabled in the Quick Adjust docker settings (Settings → Quick Adjust tab) is also hidden here, so both stay in sync.
 
 **Configuration** (Settings → Popup tab, under *[Color Selector Popup]*):
-- **Show Brush/Layer Controls Panel** — uncheck to hide the panel entirely and shrink the popup back down to just the color selector
+- **Show Brush/Layer Controls Panel** — uncheck to hide the sliders/dropdowns panel
+- **Show Brush Toggle Controls Panel** — check to show the 4 pressure-toggle buttons (off by default)
+- Hiding both panels shrinks the popup back down to just the color selector
 
 
 ## Config Files Location
