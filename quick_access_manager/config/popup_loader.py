@@ -143,6 +143,27 @@ class PopupConfigLoader:
         self._config["color_selector_popup_height"] = height
         self._save_config()
 
+    def get_color_selector_controls_panel_width(self):
+        return self._config.get("color_selector_controls_panel_width", 220)
+
+    def set_color_selector_controls_panel_width(self, width):
+        self._config["color_selector_controls_panel_width"] = width
+        self._save_config()
+
+    def get_color_selector_controls_panel_enabled(self):
+        return self._config.get("color_selector_controls_panel_enabled", True)
+
+    def set_color_selector_controls_panel_enabled(self, enabled):
+        self._config["color_selector_controls_panel_enabled"] = enabled
+        self._save_config()
+
+    def get_color_selector_toggle_panel_enabled(self):
+        return self._config.get("color_selector_toggle_panel_enabled", False)
+
+    def set_color_selector_toggle_panel_enabled(self, enabled):
+        self._config["color_selector_toggle_panel_enabled"] = enabled
+        self._save_config()
+
     def get_color_selector_value_font_size(self):
         return self._config.get("color_selector_value_font_size", 10)
 

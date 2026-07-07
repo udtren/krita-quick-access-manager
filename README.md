@@ -9,7 +9,7 @@ A plugin for Krita that provides quick access to brush presets, shortcut managem
 - **Preset Switcher**: Save multiple XML configurations per brush preset and switch between them via a cursor-centered popup
 - **Gesture System**: Execute Krita actions via keyboard + mouse directional gestures with a real-time visual preview overlay
 - **Quick Brush Adjustments Docker**: Dedicated docker with brush size/opacity/flow/rotation, layer opacity, blend mode dropdowns, color & brush history, docker toggle buttons, floating widget support, and real-time selection/gesture status indicators
-- **HueSVC Color Selector**: Floating Hue + SV box color picker with R/G/B channel bars, FG/BG color swatch, and configurable display modes — available as both a docker and a cursor-centered popup
+- **HueSVC Color Selector**: Floating Hue + SV box color picker with R/G/B channel bars, FG/BG color swatch, and configurable display modes — available as both a docker and a cursor-centered popup that also bundles the same brush/layer adjustment controls as the Quick Brush Adjustments docker
 
 ![Sample](./quick_access_manager/image/000.png)
 ---
@@ -45,6 +45,7 @@ If you find this tool helpful, you can support its development:
   - [Temp Brush Sets](#temp-brush-sets)
   - [Floating Widget](#floating-widget)
 - [HueSVC](#huesvc)
+- [HueSVC / BrushLayer Control Popup](#huesvc--brushlayer-control-popup)
 - [Config Files Location](#config-files-location)
 - [Global Config](#global-config)
 - [Shortcut Button Config](#shortcut-button-config)
@@ -252,6 +253,8 @@ The docker also includes a control bar at the right side that has toggle button 
 It also displays real-time indicators for active selection and gesture system states. Click the gesture icon will toggle on/off the gesture system.
 You can enable/disable each slider via settings.
 
+> The same sliders/dropdowns (size, opacity, flow, blend mode, rotation, reset, layer opacity, layer blend mode) are also available in a compact form inside the [HueSVC / BrushLayer Control Popup](#huesvc--brushlayer-control-popup), so you don't need this docker open to adjust brush/layer settings while painting. The per-slider enabled/disabled settings below apply to both.
+
 ### Features
 
 **Brush Controls:**
@@ -378,7 +381,7 @@ The floating widget behavior can be customized in the Settings dialog under "Qui
 **Credits:**
 The floating widget system is based on the work from [Krita-UI-Redesign](https://github.com/veryprofessionaldodo/Krita-UI-Redesign) by veryprofessionaldodo.
 
-### HueSVC
+## HueSVC
 ![HueSVC color selector](quick_access_manager/image/huesvc.png)
 
 A compact color selector docker with a vertical hue bar, saturation/value box, and 6 individual channel bars for H, S, V, R, G, B.
@@ -394,10 +397,28 @@ A compact color selector docker with a vertical hue bar, saturation/value box, a
 
 **Configuration** (Settings → Popup tab):
 - **Color Selector Popup Shortcut** — key to open/close the popup
-- **Popup Width / Height** — dimensions of the popup window
+- **Popup Width / Height** — dimensions of the color selector (left) side of the popup
 - **Value Font Size** — font size for the channel value inputs
 - **Foreground Color Check Interval (ms)** — how often the docker/popup polls Krita's foreground and background colors (default: 250 ms)
 - **R/G/B Display Mode** — choose `Percentage (0–100)` or `Value (0–255)` for the R, G, B channel bars and inputs
+
+See [HueSVC / BrushLayer Control Popup](#huesvc--brushlayer-control-popup) below — the popup also includes a brush/layer adjustment panel.
+
+## HueSVC / BrushLayer Control Popup
+![alt text](quick_access_manager/image/huesvc_popup.png)
+
+The HueSVC popup (see above) also bundles the sliders and dropdowns from the [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker) into a panel on the right side, plus an optional brush pressure-toggle panel below it.
+
+**Right panel (top to bottom):**
+- **Brush/Layer Controls** — the same size/opacity/flow/blend mode/rotation/reset/layer opacity/layer blend mode controls as the Quick Adjust docker
+- **Brush Toggle Controls** — 4 buttons toggling pen-pressure sensitivity on the current brush preset: **Size**, **Opacity**, **Flow**, **Rotation**. States refresh automatically every time the popup opens, so switching brushes never leaves stale toggle states.
+
+
+**Configuration** (Settings → Popup tab, under *[Color Selector Popup]*):
+- **Show Brush/Layer Controls Panel** — uncheck to hide the sliders/dropdowns panel
+- **Show Brush Toggle Controls Panel** — check to show the 4 pressure-toggle buttons (off by default)
+- Hiding both panels shrinks the popup back down to just the color selector
+
 
 ## Config Files Location
 ```
