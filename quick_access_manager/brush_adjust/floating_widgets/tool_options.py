@@ -15,14 +15,19 @@ class FloatToolOptions:
         position_setting = get_tool_options_position()
         if position_setting == "right_align_top":
             side = WidgetPadPosition.RIGHT
+            alignment = WidgetPadPosition.ALIGN_TOP
+        elif position_setting == "bottom_left":
+            side = WidgetPadPosition.BOTTOM
+            alignment = WidgetPadPosition.ALIGN_LEFT
         else:
             side = WidgetPadPosition.LEFT
+            alignment = WidgetPadPosition.ALIGN_TOP
 
         # Create position configuration
         position_config = WidgetPadPosition(
             reference_docker_name="brush_adjust_docker",
             side=side,
-            alignment=WidgetPadPosition.ALIGN_TOP,
+            alignment=alignment,
             gap=5,
             fallback_to_canvas_edge=True,
         )

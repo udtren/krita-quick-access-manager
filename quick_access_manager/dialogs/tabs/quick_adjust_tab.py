@@ -242,7 +242,7 @@ class QuickAdjustTab:
         floating_widgets = self.quick_adjust_config.get("floating_widgets", {})
         if "floating_widgets" not in self.quick_adjust_config:
             self.quick_adjust_config["floating_widgets"] = {
-                "tool_options": {"enabled": True, "start_visible": True},
+                "tool_options": {"enabled": False, "start_visible": True, "position": "left_align_top"},
                 "color_selector": {"enabled": True, "start_visible": False},
             }
             floating_widgets = self.quick_adjust_config["floating_widgets"]
@@ -250,14 +250,24 @@ class QuickAdjustTab:
         layout.addWidget(QLabel("[floating_widgets]"))
         for widget_name in ["tool_options", "color_selector"]:
             default_start_visible = True if widget_name == "tool_options" else False
-            widget_config = floating_widgets.get(widget_name, {"enabled": True, "start_visible": default_start_visible})
+            default_widget_config = {"enabled": True, "start_visible": default_start_visible}
+            if widget_name == "tool_options":
+                default_widget_config["enabled"] = False
+                default_widget_config["position"] = "left_align_top"
+            widget_config = floating_widgets.get(widget_name, default_widget_config.copy())
             if widget_name not in floating_widgets:
-                floating_widgets[widget_name] = {"enabled": True, "start_visible": default_start_visible}
+                floating_widgets[widget_name] = default_widget_config.copy()
                 widget_config = floating_widgets[widget_name]
             else:
                 if "start_visible" not in widget_config:
                     widget_config["start_visible"] = default_start_visible
                     floating_widgets[widget_name]["start_visible"] = default_start_visible
+                if widget_name == "tool_options" and "enabled" not in widget_config:
+                    widget_config["enabled"] = False
+                    floating_widgets[widget_name]["enabled"] = False
+                if widget_name == "tool_options" and "position" not in widget_config:
+                    widget_config["position"] = "left_align_top"
+                    floating_widgets[widget_name]["position"] = "left_align_top"
 
             layout.addWidget(QLabel(f"  {widget_name}:"))
             for key, value in widget_config.items():
@@ -274,7 +284,7 @@ class QuickAdjustTab:
                     hl.addWidget(edit)
                 elif key == "position":
                     edit = QComboBox()
-                    edit.addItems(["left_align_top", "right_align_top"])
+                    edit.addItems(["left_align_top", "right_align_top", "bottom_left"])
                     edit.setCurrentText(str(value))
                     edit.setFixedWidth(120)
                     hl.addWidget(label)

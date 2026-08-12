@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-08-12
+### Added
+- Floating Tool Options: added `bottom_left` position option, placing the Tool Options pad below the Quick Brush Adjustments docker with left edges aligned.
+
+### Changed
+- Floating Tool Options are now disabled by default in new or missing Quick Adjust configuration (`floating_widgets.tool_options.enabled: false`).
+
 ## 2026-07-07
 ### Added
 - **Brush pressure-toggle panel** (`brush_adjust/widgets/brush_toggle_widget.py`): new `BrushToggleWidget`, embedded below the brush/layer controls in the color selector popup's right panel — 4 bold buttons (Size/Opacity/Flow/Rotation) that toggle pen-pressure sensitivity on the active brush preset, turning green while enabled

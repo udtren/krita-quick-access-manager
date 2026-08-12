@@ -354,7 +354,7 @@ The buttons at the bottom of the docker provide quick show/hide toggles for othe
 
 The Quick Brush Adjust docker includes companion floating widget that can be positioned relative to the docker.
 Currently support following widgets.
-- Tools Option Docker (position at left or right)
+- Tools Option Docker (position at left or right or bottom)
 - Specific Color Selector Docker (position at bottom)
 - Brush Rotation Widget (position at top align right)
 
