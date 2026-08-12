@@ -7,7 +7,7 @@ def _get_default_config():
     """Return the default configuration structure."""
     return {
         "floating_widgets": {
-            "tool_options": {"enabled": True, "start_visible": True},
+            "tool_options": {"enabled": False, "start_visible": True, "position": "left_align_top"},
             "color_selector": {"enabled": False, "start_visible": False},
         },
         "brush_section": {
@@ -142,10 +142,10 @@ def is_tool_options_enabled():
     """Check if the floating tool options widget is enabled.
 
     Returns:
-        bool: True if tool options should be enabled (default: True)
+        bool: True if tool options should be enabled (default: False)
     """
     floating_config = get_floating_widgets_section()
-    return floating_config.get("tool_options", {}).get("enabled", True)
+    return floating_config.get("tool_options", {}).get("enabled", False)
 
 
 def is_tool_options_start_visible():
@@ -162,7 +162,7 @@ def get_tool_options_position():
     """Get the position setting for floating tool options.
 
     Returns:
-        str: Position string, either "left_align_top" or "right_align_top" (default: "left_align_top")
+        str: Position string, one of "left_align_top", "right_align_top", or "bottom_left" (default: "left_align_top")
     """
     floating_config = get_floating_widgets_section()
     return floating_config.get("tool_options", {}).get("position", "left_align_top")
