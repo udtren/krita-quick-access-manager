@@ -705,6 +705,8 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             huesvc_value_font_size=huesvc_settings["value_font_size"],
             huesvc_poll_interval=huesvc_settings["poll_interval"],
             huesvc_rgb_display_mode=huesvc_settings["rgb_display_mode"],
+            huesvc_popup_width=huesvc_settings.get("popup_width", 350),
+            huesvc_popup_height=huesvc_settings.get("popup_height", 550),
             quick_adjust_settings=self.controller.quick_adjust_settings(),
             config_dialog_width=dialog_width,
             config_dialog_height=dialog_height,
@@ -726,6 +728,8 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 value_font_size=dialog.get_huesvc_value_font_size(),
                 poll_interval=dialog.get_huesvc_poll_interval(),
                 rgb_display_mode=dialog.get_huesvc_rgb_display_mode(),
+                popup_width=dialog.get_huesvc_popup_width(),
+                popup_height=dialog.get_huesvc_popup_height(),
             )
             self.controller.update_quick_adjust_settings(
                 **dialog.get_quick_adjust_settings()

@@ -601,6 +601,8 @@ class PaletteConfigDialog(QDialog):
         huesvc_value_font_size=10,
         huesvc_poll_interval=250,
         huesvc_rgb_display_mode="percentage",
+        huesvc_popup_width=350,
+        huesvc_popup_height=550,
         quick_adjust_settings=None,
         config_dialog_width=340,
         config_dialog_height=480,
@@ -700,6 +702,22 @@ class PaletteConfigDialog(QDialog):
         if index >= 0:
             self.huesvc_rgb_mode_combo.setCurrentIndex(index)
         huesvc_layout.addWidget(self.huesvc_rgb_mode_combo)
+
+        huesvc_layout.addWidget(self._separator())
+        huesvc_layout.addWidget(QLabel("Popup Size"))
+        huesvc_layout.addWidget(QLabel("Width:"))
+        self.huesvc_popup_width_spin = QSpinBox()
+        self.huesvc_popup_width_spin.setRange(200, 1200)
+        self.huesvc_popup_width_spin.setValue(int(huesvc_popup_width))
+        self.huesvc_popup_width_spin.setSuffix(" px")
+        huesvc_layout.addWidget(self.huesvc_popup_width_spin)
+
+        huesvc_layout.addWidget(QLabel("Height:"))
+        self.huesvc_popup_height_spin = QSpinBox()
+        self.huesvc_popup_height_spin.setRange(200, 1200)
+        self.huesvc_popup_height_spin.setValue(int(huesvc_popup_height))
+        self.huesvc_popup_height_spin.setSuffix(" px")
+        huesvc_layout.addWidget(self.huesvc_popup_height_spin)
 
         huesvc_layout.addStretch(1)
         self.tabs.addTab(huesvc_page, "HueSVC")
@@ -931,6 +949,12 @@ class PaletteConfigDialog(QDialog):
 
     def get_huesvc_rgb_display_mode(self):
         return self.huesvc_rgb_mode_combo.currentData()
+
+    def get_huesvc_popup_width(self):
+        return self.huesvc_popup_width_spin.value()
+
+    def get_huesvc_popup_height(self):
+        return self.huesvc_popup_height_spin.value()
 
     def get_config_dialog_width(self):
         return self.config_dialog_width_spin.value()

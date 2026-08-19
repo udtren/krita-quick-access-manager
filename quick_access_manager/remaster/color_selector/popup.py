@@ -1,328 +1,49 @@
-"""HueSVC color-picker docker for the remastered plugin.
+"""HueSVC color-picker popup for the remastered plugin.
 
-Ported from the legacy `color_selector` docker. The companion popup
-(which also embeds the brush/layer controls panel) was intentionally left
-behind — only the standalone docker is migrated here.
+Ported from the legacy `color_selector_popup.py`. The embedded brush/layer
+controls panel (BrushLayerControlsWidget/BrushToggleWidget) was intentionally
+left behind, matching the docker port — only the standalone color picker is
+migrated here.
 """
 
-from krita import (  # type: ignore
-    DockWidget,
-    DockWidgetFactory,
-    DockWidgetFactoryBase,
-    Krita,
-    ManagedColor,
-)
+from krita import Krita, ManagedColor  # type: ignore
 
 from ..compat import (
     QColor,
+    QCursor,
     QFont,
+    QFrame,
     QHBoxLayout,
     QIntValidator,
-    QLinearGradient,
     QLineEdit,
-    QPainter,
-    QPoint,
     QPushButton,
+    QShortcut,
     Qt,
     QTimer,
     QVBoxLayout,
-    QWidget,
-    pyqtSignal,
 )
 from ..infrastructure import PaletteRepository
-
-DOCKER_ID = "HueSVC"
-
-DEFAULT_HUESVC_SETTINGS = {
-    "value_font_size": 10,
-    "poll_interval": 250,
-    "rgb_display_mode": "percentage",
-    "popup_width": 350,
-    "popup_height": 550,
-}
+from .docker import DEFAULT_HUESVC_SETTINGS, ChannelBar, FgBgColorWidget, HueBar, SVBox
 
 
 def _load_huesvc_settings():
-    """Read HueSVC display settings from the shared Quick Access Palette config."""
     document = PaletteRepository().load()
     settings = dict(DEFAULT_HUESVC_SETTINGS)
     settings.update(document.settings.get("huesvc", {}))
     return settings
 
 
-class HueBar(QWidget):
-    """Vertical hue bar — full spectrum top to bottom."""
+class HueSvcPopup(QFrame):
+    """Frameless popup window containing the HueSVC color selector UI."""
 
-    hueChanged = pyqtSignal(int)
+    def __init__(self, parent=None, close_shortcuts=None):
+        super().__init__(
+            parent, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        )
+        self.setAttribute(Qt.WA_DeleteOnClose, True)
+        self.close_shortcuts = list(close_shortcuts or [])
+        self.shortcut_handlers = []
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedWidth(30)
-        self.setMinimumHeight(100)
-        self._hue = 0
-        self._pressed = False
-
-    def hue(self):
-        return self._hue
-
-    def setHue(self, h):
-        self._hue = max(0, min(359, h))
-        self.update()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        w, h = self.width(), self.height()
-
-        grad = QLinearGradient(0, 0, 0, h)
-        for i in range(7):
-            grad.setColorAt(i / 6, QColor.fromHsv(int(i * 360 / 6) % 360, 255, 255))
-        painter.fillRect(0, 0, w, h, grad)
-
-        marker_y = int((self._hue / 360.0) * h)
-        painter.setPen(Qt.white)
-        painter.drawRect(0, marker_y - 2, w - 1, 4)
-        painter.setPen(Qt.black)
-        painter.drawRect(1, marker_y - 1, w - 3, 2)
-        painter.end()
-
-    def _pick(self, pos):
-        h = self.height()
-        y = max(0, min(pos.y(), h - 1))
-        self._hue = int((y / h) * 360) % 360
-        self.update()
-        self.hueChanged.emit(self._hue)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self._pressed = True
-            self._pick(event.pos())
-
-    def mouseMoveEvent(self, event):
-        if self._pressed:
-            self._pick(event.pos())
-
-    def mouseReleaseEvent(self, event):
-        self._pressed = False
-
-
-class SVBox(QWidget):
-    """Saturation (x-axis) / Value (y-axis) picker box."""
-
-    colorChanged = pyqtSignal(QColor)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setMinimumSize(150, 100)
-        self._hue = 0
-        self._sat = 255
-        self._val = 255
-        self._pressed = False
-
-    def setHue(self, h):
-        if h == self._hue:
-            return
-        self._hue = h
-        self.update()
-
-    def setSatVal(self, s, v):
-        self._sat = s
-        self._val = v
-        self.update()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        w, h = self.width(), self.height()
-
-        grad_s = QLinearGradient(0, 0, w, 0)
-        grad_s.setColorAt(0, Qt.white)
-        grad_s.setColorAt(1, QColor.fromHsv(self._hue, 255, 255))
-        painter.fillRect(0, 0, w, h, grad_s)
-
-        grad_v = QLinearGradient(0, 0, 0, h)
-        grad_v.setColorAt(0, QColor(0, 0, 0, 0))
-        grad_v.setColorAt(1, QColor(0, 0, 0, 255))
-        painter.fillRect(0, 0, w, h, grad_v)
-
-        cx = int((self._sat / 255.0) * (w - 1))
-        cy = int(((255 - self._val) / 255.0) * (h - 1))
-        for color, radius in [(Qt.black, 6), (Qt.white, 5)]:
-            painter.setPen(color)
-            painter.setBrush(Qt.NoBrush)
-            painter.drawEllipse(QPoint(cx, cy), radius, radius)
-
-        painter.end()
-
-    def _pick(self, pos):
-        w, h = self.width(), self.height()
-        x = max(0, min(pos.x(), w - 1))
-        y = max(0, min(pos.y(), h - 1))
-        self._sat = int((x / (w - 1)) * 255) if w > 1 else 255
-        self._val = 255 - (int((y / (h - 1)) * 255) if h > 1 else 0)
-        self.update()
-        self.colorChanged.emit(QColor.fromHsv(self._hue, self._sat, self._val))
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self._pressed = True
-            self._pick(event.pos())
-
-    def mouseMoveEvent(self, event):
-        if self._pressed:
-            self._pick(event.pos())
-
-    def mouseReleaseEvent(self, event):
-        self._pressed = False
-
-
-class ChannelBar(QWidget):
-    """Horizontal gradient bar for a single color channel (H/S/V/R/G/B)."""
-
-    valueChanged = pyqtSignal(int)
-
-    def __init__(self, channel, parent=None):
-        super().__init__(parent)
-        self._channel = channel
-        self._h = 0
-        self._s = 100
-        self._v = 100
-        self._r = 100
-        self._g = 0
-        self._b = 0
-        self._value = 0
-        self._pressed = False
-        self.setFixedHeight(16)
-        self.setMinimumWidth(80)
-
-    def _max_value(self):
-        return 359 if self._channel == "H" else 100
-
-    def setColor(self, h, s, v, r, g, b):
-        self._h, self._s, self._v = h, s, v
-        self._r, self._g, self._b = r, g, b
-        ch = self._channel
-        if ch == "H":
-            self._value = h
-        elif ch == "S":
-            self._value = s
-        elif ch == "V":
-            self._value = v
-        elif ch == "R":
-            self._value = r
-        elif ch == "G":
-            self._value = g
-        elif ch == "B":
-            self._value = b
-        self.update()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        w, h = self.width(), self.height()
-
-        def q(x):
-            return round(x * 255 / 100)
-
-        s255, v255 = q(self._s), q(self._v)
-        r255, g255, b255 = q(self._r), q(self._g), q(self._b)
-
-        grad = QLinearGradient(0, 0, w, 0)
-        ch = self._channel
-        if ch == "H":
-            for i in range(7):
-                grad.setColorAt(
-                    i / 6, QColor.fromHsv(int(i * 360 / 6) % 360, s255, v255)
-                )
-        elif ch == "S":
-            grad.setColorAt(0, QColor.fromHsv(self._h, 0, v255))
-            grad.setColorAt(1, QColor.fromHsv(self._h, 255, v255))
-        elif ch == "V":
-            grad.setColorAt(0, QColor.fromHsv(self._h, s255, 0))
-            grad.setColorAt(1, QColor.fromHsv(self._h, s255, 255))
-        elif ch == "R":
-            grad.setColorAt(0, QColor(0, g255, b255))
-            grad.setColorAt(1, QColor(255, g255, b255))
-        elif ch == "G":
-            grad.setColorAt(0, QColor(r255, 0, b255))
-            grad.setColorAt(1, QColor(r255, 255, b255))
-        elif ch == "B":
-            grad.setColorAt(0, QColor(r255, g255, 0))
-            grad.setColorAt(1, QColor(r255, g255, 255))
-        painter.fillRect(0, 0, w, h, grad)
-
-        max_val = self._max_value()
-        marker_x = int((self._value / max_val) * (w - 1)) if max_val > 0 else 0
-        painter.setPen(Qt.white)
-        painter.drawRect(marker_x - 2, 0, 4, h - 1)
-        painter.setPen(Qt.black)
-        painter.drawRect(marker_x - 1, 1, 2, h - 3)
-        painter.end()
-
-    def _pick(self, pos):
-        w = self.width()
-        x = max(0, min(pos.x(), w - 1))
-        max_val = self._max_value()
-        self._value = int((x / (w - 1)) * max_val) if w > 1 else 0
-        self.update()
-        self.valueChanged.emit(self._value)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self._pressed = True
-            self._pick(event.pos())
-
-    def mouseMoveEvent(self, event):
-        if self._pressed:
-            self._pick(event.pos())
-
-    def mouseReleaseEvent(self, event):
-        self._pressed = False
-
-
-class FgBgColorWidget(QWidget):
-    """Stacked foreground/background color swatch. Click either to swap them."""
-
-    swapRequested = pyqtSignal()
-
-    _SWATCH = 22
-    _OFFSET = 8
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._fg = QColor(0, 0, 0)
-        self._bg = QColor(255, 255, 255)
-        total = self._SWATCH + self._OFFSET
-        self.setFixedSize(total, total)
-        self.setCursor(Qt.PointingHandCursor)
-        self.setToolTip("Click to swap foreground / background")
-
-    def setColors(self, fg, bg):
-        if fg == self._fg and bg == self._bg:
-            return
-        self._fg = fg
-        self._bg = bg
-        self.update()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        sw = self._SWATCH
-        off = self._OFFSET
-        painter.fillRect(off, off, sw, sw, self._bg)
-        painter.setPen(Qt.black)
-        painter.drawRect(off, off, sw - 1, sw - 1)
-        painter.fillRect(0, 0, sw, sw, self._fg)
-        painter.setPen(Qt.black)
-        painter.drawRect(0, 0, sw - 1, sw - 1)
-        painter.end()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.swapRequested.emit()
-
-
-class ColorSelectorDock(DockWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("HueSVC")
-        self.setObjectName(DOCKER_ID)
         self._settings = _load_huesvc_settings()
 
         self._h, self._s, self._v = 0, 255, 255
@@ -330,9 +51,8 @@ class ColorSelectorDock(DockWidget):
         self._r, self._g, self._b = color.red(), color.green(), color.blue()
         self._bg_r, self._bg_g, self._bg_b = 255, 255, 255
 
-        main_widget = QWidget(self)
-        outer_layout = QVBoxLayout(main_widget)
-        outer_layout.setContentsMargins(4, 4, 4, 4)
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(6, 6, 6, 6)
         outer_layout.setSpacing(6)
 
         fg_bg_layout = QHBoxLayout()
@@ -347,7 +67,9 @@ class ColorSelectorDock(DockWidget):
         top_layout.setSpacing(6)
 
         self.hue_bar = HueBar()
+        self.hue_bar.setMinimumHeight(150)
         self.sv_box = SVBox()
+        self.sv_box.setMinimumSize(200, 150)
 
         top_layout.addWidget(self.hue_bar)
         top_layout.addWidget(self.sv_box, 1)
@@ -419,23 +141,55 @@ class ColorSelectorDock(DockWidget):
 
         outer_layout.addLayout(channels_layout)
 
-        main_widget.setLayout(outer_layout)
-        self.setWidget(main_widget)
-
         self.hue_bar.hueChanged.connect(self._onHueBarChanged)
         self.sv_box.colorChanged.connect(self._onSVChanged)
-
-        self._updateChannelBars()
 
         self._poll_timer = QTimer(self)
         self._poll_timer.setInterval(self._settings["poll_interval"])
         self._poll_timer.timeout.connect(self._pollKritaColor)
-        self._poll_timer.start()
 
         self._debounce_timer = QTimer(self)
         self._debounce_timer.setSingleShot(True)
         self._debounce_timer.setInterval(150)
         self._debounce_timer.timeout.connect(self._applyPendingColor)
+
+        self._updateChannelBars()
+        self.register_close_shortcuts()
+
+    # ------------------------------------------------------------------
+    # Visibility / positioning
+    # ------------------------------------------------------------------
+    def register_close_shortcuts(self):
+        for key_sequence in self.close_shortcuts:
+            try:
+                if key_sequence.isEmpty():
+                    continue
+            except AttributeError:
+                pass
+            shortcut = QShortcut(key_sequence, self)
+            shortcut.setContext(Qt.WindowShortcut)
+            shortcut.activated.connect(self.close_popup)
+            self.shortcut_handlers.append(shortcut)
+
+    def close_popup(self):
+        self.close()
+
+    def show_at_cursor(self):
+        self.resize(self._settings["popup_width"], self._settings["popup_height"])
+        cursor_pos = QCursor.pos()
+        self.move(
+            cursor_pos.x() - self.width() // 4, cursor_pos.y() - self.height() // 3
+        )
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        self._pollKritaColor()
+        self._poll_timer.start()
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        self._poll_timer.stop()
+        self._debounce_timer.stop()
 
     # ------------------------------------------------------------------
     # Sync helpers
@@ -531,9 +285,7 @@ class ColorSelectorDock(DockWidget):
         self._applyHSV(hue, self._s, self._v)
 
     def _onSVChanged(self, qcolor):
-        h = qcolor.hsvHue()
-        if h == -1:
-            h = self._h
+        h = qcolor.hsvHue() if qcolor.hsvHue() != -1 else self._h
         self._applyHSV(h, qcolor.hsvSaturation(), qcolor.value())
 
     def _onChannelChanged(self, channel, value, debounce=False):
@@ -605,27 +357,7 @@ class ColorSelectorDock(DockWidget):
             max_val = 255 if self._settings["rgb_display_mode"] == "value" else 100
         else:
             max_val = 100
-        val = max(0, min(max_val, val))
-        self._onChannelChanged(ch, val)
-
-    def _setKritaForeground(self, qcolor):
-        app = Krita.instance()
-        view = app.activeWindow().activeView() if app.activeWindow() else None
-        if not view:
-            return
-
-        doc = app.activeDocument()
-        if not doc:
-            return
-
-        mc = ManagedColor("RGBA", "U8", "")
-        components = mc.components()
-        components[0] = qcolor.blueF()
-        components[1] = qcolor.greenF()
-        components[2] = qcolor.redF()
-        components[3] = 1.0
-        mc.setComponents(components)
-        view.setForeGroundColor(mc)
+        self._onChannelChanged(ch, max(0, min(max_val, val)))
 
     def _swapColors(self):
         app = Krita.instance()
@@ -660,17 +392,19 @@ class ColorSelectorDock(DockWidget):
             QColor(self._bg_r, self._bg_g, self._bg_b),
         )
 
-    def canvasChanged(self, canvas):
-        pass
-
-
-class ColorSelectorDockFactory(DockWidgetFactoryBase):
-    def __init__(self):
-        try:
-            dock_pos = DockWidgetFactory.DockRight
-        except AttributeError:
-            dock_pos = DockWidgetFactory.DockPosition.DockRight
-        super().__init__(DOCKER_ID, dock_pos)
-
-    def createDockWidget(self):
-        return ColorSelectorDock()
+    def _setKritaForeground(self, qcolor):
+        app = Krita.instance()
+        view = app.activeWindow().activeView() if app.activeWindow() else None
+        if not view:
+            return
+        doc = app.activeDocument()
+        if not doc:
+            return
+        mc = ManagedColor("RGBA", "U8", "")
+        components = mc.components()
+        components[0] = qcolor.blueF()
+        components[1] = qcolor.greenF()
+        components[2] = qcolor.redF()
+        components[3] = 1.0
+        mc.setComponents(components)
+        view.setForeGroundColor(mc)

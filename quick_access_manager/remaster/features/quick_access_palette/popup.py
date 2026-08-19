@@ -50,7 +50,7 @@ class QuickAccessPalettePopup(QDialog):
         self.close_shortcuts = list(close_shortcuts or [])
         self.shortcut_handlers = []
         self.controller = PaletteController()
-        self.actions = ActionManager.get_actions_dict()
+        self._alias_data = AliasRepository().load()
         self.cell_size = self.controller.popup_icon_size()
         self.spacing = 2
         self.is_pinned = False
@@ -364,7 +364,7 @@ class QuickAccessPalettePopup(QDialog):
         )
 
     def alias_entry(self, category, item_id):
-        return AliasRepository().load().get(category, {}).get(item_id, {})
+        return self._alias_data.get(category, {}).get(item_id, {})
 
     def apply_label_style(self, label, item):
         bg = item.payload.get("backgroundColor", "transparent")

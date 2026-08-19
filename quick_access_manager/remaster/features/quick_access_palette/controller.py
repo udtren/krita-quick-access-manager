@@ -29,6 +29,8 @@ DEFAULT_SETTINGS = {
         "value_font_size": 10,
         "poll_interval": 250,
         "rgb_display_mode": "percentage",
+        "popup_width": 350,
+        "popup_height": 550,
     },
     "quick_adjust": {
         "font_size": "12px",
@@ -63,13 +65,17 @@ class PaletteController:
 
     def normalize_action_spans(self):
         changed = False
+        # Load the alias config once instead of once per action item.
+        aliases = AliasRepository().load().get("actions", {})
         for tab in self.document.tabs:
             for grid in tab.grids:
                 for index, item in enumerate(grid.items):
                     if item.type != ACTION_ITEM:
                         continue
                     expected_col_span = self._action_col_span(
-                        item.payload.get("action_id", ""), min_col_span=item.col_span
+                        item.payload.get("action_id", ""),
+                        min_col_span=item.col_span,
+                        aliases=aliases,
                     )
                     if item.col_span != expected_col_span:
                         grid.items[index] = item.copy_with(col_span=expected_col_span)
@@ -78,9 +84,14 @@ class PaletteController:
             self.save()
 
     def _action_col_span(
-        self, action_id: str, min_col_span: int = DEFAULT_ACTION_COL_SPAN
+        self,
+        action_id: str,
+        min_col_span: int = DEFAULT_ACTION_COL_SPAN,
+        aliases: dict | None = None,
     ) -> int:
-        alias = AliasRepository().load().get("actions", {}).get(action_id, {})
+        if aliases is None:
+            aliases = AliasRepository().load().get("actions", {})
+        alias = aliases.get(action_id, {})
         if alias.get("icon_name"):
             return 1
         return max(DEFAULT_ACTION_COL_SPAN, min_col_span)
@@ -160,7 +171,12 @@ class PaletteController:
         return self.settings()["huesvc"]
 
     def update_huesvc_settings(
-        self, value_font_size=None, poll_interval=None, rgb_display_mode=None
+        self,
+        value_font_size=None,
+        poll_interval=None,
+        rgb_display_mode=None,
+        popup_width=None,
+        popup_height=None,
     ):
         settings = self.settings()
         if value_font_size is not None:
@@ -169,6 +185,10 @@ class PaletteController:
             settings["huesvc"]["poll_interval"] = int(poll_interval)
         if rgb_display_mode is not None:
             settings["huesvc"]["rgb_display_mode"] = rgb_display_mode
+        if popup_width is not None:
+            settings["huesvc"]["popup_width"] = int(popup_width)
+        if popup_height is not None:
+            settings["huesvc"]["popup_height"] = int(popup_height)
         self.document.settings = settings
         self.save()
 
