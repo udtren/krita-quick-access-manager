@@ -9,7 +9,7 @@ from krita import (  # type: ignore
     ManagedColor,
 )
 
-from ...compat import (
+from ..compat import (
     QColor,
     QDockWidget,
     QFrame,
@@ -28,15 +28,15 @@ from ...compat import (
     QVBoxLayout,
     QWidget,
 )
-from ...gesture import GestureConfigDialog, set_gesture_enabled
-from ...infrastructure import (
+from ..gesture import GestureConfigDialog, set_gesture_enabled
+from ..infrastructure import (
     ActionManager,
     AliasRepository,
     DockerManager,
     get_default_icons_dir,
     get_system_icons_dir,
 )
-from ...shared import (
+from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
     COLOR_ITEM,
@@ -98,52 +98,27 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
 
     def build_header(self):
         header = QHBoxLayout()
+        self.menu_btn = QPushButton("Menu")
+        self.menu_btn.setFixedHeight(24)
+        self.menu_btn.setMenu(self.build_menu())
         self.add_brush_btn = self.create_header_button("add_brush.png", "Add Brush")
         self.add_action_btn = self.create_header_button("actions.png", "Add Action")
-        self.add_tab_btn = self.create_header_button("add_tab.png", "Add Tab")
-        self.add_label_btn = self.create_header_button("label.png", "Add Label")
-        self.add_separator_btn = self.create_header_button(
-            "separator.png", "Add Separator"
-        )
-        self.add_docker_toggle_btn = self.create_header_button(
-            "add_docker.png", "Add Docker Toggle"
-        )
-        self.add_color_btn = self.create_header_button(
-            "add_color.png", "Add Color Swatch"
-        )
-        self.add_script_btn = self.create_header_button("add_script.png", "Add Script")
         self.grid_edit_btn = self.create_header_button("manage_grid.png", "Edit Grid")
         self.gesture_btn = self.create_header_button("gesture.png", "Gesture Settings")
-        self.alias_config_btn = self.create_header_button(
-            "alias_config.png", "Alias Config"
-        )
         self.config_btn = self.create_header_button("setting.png", "Config")
 
-        self.add_tab_btn.clicked.connect(self.add_tab)
         self.add_brush_btn.clicked.connect(self.add_current_brush)
         self.add_action_btn.clicked.connect(self.add_action)
-        self.add_label_btn.clicked.connect(self.add_label)
-        self.add_separator_btn.clicked.connect(self.add_separator)
-        self.add_docker_toggle_btn.clicked.connect(self.add_docker_toggle)
-        self.add_color_btn.clicked.connect(self.add_color)
-        self.add_script_btn.clicked.connect(self.add_script)
         self.grid_edit_btn.clicked.connect(self.show_grid_edit_dialog)
         self.gesture_btn.clicked.connect(self.show_gesture_config_dialog)
-        self.alias_config_btn.clicked.connect(self.show_alias_config_dialog)
         self.config_btn.clicked.connect(self.show_config_dialog)
 
+        header.addWidget(self.menu_btn)
         for button in (
-            self.add_tab_btn,
             self.add_brush_btn,
             self.add_action_btn,
-            self.add_label_btn,
-            self.add_separator_btn,
-            self.add_docker_toggle_btn,
-            self.add_color_btn,
-            self.add_script_btn,
             self.grid_edit_btn,
             self.gesture_btn,
-            self.alias_config_btn,
             self.config_btn,
         ):
             if not button.icon().isNull():
@@ -154,6 +129,18 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             header.addWidget(button)
         header.addStretch(1)
         self.root_layout.addLayout(header)
+
+    def build_menu(self):
+        menu = QMenu(self)
+        menu.addAction("Add Tab", self.add_tab)
+        menu.addAction("Add Label", self.add_label)
+        menu.addAction("Add Separator", self.add_separator)
+        menu.addAction("Add Docker Toggle", self.add_docker_toggle)
+        menu.addAction("Add Color Swatch", self.add_color)
+        menu.addAction("Add Script", self.add_script)
+        menu.addSeparator()
+        menu.addAction("Alias Config", self.show_alias_config_dialog)
+        return menu
 
     def create_header_button(self, icon_name, tooltip, fallback_text=""):
         button = QPushButton()

@@ -3,7 +3,7 @@ for Krita Actions and Dockers, independent of any palette item or gesture."""
 
 import os
 
-from ...compat import (
+from ..compat import (
     QColor,
     QColorDialog,
     QDialog,
@@ -18,7 +18,7 @@ from ...compat import (
     QTabWidget,
     QVBoxLayout,
 )
-from ...infrastructure import (
+from ..infrastructure import (
     ActionManager,
     AliasRepository,
     DockerManager,

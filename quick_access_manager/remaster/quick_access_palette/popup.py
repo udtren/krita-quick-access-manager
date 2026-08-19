@@ -4,7 +4,7 @@ import os
 
 from krita import Krita, ManagedColor  # type: ignore
 
-from ...compat import (
+from ..compat import (
     QColor,
     QCursor,
     QDialog,
@@ -23,14 +23,14 @@ from ...compat import (
     QVBoxLayout,
     QWidget,
 )
-from ...infrastructure import (
+from ..infrastructure import (
     ActionManager,
     AliasRepository,
     DockerManager,
     get_default_icons_dir,
     get_system_icons_dir,
 )
-from ...shared import (
+from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
     COLOR_ITEM,

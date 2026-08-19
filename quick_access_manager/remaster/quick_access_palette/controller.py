@@ -2,8 +2,8 @@
 
 from uuid import uuid4
 
-from ...infrastructure import AliasRepository, PaletteRepository
-from ...shared import (
+from ..infrastructure import AliasRepository, PaletteRepository
+from ..shared import (
     ACTION_ITEM,
     COLOR_ITEM,
     DEFAULT_ACTION_COL_SPAN,
@@ -231,7 +231,7 @@ class PaletteController:
     def add_tab(self, name: str):
         tab_id = self._new_id("tab")
         grid = PaletteGrid(id=self._new_id("grid"), name="Main", columns=8, items=[])
-        from ...shared import PaletteTab
+        from ..shared import PaletteTab
 
         tab = PaletteTab(id=tab_id, name=name, grids=[grid])
         self.document.tabs.append(tab)

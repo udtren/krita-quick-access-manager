@@ -5,15 +5,15 @@ from krita import Extension, Krita  # type: ignore
 from .color_selector.docker import ColorSelectorDockFactory
 from .color_selector.popup import HueSvcPopup
 from .compat import QApplication
-from .features.quick_access_palette.controller import PaletteController
-from .features.quick_access_palette.docker import QuickAccessPaletteDockerFactory
-from .features.quick_access_palette.popup import QuickAccessPalettePopup
 from .gesture import (
     ToggleGestureExtension,
     initialize_gesture_system,
     is_gesture_enabled,
     shutdown_gesture_system,
 )
+from .quick_access_palette.controller import PaletteController
+from .quick_access_palette.docker import QuickAccessPaletteDockerFactory
+from .quick_access_palette.popup import QuickAccessPalettePopup
 from .quick_adjust.docker import QuickAdjustDockerFactory
 
 _popup_window = None

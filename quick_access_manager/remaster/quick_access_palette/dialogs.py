@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from krita import Krita  # type: ignore
 
-from ...compat import (
+from ..compat import (
     QApplication,
     QCheckBox,
     QColor,
@@ -35,14 +35,14 @@ from ...compat import (
     QVBoxLayout,
     QWidget,
 )
-from ...gesture import is_gesture_enabled
-from ...infrastructure import (
+from ..gesture import is_gesture_enabled
+from ..infrastructure import (
     AliasRepository,
     DockerManager,
     get_default_icons_dir,
     get_system_icons_dir,
 )
-from ...shared import (
+from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
     COLOR_ITEM,
