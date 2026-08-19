@@ -151,8 +151,11 @@ class PaletteController:
         self.save()
         return True
 
-    def add_brush(self, brush_name: str, row: int = 0, col: int = 0) -> LayoutResult:
+    def add_brush(
+        self, brush_name: str, row: int | None = None, col: int | None = None
+    ) -> LayoutResult:
         grid = self._require_active_grid()
+        row, col = self._resolve_position(grid, row, col)
         item = PaletteItem.create_brush(
             self._new_id("brush"), brush_name, row=row, col=col
         )
@@ -162,8 +165,11 @@ class PaletteController:
             compact=False,
         )
 
-    def add_action(self, action_id: str, row: int = 0, col: int = 0) -> LayoutResult:
+    def add_action(
+        self, action_id: str, row: int | None = None, col: int | None = None
+    ) -> LayoutResult:
         grid = self._require_active_grid()
+        row, col = self._resolve_position(grid, row, col)
         item = PaletteItem.create_action(
             self._new_id("action"),
             action_id,
@@ -177,8 +183,11 @@ class PaletteController:
             compact=False,
         )
 
-    def add_label(self, text: str, row: int = 0, col: int = 0) -> LayoutResult:
+    def add_label(
+        self, text: str, row: int | None = None, col: int | None = None
+    ) -> LayoutResult:
         grid = self._require_active_grid()
+        row, col = self._resolve_position(grid, row, col)
         item = PaletteItem.create_label(self._new_id("label"), text, row=row, col=col)
         return self._apply_result(
             grid,
@@ -186,8 +195,11 @@ class PaletteController:
             compact=False,
         )
 
-    def add_separator(self, row: int = 0, col: int = 0) -> LayoutResult:
+    def add_separator(
+        self, row: int | None = None, col: int | None = None
+    ) -> LayoutResult:
         grid = self._require_active_grid()
+        row, col = self._resolve_position(grid, row, col)
         item = PaletteItem.create_separator(self._new_id("separator"), row=row, col=col)
         return self._apply_result(
             grid,
@@ -196,9 +208,10 @@ class PaletteController:
         )
 
     def add_docker_toggle(
-        self, docker_id: str, row: int = 0, col: int = 0
+        self, docker_id: str, row: int | None = None, col: int | None = None
     ) -> LayoutResult:
         grid = self._require_active_grid()
+        row, col = self._resolve_position(grid, row, col)
         item = PaletteItem.create_docker_toggle(
             self._new_id("docker_toggle"), docker_id, row=row, col=col
         )
@@ -209,9 +222,10 @@ class PaletteController:
         )
 
     def add_color(
-        self, color: str = "#ffffff", row: int = 0, col: int = 0
+        self, color: str = "#ffffff", row: int | None = None, col: int | None = None
     ) -> LayoutResult:
         grid = self._require_active_grid()
+        row, col = self._resolve_position(grid, row, col)
         item = PaletteItem.create_color(self._new_id("color"), color, row=row, col=col)
         return self._apply_result(
             grid,
@@ -220,9 +234,14 @@ class PaletteController:
         )
 
     def add_script(
-        self, script_path: str, config=None, row: int = 0, col: int = 0
+        self,
+        script_path: str,
+        config=None,
+        row: int | None = None,
+        col: int | None = None,
     ) -> LayoutResult:
         grid = self._require_active_grid()
+        row, col = self._resolve_position(grid, row, col)
         item = PaletteItem.create_script(
             self._new_id("script"), script_path, row=row, col=col, config=config
         )
@@ -235,8 +254,8 @@ class PaletteController:
     def remove_item(self, item_id: str) -> LayoutResult:
         grid = self._require_active_grid()
         grid.items = [item for item in grid.items if item.id != item_id]
-        result = FreeGridLayoutEngine(grid.columns).compact(grid.items)
-        return self._apply_result(grid, result)
+        result = FreeGridLayoutEngine(grid.columns).validate(grid.items)
+        return self._apply_result(grid, result, compact=False)
 
     def update_action_item(self, item_id: str) -> LayoutResult:
         """Recompute an Action item's col_span from the shared Alias Config."""
@@ -354,6 +373,16 @@ class PaletteController:
         if grid is None:
             raise ValueError("Quick Access Palette has no active grid.")
         return grid
+
+    def _resolve_position(
+        self, grid: PaletteGrid, row: int | None, col: int | None
+    ) -> tuple[int, int]:
+        """Default an unspecified position to the row right below the last item."""
+        if row is None:
+            row = max((item.bottom for item in grid.items), default=0)
+        if col is None:
+            col = 0
+        return row, col
 
     def _new_id(self, prefix: str) -> str:
         return f"{prefix}-{uuid4().hex[:12]}"

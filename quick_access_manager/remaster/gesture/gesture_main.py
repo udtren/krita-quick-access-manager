@@ -209,9 +209,7 @@ class GestureDetector(QObject):
                         self.start_gesture(cursor_pos)
                         if self.show_preview:
                             if self.preview_widget is None:
-                                self.preview_widget = GesturePreviewWidget(
-                                    self.gesture_alias
-                                )
+                                self.preview_widget = GesturePreviewWidget()
                             gesture_map = self.gesture_configs[key_text]
                             self.preview_widget.show_preview(gesture_map, cursor_pos)
 

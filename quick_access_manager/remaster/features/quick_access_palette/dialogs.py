@@ -676,7 +676,20 @@ class GridEditItemButton(QPushButton):
             self.drag_start_global_pos = event.globalPos()
         super().mousePressEvent(event)
 
+    def mouseMoveEvent(self, event):
+        if self.drag_start_global_pos is not None and event.buttons() & Qt.LeftButton:
+            dx = event.globalPos().x() - self.drag_start_global_pos.x()
+            dy = event.globalPos().y() - self.drag_start_global_pos.y()
+            col_delta = int(round(dx / float(self.dialog.cell_size)))
+            row_delta = int(round(dy / float(self.dialog.cell_size)))
+            if col_delta or row_delta:
+                self.dialog.show_drop_highlight(self.item, row_delta, col_delta)
+            else:
+                self.dialog.hide_drop_highlight()
+        super().mouseMoveEvent(event)
+
     def mouseReleaseEvent(self, event):
+        self.dialog.hide_drop_highlight()
         if event.button() == Qt.LeftButton and self.drag_start_global_pos is not None:
             dx = event.globalPos().x() - self.drag_start_global_pos.x()
             dy = event.globalPos().y() - self.drag_start_global_pos.y()
@@ -704,8 +717,10 @@ class GridEditDialog(QDialog):
         self.selected_ids = set()
         self.item_widgets = {}
         self.cell_size = 42
+        self.spacing = 4
         self.visible_rows = 10
         self.saved_items = None
+        self.drop_highlight = None
         self.setup_ui()
         self.rebuild_grid()
 
@@ -764,7 +779,8 @@ class GridEditDialog(QDialog):
         for child in self.grid_host.findChildren(QWidget):
             child.deleteLater()
         self.item_widgets = {}
-        spacing = 4
+        self.drop_highlight = None
+        spacing = self.spacing
         max_bottom = max([item.bottom for item in self.items], default=0)
         rows = max(self.visible_rows, max_bottom + 2)
         width = self.columns * self.cell_size + max(0, self.columns - 1) * spacing + 8
@@ -804,6 +820,25 @@ class GridEditDialog(QDialog):
         width = item.col_span * self.cell_size + max(0, item.col_span - 1) * spacing
         height = item.row_span * self.cell_size + max(0, item.row_span - 1) * spacing
         return x, y, width, height
+
+    def show_drop_highlight(self, item, row_delta, col_delta):
+        """Outline the cell(s) the dragged item would land on."""
+        target_row = max(0, item.row + row_delta)
+        target_col = max(0, min(item.col + col_delta, self.columns - item.col_span))
+        target = item.copy_with(row=target_row, col=target_col)
+        x, y, width, height = self.item_geometry(target, self.spacing)
+        if self.drop_highlight is None:
+            self.drop_highlight = QFrame(self.grid_host)
+            self.drop_highlight.setStyleSheet(
+                "QFrame { border: 2px solid #4FC3F7; background-color: rgba(79, 195, 247, 60); border-radius: 3px; }"
+            )
+        self.drop_highlight.setGeometry(x, y, width, height)
+        self.drop_highlight.raise_()
+        self.drop_highlight.show()
+
+    def hide_drop_highlight(self):
+        if self.drop_highlight is not None:
+            self.drop_highlight.hide()
 
     def create_item_widget(self, item):
         button = GridEditItemButton(item, self)
