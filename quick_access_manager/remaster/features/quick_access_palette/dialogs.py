@@ -1,0 +1,673 @@
+"""Action item configuration dialog for the remastered palette."""
+
+import os
+
+from ...compat import (
+    Qt,
+    QApplication,
+    QColor,
+    QColorDialog,
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QIcon,
+    QPixmap,
+    QSize,
+    QMessageBox,
+    QPushButton,
+    QSpinBox,
+    QTabWidget,
+    QScrollArea,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+from krita import Krita  # type: ignore
+
+from ...infrastructure import get_default_icons_dir
+from ...shared import ACTION_ITEM, BRUSH_ITEM, LABEL_ITEM, SEPARATOR_ITEM, PaletteItem
+
+
+class ActionItemConfigDialog(QDialog):
+    """Configure an Action palette item from plain config data."""
+
+    def __init__(self, actions, config=None, parent=None, selected_action_id=None):
+        super().__init__(parent)
+        self.actions = actions
+        self.config = dict(config or {})
+        if selected_action_id:
+            self.config["action_id"] = selected_action_id
+        self.selected_action_id = selected_action_id
+        self.bg_color = QColor(self.config.get("backgroundColor", "#3a263f"))
+        self.font_color = QColor(self.config.get("fontColor", "#ffffff"))
+        self.icon_path = self.config.get("icon_name", "")
+        self.setup_ui()
+        self.load_values()
+
+    def normalized_item(self, item):
+        if item.type == ACTION_ITEM and item.payload.get("icon_name"):
+            return item.copy_with(col_span=1)
+        return item
+    def setup_ui(self):
+        self.setWindowTitle("Action Button Config")
+        self.resize(300, 220)
+        self.setMinimumWidth(280)
+        layout = QVBoxLayout()
+
+        layout.addWidget(QLabel("Action:"))
+        self.action_combo = QComboBox()
+        for action_id, action in sorted(self.actions.items()):
+            text = action.text() if hasattr(action, "text") else action_id
+            self.action_combo.addItem("{0} ({1})".format(text, action_id), action_id)
+        layout.addWidget(self.action_combo)
+        if self.selected_action_id:
+            self.action_combo.setEnabled(False)
+
+        layout.addWidget(QLabel("Button Name:"))
+        self.name_edit = QLineEdit()
+        layout.addWidget(self.name_edit)
+
+        layout.addWidget(QLabel("Font Size:"))
+        self.font_size_edit = QLineEdit()
+        layout.addWidget(self.font_size_edit)
+
+        layout.addWidget(QLabel("Background Color:"))
+        self.bg_color_button = QPushButton()
+        self.bg_color_button.setFixedHeight(24)
+        self.bg_color_button.clicked.connect(self.pick_bg_color)
+        layout.addWidget(self.bg_color_button)
+
+        layout.addWidget(QLabel("Font Color:"))
+        self.font_color_button = QPushButton()
+        self.font_color_button.setFixedHeight(24)
+        self.font_color_button.clicked.connect(self.pick_font_color)
+        layout.addWidget(self.font_color_button)
+
+        self.icon_button = QPushButton("Icon")
+        self.icon_button.clicked.connect(self.pick_icon)
+        layout.addWidget(self.icon_button)
+
+        self.icon_path_label = QLabel("")
+        self.icon_path_label.setWordWrap(True)
+        self.icon_path_label.setStyleSheet("color: #b8b8b8; font-size: 11px;")
+        layout.addWidget(self.icon_path_label)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def load_values(self):
+        action_id = self.config.get("action_id")
+        if action_id:
+            index = self.action_combo.findData(action_id)
+            if index >= 0:
+                self.action_combo.setCurrentIndex(index)
+        self.name_edit.setText(self.config.get("customName", ""))
+        if not self.name_edit.text() and action_id:
+            self.name_edit.setText(action_id)
+        self.font_size_edit.setText(str(self.config.get("fontSize", "18")))
+        self.update_icon_label()
+        self.update_color_buttons()
+
+    def pick_icon(self):
+        selected, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Icon",
+            get_default_icons_dir(),
+            "Images (*.png *.jpg *.jpeg *.bmp *.gif);;All Files (*)",
+        )
+        if selected:
+            self.icon_path = self._stored_icon_path(selected)
+            self.update_icon_label()
+
+    def update_icon_label(self):
+        self.icon_path_label.setText(self.icon_path or "No icon selected")
+
+    def _stored_icon_path(self, selected_path):
+        default_dir = os.path.normcase(os.path.abspath(get_default_icons_dir()))
+        selected_abs = os.path.abspath(selected_path)
+        selected_dir = os.path.normcase(os.path.dirname(selected_abs))
+        if selected_dir == default_dir:
+            return os.path.basename(selected_abs)
+        return selected_abs
+
+    def pick_bg_color(self):
+        color = QColorDialog.getColor(self.bg_color, self, "Select Background Color")
+        if color.isValid():
+            self.bg_color = color
+            self.update_color_buttons()
+
+    def pick_font_color(self):
+        color = QColorDialog.getColor(self.font_color, self, "Select Font Color")
+        if color.isValid():
+            self.font_color = color
+            self.update_color_buttons()
+
+    def update_color_buttons(self):
+        self.bg_color_button.setStyleSheet(
+            "background-color: {0}; border: 1px solid #888;".format(self.bg_color.name())
+        )
+        self.bg_color_button.setText(self.bg_color.name())
+        self.font_color_button.setStyleSheet(
+            "background-color: {0}; border: 1px solid #888;".format(self.font_color.name())
+        )
+        self.font_color_button.setText(self.font_color.name())
+
+    def get_config(self):
+        return {
+            "action_id": self.action_combo.currentData(),
+            "customName": self.name_edit.text().strip(),
+            "fontSize": self.font_size_edit.text().strip() or "18",
+            "backgroundColor": self.bg_color.name(),
+            "fontColor": self.font_color.name(),
+            "icon_name": self.icon_path,
+        }
+
+
+
+
+class LabelItemConfigDialog(QDialog):
+    """Configure a Label palette item."""
+
+    def __init__(self, config=None, parent=None):
+        super().__init__(parent)
+        self.config = dict(config or {})
+        self.bg_color = QColor(self.config.get("backgroundColor", "#263746"))
+        self.font_color = QColor(self.config.get("fontColor", "#4FC3F7"))
+        self.setup_ui()
+        self.load_values()
+
+    def setup_ui(self):
+        self.setWindowTitle("Label Config")
+        self.resize(300, 180)
+        self.setMinimumWidth(280)
+        layout = QVBoxLayout()
+
+        layout.addWidget(QLabel("Label Name:"))
+        self.name_edit = QLineEdit()
+        layout.addWidget(self.name_edit)
+
+        layout.addWidget(QLabel("Font Size:"))
+        self.font_size_edit = QLineEdit()
+        layout.addWidget(self.font_size_edit)
+
+        layout.addWidget(QLabel("Background Color:"))
+        self.bg_color_button = QPushButton()
+        self.bg_color_button.setFixedHeight(24)
+        self.bg_color_button.clicked.connect(self.pick_bg_color)
+        layout.addWidget(self.bg_color_button)
+
+        layout.addWidget(QLabel("Text Color:"))
+        self.font_color_button = QPushButton()
+        self.font_color_button.setFixedHeight(24)
+        self.font_color_button.clicked.connect(self.pick_font_color)
+        layout.addWidget(self.font_color_button)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def load_values(self):
+        self.name_edit.setText(self.config.get("text", "Label"))
+        self.font_size_edit.setText(str(self.config.get("fontSize", "18")))
+        self.update_color_buttons()
+
+    def pick_bg_color(self):
+        color = QColorDialog.getColor(self.bg_color, self, "Select Background Color")
+        if color.isValid():
+            self.bg_color = color
+            self.update_color_buttons()
+
+    def pick_font_color(self):
+        color = QColorDialog.getColor(self.font_color, self, "Select Text Color")
+        if color.isValid():
+            self.font_color = color
+            self.update_color_buttons()
+
+    def update_color_buttons(self):
+        self.bg_color_button.setStyleSheet(
+            "background-color: {0}; border: 1px solid #888;".format(self.bg_color.name())
+        )
+        self.bg_color_button.setText(self.bg_color.name())
+        self.font_color_button.setStyleSheet(
+            "background-color: {0}; border: 1px solid #888;".format(self.font_color.name())
+        )
+        self.font_color_button.setText(self.font_color.name())
+
+    def get_config(self):
+        return {
+            "text": self.name_edit.text().strip() or "Label",
+            "fontSize": self.font_size_edit.text().strip() or "18",
+            "backgroundColor": self.bg_color.name(),
+            "fontColor": self.font_color.name(),
+        }
+
+class ActionSelectorDialog(QDialog):
+    """Select one Krita action for a remastered Action item."""
+
+    def __init__(self, actions, parent=None):
+        super().__init__(parent)
+        self.actions = list(actions)
+        self.selected_action = None
+        self.setup_ui()
+        self.populate_table()
+
+    def normalized_item(self, item):
+        if item.type == ACTION_ITEM and item.payload.get("icon_name"):
+            return item.copy_with(col_span=1)
+        return item
+    def setup_ui(self):
+        self.setWindowTitle("Krita Actions")
+        self.resize(600, 400)
+        layout = QVBoxLayout()
+
+        self.filter_edit = QLineEdit()
+        self.filter_edit.setPlaceholderText("Filter by internal ID...")
+        self.filter_edit.textChanged.connect(self.apply_filter)
+        layout.addWidget(self.filter_edit)
+
+        self.table = QTableWidget()
+        self.table.setColumnCount(2)
+        self.table.setHorizontalHeaderLabels(["Action ID", "Shortcut Keys"])
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.itemDoubleClicked.connect(self.accept_selection)
+        layout.addWidget(self.table)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept_selection)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def populate_table(self):
+        self.actions.sort(key=lambda action: action.objectName())
+        self.table.setRowCount(len(self.actions))
+        for row, action in enumerate(self.actions):
+            id_item = QTableWidgetItem(action.objectName())
+            self.table.setItem(row, 0, id_item)
+            shortcuts = []
+            if hasattr(action, "shortcuts"):
+                shortcuts = [str(shortcut.toString()) for shortcut in action.shortcuts()]
+            self.table.setItem(row, 1, QTableWidgetItem(", ".join(shortcuts)))
+
+    def apply_filter(self, text):
+        needle = text.lower()
+        for row in range(self.table.rowCount()):
+            id_item = self.table.item(row, 0)
+            self.table.setRowHidden(row, bool(needle and needle not in id_item.text().lower()))
+
+    def get_selected_action(self):
+        selected_items = self.table.selectedItems()
+        if selected_items:
+            row = selected_items[0].row()
+            return self.actions[row]
+        return None
+
+    def accept_selection(self):
+        action = self.get_selected_action()
+        if not action:
+            QMessageBox.warning(self, "No Action Selected", "Please select an action from the table.")
+            return
+        self.selected_action = action
+        self.accept()
+
+class PaletteConfigDialog(QDialog):
+    """Configuration dialog for Quick Access Palette."""
+
+    def __init__(self, columns, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Quick Access Palette Config")
+        self.resize(280, 140)
+        layout = QVBoxLayout()
+
+        self.tabs = QTabWidget()
+        default_page = QWidget()
+        default_layout = QVBoxLayout(default_page)
+
+        default_layout.addWidget(QLabel("Columns:"))
+        self.columns_spin = QSpinBox()
+        self.columns_spin.setRange(1, 64)
+        self.columns_spin.setValue(int(columns))
+        default_layout.addWidget(self.columns_spin)
+        default_layout.addStretch(1)
+        self.tabs.addTab(default_page, "Default")
+        layout.addWidget(self.tabs)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def get_columns(self):
+        return self.columns_spin.value()
+
+
+class GridEditItemButton(QPushButton):
+    """Grid edit item button that supports click selection and cell drag movement."""
+
+    def __init__(self, item, dialog):
+        super().__init__(dialog.item_label(item))
+        self.item = item
+        self.dialog = dialog
+        self.drag_start_global_pos = None
+        self.setCursor(Qt.SizeAllCursor)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.drag_start_global_pos = event.globalPos()
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton and self.drag_start_global_pos is not None:
+            dx = event.globalPos().x() - self.drag_start_global_pos.x()
+            dy = event.globalPos().y() - self.drag_start_global_pos.y()
+            col_delta = int(round(dx / float(self.dialog.cell_size)))
+            row_delta = int(round(dy / float(self.dialog.cell_size)))
+            if col_delta or row_delta:
+                self.dialog.ensure_selected_for_drag(self.item.id)
+                self.dialog.move_selected(row_delta, col_delta)
+                self.drag_start_global_pos = None
+                return
+        self.drag_start_global_pos = None
+        super().mouseReleaseEvent(event)
+
+
+class GridEditDialog(QDialog):
+    """Edit the active grid in a separate dialog without auto-compacting on save."""
+
+    def __init__(self, grid, parent=None):
+        super().__init__(parent)
+        self.columns = int(grid.columns)
+        self.items = [self.normalized_item(PaletteItem.from_dict(item.to_dict())) for item in grid.items]
+        self.selected_ids = set()
+        self.item_widgets = {}
+        self.cell_size = 42
+        self.visible_rows = 10
+        self.saved_items = None
+        self.setup_ui()
+        self.rebuild_grid()
+
+    def normalized_item(self, item):
+        if item.type == ACTION_ITEM and item.payload.get("icon_name"):
+            return item.copy_with(col_span=1)
+        return item
+    def setup_ui(self):
+        self.setWindowTitle("Grid Edit")
+        self.resize(720, 520)
+        layout = QVBoxLayout()
+
+        control_layout = QHBoxLayout()
+        self.wider_btn = QPushButton("Wider")
+        self.narrower_btn = QPushButton("Narrower")
+
+        self.wider_btn.clicked.connect(lambda: self.resize_selected(0, 1))
+        self.narrower_btn.clicked.connect(lambda: self.resize_selected(0, -1))
+
+        for button in (
+            self.wider_btn,
+            self.narrower_btn,
+        ):
+            button.setFixedHeight(24)
+            control_layout.addWidget(button)
+        control_layout.addStretch(1)
+        layout.addLayout(control_layout)
+
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.grid_host = QWidget()
+        self.grid_layout = QGridLayout(self.grid_host)
+        self.grid_layout.setContentsMargins(4, 4, 4, 4)
+        self.grid_layout.setSpacing(4)
+        self.grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.scroll.setWidget(self.grid_host)
+        layout.addWidget(self.scroll)
+
+        button_layout = QHBoxLayout()
+        self.save_btn = QPushButton("Save")
+        self.cancel_btn = QPushButton("Cancel")
+        self.save_btn.clicked.connect(self.accept_save)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.save_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def rebuild_grid(self):
+        while self.grid_layout.count():
+            item = self.grid_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        self.item_widgets = {}
+        self.add_grid_lines()
+        for col in range(self.columns):
+            self.grid_layout.setColumnMinimumWidth(col, self.cell_size)
+        for item in sorted(self.items, key=lambda entry: (entry.row, entry.col, entry.id)):
+            widget = self.create_item_widget(item)
+            self.item_widgets[item.id] = widget
+            self.grid_layout.addWidget(widget, item.row, item.col, item.row_span, item.col_span)
+        self.update_selection_styles()
+
+    def add_grid_lines(self):
+        max_bottom = max([item.bottom for item in self.items], default=0)
+        rows = max(self.visible_rows, max_bottom + 2)
+        for row in range(rows):
+            self.grid_layout.setRowMinimumHeight(row, self.cell_size)
+            for col in range(self.columns):
+                cell = QFrame()
+                cell.setMinimumSize(self.cell_size, self.cell_size)
+                cell.setStyleSheet("QFrame { border: 1px solid #3f3f3f; background: transparent; }")
+                self.grid_layout.addWidget(cell, row, col)
+    def create_item_widget(self, item):
+        button = GridEditItemButton(item, self)
+        button.setMinimumSize(self.cell_size, 36)
+        if item.type in (BRUSH_ITEM, ACTION_ITEM) and item.col_span == 1:
+            button.setFixedSize(self.cell_size, self.cell_size)
+        self.apply_item_icon(button, item)
+        button.clicked.connect(lambda checked=False, item_id=item.id: self.toggle_selection(item_id))
+        return button
+
+    def apply_item_icon(self, button, item):
+        if item.type == BRUSH_ITEM:
+            brush_name = item.payload.get("brush_name", "")
+            try:
+                preset = Krita.instance().resources("preset").get(brush_name)
+                image = preset.image() if preset else None
+                if image:
+                    pixmap = QPixmap.fromImage(image)
+                    if not pixmap.isNull():
+                        button.setIcon(QIcon(pixmap))
+                        button.setIconSize(QSize(34, 34))
+                        button.setText("")
+                        return
+            except Exception:
+                pass
+        elif item.type == ACTION_ITEM:
+            icon_name = item.payload.get("icon_name")
+            icon_path = self.resolve_icon_path(icon_name)
+            if icon_path:
+                button.setIcon(QIcon(icon_path))
+                button.setIconSize(QSize(32, 32))
+                button.setText("")
+
+    def resolve_icon_path(self, icon_name):
+        if not icon_name:
+            return None
+        if os.path.isabs(icon_name) and os.path.exists(icon_name):
+            return icon_name
+        icon_path = os.path.join(get_default_icons_dir(), icon_name)
+        if os.path.exists(icon_path):
+            return icon_path
+        return None
+
+    def item_label(self, item):
+        if item.type == BRUSH_ITEM:
+            return "Brush"
+        if item.type == ACTION_ITEM:
+            return item.payload.get("customName") or item.payload.get("action_id", "Action")
+        if item.type == LABEL_ITEM:
+            return item.payload.get("text", "Label")
+        if item.type == SEPARATOR_ITEM:
+            return "---"
+        return item.type
+
+    def ensure_selected_for_drag(self, item_id):
+        if item_id not in self.selected_ids:
+            self.selected_ids = {item_id}
+            self.update_selection_styles()
+
+    def toggle_selection(self, item_id):
+        if QApplication.keyboardModifiers() == Qt.ControlModifier:
+            if item_id in self.selected_ids:
+                self.selected_ids.remove(item_id)
+            else:
+                self.selected_ids.add(item_id)
+        else:
+            self.selected_ids = {item_id}
+        self.update_selection_styles()
+
+    def update_selection_styles(self):
+        for item in self.items:
+            widget = self.item_widgets.get(item.id)
+            if not widget:
+                continue
+            widget.setStyleSheet(self.item_style(item, item.id in self.selected_ids))
+        self.update_resize_controls()
+
+    def item_style(self, item, selected):
+        colors = {
+            BRUSH_ITEM: ("#2f2f2f", "#555555"),
+            ACTION_ITEM: ("#3a263f", "#6b4a73"),
+            LABEL_ITEM: (item.payload.get("backgroundColor", "#263746"), item.payload.get("fontColor", "#4FC3F7")),
+            SEPARATOR_ITEM: ("#303030", "#777777"),
+        }
+        background, border = colors.get(item.type, ("#333333", "#555555"))
+        border_width = 2 if selected else 1
+        border_color = "#4FC3F7" if selected else border
+        text_color = item.payload.get("fontColor", "#ffffff") if item.type == LABEL_ITEM else "#ffffff"
+        font_size = item.payload.get("fontSize", "18") if item.type == LABEL_ITEM else "18"
+        return (
+            "QPushButton {{ background: {0}; color: {1}; font-size: {2}px; border: {3}px solid {4}; "
+            "border-radius: 3px; padding: 0px 4px; }}"
+        ).format(background, text_color, font_size, border_width, border_color)
+
+    def update_resize_controls(self):
+        selected = self.selected_items()
+        can_resize = bool(selected) and all(
+            item.type in (LABEL_ITEM, SEPARATOR_ITEM) for item in selected
+        )
+        self.wider_btn.setEnabled(can_resize)
+        self.narrower_btn.setEnabled(can_resize)
+        tooltip = "Resize selected Label/Separator items only"
+        self.wider_btn.setToolTip(tooltip)
+        self.narrower_btn.setToolTip(tooltip)
+
+    def selected_items(self):
+        return [item for item in self.items if item.id in self.selected_ids]
+
+    def move_selected(self, row_delta, col_delta):
+        if not self.selected_ids:
+            return
+        selected = self.selected_items()
+        min_row = min(item.row for item in selected)
+        min_col = min(item.col for item in selected)
+        row_delta = max(row_delta, -min_row)
+        col_delta = max(col_delta, -min_col)
+        moved_selected = []
+        for item in selected:
+            moved_selected.append(item.copy_with(row=item.row + row_delta, col=item.col + col_delta))
+        self.items = self.place_group_with_push(moved_selected)
+        self.rebuild_grid()
+
+    def place_group_with_push(self, active_items):
+        active_ids = {item.id for item in active_items}
+        placed = sorted(active_items, key=lambda item: (item.row, item.col, item.id))
+        for item in self.sorted_items([item for item in self.items if item.id not in active_ids]):
+            candidate = item.copy_with(row=max(0, item.row), col=max(0, item.col))
+            if self.needs_reposition(candidate, placed):
+                candidate = self.first_free_position(candidate, placed)
+            placed.append(candidate)
+        return placed
+
+    def first_free_position(self, item, placed):
+        cursor = self.linear_index(item.row, item.col)
+        while True:
+            row = cursor // self.columns
+            col = cursor % self.columns
+            if col + item.col_span <= self.columns:
+                candidate = item.copy_with(row=row, col=col)
+                if not self.needs_reposition(candidate, placed):
+                    return candidate
+            cursor += 1
+
+    def needs_reposition(self, item, placed):
+        if item.col + item.col_span > self.columns:
+            return True
+        return any(self.items_overlap(item, other) for other in placed)
+
+    def items_overlap(self, item, other):
+        return not (
+            item.right <= other.col
+            or other.right <= item.col
+            or item.bottom <= other.row
+            or other.bottom <= item.row
+        )
+
+    def sorted_items(self, items):
+        return sorted(items, key=lambda item: (self.linear_index(item.row, item.col), item.id))
+
+    def linear_index(self, row, col):
+        return max(0, int(row)) * self.columns + max(0, int(col))
+
+    def resize_selected(self, row_delta, col_delta):
+        selected = self.selected_items()
+        if not selected or any(item.type not in (LABEL_ITEM, SEPARATOR_ITEM) for item in selected):
+            return
+        resized = []
+        for item in selected:
+            resized.append(
+                item.copy_with(
+                    row_span=max(1, item.row_span + row_delta),
+                    col_span=max(1, item.col_span + col_delta),
+                )
+            )
+        self.items = self.place_group_with_push(resized)
+        self.rebuild_grid()
+
+    def accept_save(self):
+        self.saved_items = [PaletteItem.from_dict(item.to_dict()) for item in self.items]
+        self.accept()
