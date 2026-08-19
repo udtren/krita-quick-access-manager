@@ -21,6 +21,7 @@ from .paths import (
     get_gesture_data_dir,
     get_gesture_images_dir,
     get_palette_config_path,
+    get_quick_adjust_icons_dir,
     get_remaster_config_dir,
     get_system_icons_dir,
 )
@@ -35,6 +36,7 @@ __all__ = [
     "get_gesture_data_dir",
     "get_gesture_images_dir",
     "get_palette_config_path",
+    "get_quick_adjust_icons_dir",
     "get_remaster_config_dir",
     "get_system_icons_dir",
 ]

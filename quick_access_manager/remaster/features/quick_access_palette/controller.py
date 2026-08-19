@@ -24,6 +24,25 @@ DEFAULT_SETTINGS = {
         "poll_interval": 250,
         "rgb_display_mode": "percentage",
     },
+    "quick_adjust": {
+        "font_size": "12px",
+        "size_slider_enabled": True,
+        "opacity_slider_enabled": True,
+        "flow_slider_enabled": True,
+        "layer_opacity_slider_enabled": True,
+        "color_history_enabled": True,
+        "color_history_total": 14,
+        "color_history_icon_size": 30,
+        "brush_history_enabled": True,
+        "brush_history_total": 14,
+        "brush_history_icon_size": 34,
+        "alt_erase_key": "",
+        "preserve_alpha_key": "",
+        "select_outline_key": "",
+        "tool_options_enabled": False,
+        "tool_options_start_visible": True,
+        "tool_options_position": "left_align_top",
+    },
 }
 
 
@@ -71,6 +90,7 @@ class PaletteController:
             "default": dict(DEFAULT_SETTINGS["default"]),
             "popup": dict(DEFAULT_SETTINGS["popup"]),
             "huesvc": dict(DEFAULT_SETTINGS["huesvc"]),
+            "quick_adjust": dict(DEFAULT_SETTINGS["quick_adjust"]),
         }
         for section, values in self.document.settings.items():
             if isinstance(values, dict):
@@ -113,6 +133,15 @@ class PaletteController:
             settings["huesvc"]["poll_interval"] = int(poll_interval)
         if rgb_display_mode is not None:
             settings["huesvc"]["rgb_display_mode"] = rgb_display_mode
+        self.document.settings = settings
+        self.save()
+
+    def quick_adjust_settings(self):
+        return self.settings()["quick_adjust"]
+
+    def update_quick_adjust_settings(self, **kwargs):
+        settings = self.settings()
+        settings["quick_adjust"].update(kwargs)
         self.document.settings = settings
         self.save()
 

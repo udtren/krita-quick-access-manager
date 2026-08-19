@@ -601,6 +601,7 @@ class PaletteConfigDialog(QDialog):
         huesvc_value_font_size=10,
         huesvc_poll_interval=250,
         huesvc_rgb_display_mode="percentage",
+        quick_adjust_settings=None,
         parent=None,
     ):
         super().__init__(parent)
@@ -675,6 +676,157 @@ class PaletteConfigDialog(QDialog):
         huesvc_layout.addStretch(1)
         self.tabs.addTab(huesvc_page, "HueSVC")
 
+        quick_adjust_settings = quick_adjust_settings or {}
+        quick_adjust_page = QWidget()
+        quick_adjust_layout = QVBoxLayout(quick_adjust_page)
+
+        quick_adjust_layout.addWidget(QLabel("Font Size:"))
+        self.quick_adjust_font_size_spin = QSpinBox()
+        self.quick_adjust_font_size_spin.setRange(8, 24)
+        self.quick_adjust_font_size_spin.setSuffix(" px")
+        self.quick_adjust_font_size_spin.setValue(
+            int(
+                str(quick_adjust_settings.get("font_size", "12px")).replace("px", "")
+                or 12
+            )
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_font_size_spin)
+
+        self.quick_adjust_size_checkbox = QCheckBox("Enable Size Slider")
+        self.quick_adjust_size_checkbox.setChecked(
+            quick_adjust_settings.get("size_slider_enabled", True)
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_size_checkbox)
+
+        self.quick_adjust_opacity_checkbox = QCheckBox("Enable Opacity Slider")
+        self.quick_adjust_opacity_checkbox.setChecked(
+            quick_adjust_settings.get("opacity_slider_enabled", True)
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_opacity_checkbox)
+
+        self.quick_adjust_flow_checkbox = QCheckBox("Enable Flow Slider")
+        self.quick_adjust_flow_checkbox.setChecked(
+            quick_adjust_settings.get("flow_slider_enabled", True)
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_flow_checkbox)
+
+        self.quick_adjust_layer_opacity_checkbox = QCheckBox(
+            "Enable Layer Opacity Slider"
+        )
+        self.quick_adjust_layer_opacity_checkbox.setChecked(
+            quick_adjust_settings.get("layer_opacity_slider_enabled", True)
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_layer_opacity_checkbox)
+
+        quick_adjust_layout.addWidget(self._separator())
+        self.quick_adjust_color_history_checkbox = QCheckBox("Enable Color History")
+        self.quick_adjust_color_history_checkbox.setChecked(
+            quick_adjust_settings.get("color_history_enabled", True)
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_color_history_checkbox)
+
+        quick_adjust_layout.addWidget(QLabel("Color History Count:"))
+        self.quick_adjust_color_history_total_spin = QSpinBox()
+        self.quick_adjust_color_history_total_spin.setRange(2, 40)
+        self.quick_adjust_color_history_total_spin.setValue(
+            int(quick_adjust_settings.get("color_history_total", 14))
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_color_history_total_spin)
+
+        quick_adjust_layout.addWidget(QLabel("Color History Icon Size:"))
+        self.quick_adjust_color_history_icon_spin = QSpinBox()
+        self.quick_adjust_color_history_icon_spin.setRange(16, 64)
+        self.quick_adjust_color_history_icon_spin.setSuffix(" px")
+        self.quick_adjust_color_history_icon_spin.setValue(
+            int(quick_adjust_settings.get("color_history_icon_size", 30))
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_color_history_icon_spin)
+
+        quick_adjust_layout.addWidget(self._separator())
+        self.quick_adjust_brush_history_checkbox = QCheckBox("Enable Brush History")
+        self.quick_adjust_brush_history_checkbox.setChecked(
+            quick_adjust_settings.get("brush_history_enabled", True)
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_brush_history_checkbox)
+
+        quick_adjust_layout.addWidget(QLabel("Brush History Count:"))
+        self.quick_adjust_brush_history_total_spin = QSpinBox()
+        self.quick_adjust_brush_history_total_spin.setRange(2, 40)
+        self.quick_adjust_brush_history_total_spin.setValue(
+            int(quick_adjust_settings.get("brush_history_total", 14))
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_brush_history_total_spin)
+
+        quick_adjust_layout.addWidget(QLabel("Brush History Icon Size:"))
+        self.quick_adjust_brush_history_icon_spin = QSpinBox()
+        self.quick_adjust_brush_history_icon_spin.setRange(16, 64)
+        self.quick_adjust_brush_history_icon_spin.setSuffix(" px")
+        self.quick_adjust_brush_history_icon_spin.setValue(
+            int(quick_adjust_settings.get("brush_history_icon_size", 34))
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_brush_history_icon_spin)
+
+        quick_adjust_layout.addWidget(self._separator())
+        quick_adjust_layout.addWidget(
+            QLabel("Temporary Key Hold Modes (leave blank to disable):")
+        )
+        quick_adjust_layout.addWidget(QLabel("Alt Erase Key:"))
+        self.quick_adjust_alt_erase_edit = QLineEdit(
+            quick_adjust_settings.get("alt_erase_key", "")
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_alt_erase_edit)
+
+        quick_adjust_layout.addWidget(QLabel("Preserve Alpha Key:"))
+        self.quick_adjust_preserve_alpha_edit = QLineEdit(
+            quick_adjust_settings.get("preserve_alpha_key", "")
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_preserve_alpha_edit)
+
+        quick_adjust_layout.addWidget(QLabel("Select Outline Key:"))
+        self.quick_adjust_select_outline_edit = QLineEdit(
+            quick_adjust_settings.get("select_outline_key", "")
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_select_outline_edit)
+
+        quick_adjust_layout.addWidget(self._separator())
+        quick_adjust_layout.addWidget(QLabel("Floating Tool Options"))
+        self.quick_adjust_tool_options_checkbox = QCheckBox(
+            "Enable Floating Tool Options"
+        )
+        self.quick_adjust_tool_options_checkbox.setChecked(
+            quick_adjust_settings.get("tool_options_enabled", False)
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_tool_options_checkbox)
+
+        self.quick_adjust_tool_options_visible_checkbox = QCheckBox("Start Visible")
+        self.quick_adjust_tool_options_visible_checkbox.setChecked(
+            quick_adjust_settings.get("tool_options_start_visible", True)
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_tool_options_visible_checkbox)
+
+        quick_adjust_layout.addWidget(QLabel("Position:"))
+        self.quick_adjust_tool_options_position_combo = QComboBox()
+        self.quick_adjust_tool_options_position_combo.addItem(
+            "Left of Docker", "left_align_top"
+        )
+        self.quick_adjust_tool_options_position_combo.addItem(
+            "Right of Docker", "right_align_top"
+        )
+        self.quick_adjust_tool_options_position_combo.addItem(
+            "Bottom Left of Docker", "bottom_left"
+        )
+        position_index = self.quick_adjust_tool_options_position_combo.findData(
+            quick_adjust_settings.get("tool_options_position", "left_align_top")
+        )
+        if position_index >= 0:
+            self.quick_adjust_tool_options_position_combo.setCurrentIndex(
+                position_index
+            )
+        quick_adjust_layout.addWidget(self.quick_adjust_tool_options_position_combo)
+
+        quick_adjust_layout.addStretch(1)
+        self.tabs.addTab(quick_adjust_page, "Quick Adjust")
+
         layout.addWidget(self.tabs)
 
         button_layout = QHBoxLayout()
@@ -708,6 +860,27 @@ class PaletteConfigDialog(QDialog):
 
     def get_huesvc_rgb_display_mode(self):
         return self.huesvc_rgb_mode_combo.currentData()
+
+    def get_quick_adjust_settings(self):
+        return {
+            "font_size": f"{self.quick_adjust_font_size_spin.value()}px",
+            "size_slider_enabled": self.quick_adjust_size_checkbox.isChecked(),
+            "opacity_slider_enabled": self.quick_adjust_opacity_checkbox.isChecked(),
+            "flow_slider_enabled": self.quick_adjust_flow_checkbox.isChecked(),
+            "layer_opacity_slider_enabled": self.quick_adjust_layer_opacity_checkbox.isChecked(),
+            "color_history_enabled": self.quick_adjust_color_history_checkbox.isChecked(),
+            "color_history_total": self.quick_adjust_color_history_total_spin.value(),
+            "color_history_icon_size": self.quick_adjust_color_history_icon_spin.value(),
+            "brush_history_enabled": self.quick_adjust_brush_history_checkbox.isChecked(),
+            "brush_history_total": self.quick_adjust_brush_history_total_spin.value(),
+            "brush_history_icon_size": self.quick_adjust_brush_history_icon_spin.value(),
+            "alt_erase_key": self.quick_adjust_alt_erase_edit.text().strip(),
+            "preserve_alpha_key": self.quick_adjust_preserve_alpha_edit.text().strip(),
+            "select_outline_key": self.quick_adjust_select_outline_edit.text().strip(),
+            "tool_options_enabled": self.quick_adjust_tool_options_checkbox.isChecked(),
+            "tool_options_start_visible": self.quick_adjust_tool_options_visible_checkbox.isChecked(),
+            "tool_options_position": self.quick_adjust_tool_options_position_combo.currentData(),
+        }
 
     def _separator(self):
         separator = QFrame()

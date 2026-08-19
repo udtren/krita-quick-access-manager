@@ -49,3 +49,8 @@ def get_system_icons_dir():
 def get_gesture_images_dir():
     remaster_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(remaster_dir, "resources", "gesture")
+
+
+def get_quick_adjust_icons_dir():
+    remaster_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(remaster_dir, "resources", "quick_adjust")

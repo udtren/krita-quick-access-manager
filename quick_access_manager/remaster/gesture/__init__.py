@@ -8,7 +8,10 @@ from .gesture_main import (
     get_gesture_manager,
     initialize_gesture_system,
     is_gesture_enabled,
+    is_gesture_filter_paused,
+    pause_gesture_event_filter,
     reload_gesture_configs,
+    resume_gesture_event_filter,
     set_gesture_enabled,
     shutdown_gesture_system,
 )
@@ -20,7 +23,10 @@ __all__ = [
     "get_gesture_manager",
     "initialize_gesture_system",
     "is_gesture_enabled",
+    "is_gesture_filter_paused",
+    "pause_gesture_event_filter",
     "reload_gesture_configs",
+    "resume_gesture_event_filter",
     "set_gesture_enabled",
     "shutdown_gesture_system",
 ]

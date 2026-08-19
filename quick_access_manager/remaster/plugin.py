@@ -12,6 +12,7 @@ from .gesture import (
     is_gesture_enabled,
     shutdown_gesture_system,
 )
+from .quick_adjust.docker import QuickAdjustDockerFactory
 
 _popup_window = None
 
@@ -54,6 +55,7 @@ class QuickAccessPaletteExtension(Extension):
         super().__init__(parent)
         self.palette_factory = None
         self.color_selector_factory = None
+        self.quick_adjust_factory = None
         self.popup_window = None
         self.popup_action = None
 
@@ -63,6 +65,9 @@ class QuickAccessPaletteExtension(Extension):
 
         self.color_selector_factory = ColorSelectorDockFactory()
         Krita.instance().addDockWidgetFactory(self.color_selector_factory)
+
+        self.quick_adjust_factory = QuickAdjustDockerFactory()
+        Krita.instance().addDockWidgetFactory(self.quick_adjust_factory)
 
         if is_gesture_enabled():
             try:

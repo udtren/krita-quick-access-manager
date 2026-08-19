@@ -704,6 +704,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             huesvc_value_font_size=huesvc_settings["value_font_size"],
             huesvc_poll_interval=huesvc_settings["poll_interval"],
             huesvc_rgb_display_mode=huesvc_settings["rgb_display_mode"],
+            quick_adjust_settings=self.controller.quick_adjust_settings(),
             parent=self,
         )
         if dialog.exec():
@@ -716,6 +717,9 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 value_font_size=dialog.get_huesvc_value_font_size(),
                 poll_interval=dialog.get_huesvc_poll_interval(),
                 rgb_display_mode=dialog.get_huesvc_rgb_display_mode(),
+            )
+            self.controller.update_quick_adjust_settings(
+                **dialog.get_quick_adjust_settings()
             )
             set_gesture_enabled(dialog.get_gesture_enabled())
             self.reload_tabs()
