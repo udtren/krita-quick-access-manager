@@ -34,7 +34,12 @@ from ...compat import (
     QWidget,
 )
 from ...gesture import is_gesture_enabled
-from ...infrastructure import AliasRepository, DockerManager, get_default_icons_dir
+from ...infrastructure import (
+    AliasRepository,
+    DockerManager,
+    get_default_icons_dir,
+    get_system_icons_dir,
+)
 from ...shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
@@ -759,6 +764,7 @@ class GridEditDialog(QDialog):
         self.visible_rows = 10
         self.saved_items = None
         self.drop_highlight = None
+        self.history = []
         self.setup_ui()
         self.rebuild_grid()
 
@@ -780,6 +786,19 @@ class GridEditDialog(QDialog):
         layout = QVBoxLayout()
 
         control_layout = QHBoxLayout()
+        self.undo_btn = QPushButton()
+        undo_icon_path = os.path.join(get_system_icons_dir(), "undo.png")
+        if os.path.exists(undo_icon_path):
+            self.undo_btn.setIcon(QIcon(undo_icon_path))
+            self.undo_btn.setIconSize(QSize(18, 18))
+        else:
+            self.undo_btn.setText("Undo")
+        self.undo_btn.setToolTip("Undo last move/resize")
+        self.undo_btn.setEnabled(False)
+        self.undo_btn.setFixedHeight(24)
+        self.undo_btn.clicked.connect(self.undo)
+        control_layout.addWidget(self.undo_btn)
+
         self.wider_btn = QPushButton("Wider")
         self.narrower_btn = QPushButton("Narrower")
 
@@ -1056,6 +1075,23 @@ class GridEditDialog(QDialog):
     def selected_items(self):
         return [item for item in self.items if item.id in self.selected_ids]
 
+    MAX_HISTORY = 20
+
+    def _push_history(self):
+        snapshot = [item.copy_with() for item in self.items]
+        self.history.append(snapshot)
+        if len(self.history) > self.MAX_HISTORY:
+            self.history.pop(0)
+        self.undo_btn.setEnabled(True)
+
+    def undo(self):
+        if not self.history:
+            return
+        self.items = self.history.pop()
+        self.selected_ids &= {item.id for item in self.items}
+        self.undo_btn.setEnabled(bool(self.history))
+        self.rebuild_grid()
+
     def move_selected(self, row_delta, col_delta):
         if not self.selected_ids:
             return
@@ -1064,6 +1100,9 @@ class GridEditDialog(QDialog):
         min_col = min(item.col for item in selected)
         row_delta = max(row_delta, -min_row)
         col_delta = max(col_delta, -min_col)
+        if row_delta == 0 and col_delta == 0:
+            return
+        self._push_history()
         moved_selected = []
         for item in selected:
             moved_selected.append(
@@ -1122,6 +1161,7 @@ class GridEditDialog(QDialog):
             item.type not in (LABEL_ITEM, SEPARATOR_ITEM) for item in selected
         ):
             return
+        self._push_history()
         resized = []
         for item in selected:
             resized.append(
