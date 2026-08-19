@@ -42,6 +42,10 @@ DEFAULT_HUESVC_SETTINGS = {
     # Width of the brush/layer controls panel on the popup's right side; the
     # panel is always shown there, unlike the legacy version's config toggle.
     "controls_panel_width": 220,
+    # Text size for that panel's labels/dropdowns/buttons, independent of the
+    # Quick Adjust docker's own font size - matches its old effective size
+    # (12px, inherited from Quick Adjust before this became configurable).
+    "controls_panel_font_size": 12,
 }
 
 

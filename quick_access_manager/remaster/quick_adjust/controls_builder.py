@@ -1,12 +1,12 @@
 """
 Shared builder for the brush/layer slider and dropdown controls used by the
-Quick Adjust docker (BrushAdjustmentWidget).
+Quick Adjust docker (BrushAdjustmentWidget) and the HueSVC popup's right
+panel (BrushLayerControlsWidget).
 
 `create_brush_layer_controls()` creates the individual widgets (assigned as
 attributes on the target widget) and returns the slider+value-label rows as
 sub-layouts. `build_docker_controls_layout()` arranges those pieces for the
-docker; `build_popup_controls_layout()` is kept for parity with the legacy
-API in case a popup embedding is ported later.
+docker; `build_popup_controls_layout()` arranges them for the popup panel.
 """
 
 import os
@@ -28,15 +28,23 @@ from .utils_adjust import brush_size_to_slider
 from .widgets import CircularRotationWidget
 
 
-def create_brush_layer_controls(widget, brush_config, layer_config, blender_modes):
+def create_brush_layer_controls(
+    widget, brush_config, layer_config, blender_modes, font_size=None
+):
     """Create every slider/dropdown/rotation/reset control.
 
     Assigns the resulting widgets (size_slider, opacity_slider, flow_slider,
     blend_combo, reset_btn, layer_opacity_slider, layer_blend_combo,
     rotation_widget, rotation_value_label - any of which may be None when
     disabled via config) as attributes on `widget`.
+
+    `font_size` overrides the blend-mode dropdowns' and reset button's text
+    size (both otherwise always follow the Quick Adjust docker's font size
+    setting, which the HueSVC popup panel needs to size independently of).
+    Value-label sizes still come from each config dict's own `number_size`.
     """
     rows = {}
+    combo_font_size = font_size or get_font_size()
 
     size_config = brush_config.get("size_slider", {})
     if size_config.get("enabled", True):
@@ -113,7 +121,7 @@ def create_brush_layer_controls(widget, brush_config, layer_config, blender_mode
 
     if opacity_config.get("enabled", True):
         widget.blend_combo = QComboBox()
-        widget.blend_combo.setStyleSheet(f"font-size: {get_font_size()};")
+        widget.blend_combo.setStyleSheet(f"font-size: {combo_font_size};")
         widget.blend_combo.setEditable(True)
         widget.blend_combo.setMaximumWidth(150)
         for mode in blender_modes:
@@ -128,7 +136,7 @@ def create_brush_layer_controls(widget, brush_config, layer_config, blender_mode
         else:
             widget.reset_btn.setText("Reset")
             widget.reset_btn.setStyleSheet(
-                f"font-size: {get_font_size()}; padding: 2px 8px;"
+                f"font-size: {combo_font_size}; padding: 2px 8px;"
             )
         widget.reset_btn.setFixedSize(24, 24)
         widget.reset_btn.setToolTip("Reset brush settings")
@@ -165,7 +173,7 @@ def create_brush_layer_controls(widget, brush_config, layer_config, blender_mode
 
     if layer_opacity_config.get("enabled", True):
         widget.layer_blend_combo = QComboBox()
-        widget.layer_blend_combo.setStyleSheet(f"font-size: {get_font_size()};")
+        widget.layer_blend_combo.setStyleSheet(f"font-size: {combo_font_size};")
         widget.layer_blend_combo.setEditable(True)
         widget.layer_blend_combo.setMaximumWidth(150)
         for mode in blender_modes:
@@ -192,10 +200,12 @@ def create_brush_layer_controls(widget, brush_config, layer_config, blender_mode
     return rows
 
 
-def build_docker_controls_layout(widget, brush_config, layer_config, blender_modes):
+def build_docker_controls_layout(
+    widget, brush_config, layer_config, blender_modes, font_size=None
+):
     """Assemble controls into the Quick Adjust docker's layout."""
     rows = create_brush_layer_controls(
-        widget, brush_config, layer_config, blender_modes
+        widget, brush_config, layer_config, blender_modes, font_size=font_size
     )
 
     left_layout = QVBoxLayout()
@@ -232,10 +242,12 @@ def build_docker_controls_layout(widget, brush_config, layer_config, blender_mod
     return left_layout
 
 
-def build_popup_controls_layout(widget, brush_config, layer_config, blender_modes):
-    """Kept for API parity with the legacy popup embedding (unused for now)."""
+def build_popup_controls_layout(
+    widget, brush_config, layer_config, blender_modes, font_size=None
+):
+    """Arrange the controls for the HueSVC popup's right panel."""
     rows = create_brush_layer_controls(
-        widget, brush_config, layer_config, blender_modes
+        widget, brush_config, layer_config, blender_modes, font_size=font_size
     )
 
     layout = QVBoxLayout()

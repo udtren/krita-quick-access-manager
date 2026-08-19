@@ -32,6 +32,8 @@ DEFAULT_SETTINGS = {
         "rgb_display_mode": "percentage",
         "popup_width": 350,
         "popup_height": 550,
+        "controls_panel_width": 220,
+        "controls_panel_font_size": 12,
     },
     "quick_adjust": {
         "font_size": "12px",
@@ -52,6 +54,18 @@ DEFAULT_SETTINGS = {
         "tool_options_start_visible": True,
         "tool_options_position": "left_align_top",
         "temp_brush_sets": [],
+        "blender_mode_list": [
+            "normal",
+            "multiply",
+            "screen",
+            "dodge",
+            "overlay",
+            "soft_light_svg",
+            "hard_light",
+            "darken",
+            "lighten",
+            "greater",
+        ],
     },
 }
 
@@ -184,6 +198,7 @@ class PaletteController:
         rgb_display_mode=None,
         popup_width=None,
         popup_height=None,
+        controls_panel_font_size=None,
     ):
         settings = self.settings()
         if value_font_size is not None:
@@ -196,6 +211,10 @@ class PaletteController:
             settings["huesvc"]["popup_width"] = int(popup_width)
         if popup_height is not None:
             settings["huesvc"]["popup_height"] = int(popup_height)
+        if controls_panel_font_size is not None:
+            settings["huesvc"]["controls_panel_font_size"] = int(
+                controls_panel_font_size
+            )
         self.document.settings = settings
         self.save()
 

@@ -405,7 +405,7 @@ class GestureConfigDialog(QDialog):
 
         alias_note = QLabel(
             "Custom name / color / icon for actions and dockers are now set in\n"
-            "the shared Alias Config dialog (docker header button)."
+            "the shared Resources dialog (Menu → Resources)."
         )
         form_layout.addRow(alias_note)
 

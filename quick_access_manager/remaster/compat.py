@@ -58,6 +58,8 @@ try:
         QKeySequenceEdit,
         QLabel,
         QLineEdit,
+        QListWidget,
+        QListWidgetItem,
         QMdiArea,
         QMenu,
         QMessageBox,
@@ -133,6 +135,8 @@ except ImportError:
         QKeySequenceEdit,
         QLabel,
         QLineEdit,
+        QListWidget,
+        QListWidgetItem,
         QMdiArea,
         QMenu,
         QMessageBox,
@@ -364,6 +368,13 @@ except ImportError:
     QAbstractItemView.ExtendedSelection = (
         QAbstractItemView.SelectionMode.ExtendedSelection
     )
+
+    # QListWidget inherits these from QListView; the nested enum classes carry
+    # over through the MRO so no separate QListView import is needed here.
+    QListWidget.IconMode = QListWidget.ViewMode.IconMode
+    QListWidget.ListMode = QListWidget.ViewMode.ListMode
+    QListWidget.Adjust = QListWidget.ResizeMode.Adjust
+    QListWidget.Static = QListWidget.Movement.Static
 
     QDialog.Accepted = QDialog.DialogCode.Accepted
     QDialog.Rejected = QDialog.DialogCode.Rejected

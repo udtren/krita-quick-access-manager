@@ -15,18 +15,31 @@ class BrushLayerControlsWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
     """Sliders/dropdowns for brush size, opacity, flow, blend mode, rotation,
     and layer opacity/blend mode - laid out for the HueSVC popup."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, font_size=None):
+        """`font_size` (a CSS size string, e.g. "12px") overrides every label
+        and dropdown's text size, independent of the Quick Adjust docker's own
+        font size setting - the HueSVC popup panel configures this separately
+        since it's a much narrower panel."""
         super().__init__(parent)
 
         self.brush_config = get_brush_section()
         self.layer_config = get_layer_section()
         self.blender_modes = get_blender_mode_list()
+        if font_size:
+            for section in (self.brush_config, self.layer_config):
+                for entry in section.values():
+                    if isinstance(entry, dict) and "number_size" in entry:
+                        entry["number_size"] = font_size
 
         self.setup_brush_monitoring()
         self.setup_layer_monitoring()
 
         layout = build_popup_controls_layout(
-            self, self.brush_config, self.layer_config, self.blender_modes
+            self,
+            self.brush_config,
+            self.layer_config,
+            self.blender_modes,
+            font_size=font_size,
         )
         self.setLayout(layout)
 

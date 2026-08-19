@@ -8,6 +8,7 @@ always shown on the right side rather than being gated by a config toggle.
 from krita import Krita, ManagedColor  # type: ignore
 
 from ..compat import (
+    QApplication,
     QColor,
     QCursor,
     QFont,
@@ -153,8 +154,9 @@ class HueSvcPopup(QFrame):
         controls_layout = QVBoxLayout()
         controls_layout.setContentsMargins(0, 0, 0, 0)
         controls_layout.setSpacing(6)
-        self.controls_widget = BrushLayerControlsWidget()
-        self.toggle_widget = BrushToggleWidget()
+        panel_font_size = f"{self._settings.get('controls_panel_font_size', 12)}px"
+        self.controls_widget = BrushLayerControlsWidget(font_size=panel_font_size)
+        self.toggle_widget = BrushToggleWidget(font_size=panel_font_size)
         panel_width = self._settings.get("controls_panel_width", 220)
         self.controls_widget.setFixedWidth(panel_width)
         self.toggle_widget.setFixedWidth(panel_width)
@@ -218,6 +220,16 @@ class HueSvcPopup(QFrame):
         self._poll_timer.stop()
         self._debounce_timer.stop()
         self.controls_widget.stop_monitoring()
+
+    def leaveEvent(self, event):
+        super().leaveEvent(event)
+        # A combo box's dropdown list (blend mode, etc.) is a separate
+        # top-level popup that often extends outside this frame's bounds -
+        # moving the mouse into it fires a genuine leaveEvent here. Don't
+        # close the popup for that.
+        if QApplication.activePopupWidget() is not None:
+            return
+        self.close_popup()
 
     # ------------------------------------------------------------------
     # Sync helpers

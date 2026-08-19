@@ -35,19 +35,22 @@ class BrushToggleWidget(QWidget):
     """Checkable buttons toggling PressureSize/OpacityUseCurve/FlowUseCurve/
     PressureRotation on the active brush preset."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, font_size=None):
+        """`font_size` (a CSS size string, e.g. "12px") overrides the button
+        text size, independent of the Quick Adjust docker's font size."""
         super().__init__(parent)
 
         self.buttons = {}
         grid = QGridLayout()
         grid.setSpacing(4)
         grid.setContentsMargins(0, 0, 0, 0)
+        button_font_size = font_size or get_font_size()
 
         for i, (label, name, sub_name) in enumerate(PROPERTIES):
             btn = QPushButton(label)
             btn.setCheckable(True)
             btn.setStyleSheet(
-                f"QPushButton {{ font-weight: bold; font-size: {get_font_size()}; }}"
+                f"QPushButton {{ font-weight: bold; font-size: {button_font_size}; }}"
                 "QPushButton:checked { background-color: #2ecc71; }"
             )
             btn.toggled.connect(

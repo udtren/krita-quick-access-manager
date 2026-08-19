@@ -51,7 +51,6 @@ from .alias_config_dialog import AliasConfigDialog
 from .controller import PaletteController
 from .dialogs import (
     ActionItemConfigDialog,
-    ActionSelectorDialog,
     ColorItemConfigDialog,
     DockerToggleItemConfigDialog,
     GridEditDialog,
@@ -110,13 +109,11 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.menu_btn.setFixedHeight(24)
         self.menu_btn.setMenu(self.build_menu())
         self.add_brush_btn = self.create_header_button("add_brush.png", "Add Brush")
-        self.add_action_btn = self.create_header_button("actions.png", "Add Action")
         self.grid_edit_btn = self.create_header_button("manage_grid.png", "Edit Grid")
         self.gesture_btn = self.create_header_button("gesture.png", "Gesture Settings")
         self.config_btn = self.create_header_button("setting.png", "Config")
 
         self.add_brush_btn.clicked.connect(self.add_current_brush)
-        self.add_action_btn.clicked.connect(self.add_action)
         self.grid_edit_btn.clicked.connect(self.show_grid_edit_dialog)
         self.gesture_btn.clicked.connect(self.show_gesture_config_dialog)
         self.config_btn.clicked.connect(self.show_config_dialog)
@@ -124,7 +121,6 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.header_buttons = (
             self.menu_btn,
             self.add_brush_btn,
-            self.add_action_btn,
             self.grid_edit_btn,
             self.gesture_btn,
             self.config_btn,
@@ -146,11 +142,10 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         menu.addAction("Add Tab", self.add_tab)
         menu.addAction("Add Label", self.add_label)
         menu.addAction("Add Separator", self.add_separator)
-        menu.addAction("Add Docker Toggle", self.add_docker_toggle)
         menu.addAction("Add Color Swatch", self.add_color)
         menu.addAction("Add Script", self.add_script)
         menu.addSeparator()
-        menu.addAction("Alias Config", self.show_alias_config_dialog)
+        menu.addAction("Resources", self.show_alias_config_dialog)
         return menu
 
     def create_header_button(self, icon_name, tooltip, fallback_text=""):
@@ -627,33 +622,6 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.controller.add_brush(preset.name())
         self.reload_tabs()
 
-    def add_action(self):
-        actions = self.action_map(refresh=True)
-        if not actions:
-            QMessageBox.warning(
-                self, "No Actions", "No Krita actions are available yet."
-            )
-            return
-        selector = ActionSelectorDialog(list(actions.values()), parent=self)
-        if not selector.exec() or not selector.selected_action:
-            return
-        self.configure_and_add_action(selector.selected_action)
-
-    def configure_and_add_action(self, action):
-        action_id = action.objectName()
-        dialog = ActionItemConfigDialog(
-            self.action_map(),
-            parent=self,
-            selected_action_id=action_id,
-            config=self.action_alias_dialog_config(action_id),
-        )
-        if dialog.exec():
-            config = dialog.get_config()
-            action_id = config.pop("action_id")
-            self.save_action_alias(action_id, config)
-            self.controller.add_action(action_id)
-            self.reload_tabs()
-
     def add_label(self):
         text, ok = QInputDialog.getText(self, "Add Label", "Label text:")
         if ok and text:
@@ -663,20 +631,6 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
     def add_separator(self):
         self.controller.add_separator()
         self.reload_tabs()
-
-    def add_docker_toggle(self):
-        dialog = DockerToggleItemConfigDialog(parent=self)
-        if dialog.exec():
-            config = dialog.get_config()
-            docker_id = config.pop("docker_id", "")
-            if not docker_id:
-                QMessageBox.warning(
-                    self, "No Docker Selected", "Please select a docker."
-                )
-                return
-            self.save_docker_alias(docker_id, config)
-            self.controller.add_docker_toggle(docker_id)
-            self.reload_tabs()
 
     def add_color(self):
         dialog = ColorItemConfigDialog(
@@ -719,8 +673,17 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         dialog.exec()
 
     def show_alias_config_dialog(self):
-        dialog = AliasConfigDialog(parent=self)
+        # on_item_added repaints the grid immediately on every Add click, while
+        # the (modal) dialog is still open - without it, added items only
+        # became visible once the dialog was closed.
+        dialog = AliasConfigDialog(
+            parent=self, controller=self.controller, on_item_added=self.reload_tabs
+        )
         dialog.exec()
+        # Reload once more regardless of Save/Cancel, in case the alias
+        # name/color/icon fields themselves (not the Add buttons) changed how
+        # an already-placed item should render.
+        self.reload_tabs()
 
     def show_config_dialog(self):
         grid = self.controller.active_grid()
@@ -737,6 +700,9 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             huesvc_rgb_display_mode=huesvc_settings["rgb_display_mode"],
             huesvc_popup_width=huesvc_settings.get("popup_width", 350),
             huesvc_popup_height=huesvc_settings.get("popup_height", 550),
+            huesvc_controls_panel_font_size=huesvc_settings.get(
+                "controls_panel_font_size", 12
+            ),
             quick_adjust_settings=self.controller.quick_adjust_settings(),
             config_dialog_width=dialog_width,
             config_dialog_height=dialog_height,
@@ -762,6 +728,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 rgb_display_mode=dialog.get_huesvc_rgb_display_mode(),
                 popup_width=dialog.get_huesvc_popup_width(),
                 popup_height=dialog.get_huesvc_popup_height(),
+                controls_panel_font_size=dialog.get_huesvc_controls_panel_font_size(),
             )
             self.controller.update_quick_adjust_settings(
                 **dialog.get_quick_adjust_settings()

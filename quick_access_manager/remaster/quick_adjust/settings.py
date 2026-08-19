@@ -4,6 +4,19 @@
 
 from ..infrastructure import PaletteRepository
 
+DEFAULT_BLENDER_MODE_LIST = [
+    "normal",
+    "multiply",
+    "screen",
+    "dodge",
+    "overlay",
+    "soft_light_svg",
+    "hard_light",
+    "darken",
+    "lighten",
+    "greater",
+]
+
 DEFAULT_QUICK_ADJUST_SETTINGS = {
     "font_size": "12px",
     "size_slider_enabled": True,
@@ -23,20 +36,8 @@ DEFAULT_QUICK_ADJUST_SETTINGS = {
     "tool_options_start_visible": True,
     "tool_options_position": "left_align_top",
     "temp_brush_sets": [],
+    "blender_mode_list": DEFAULT_BLENDER_MODE_LIST,
 }
-
-BLENDER_MODE_LIST = [
-    "normal",
-    "multiply",
-    "screen",
-    "dodge",
-    "overlay",
-    "soft_light_svg",
-    "hard_light",
-    "darken",
-    "lighten",
-    "greater",
-]
 
 
 def _load():
@@ -101,7 +102,10 @@ def get_color_history_section():
 
 
 def get_blender_mode_list():
-    return list(BLENDER_MODE_LIST)
+    # list(...) - _load() may hand back the DEFAULT_QUICK_ADJUST_SETTINGS list
+    # object itself when there's no user override; never let a caller mutate it.
+    modes = _load().get("blender_mode_list") or DEFAULT_BLENDER_MODE_LIST
+    return list(modes)
 
 
 def get_font_size():

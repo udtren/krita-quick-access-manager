@@ -34,6 +34,7 @@ from ..compat import (
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -514,88 +515,6 @@ class ScriptItemConfigDialog(QDialog):
         }
 
 
-class ActionSelectorDialog(QDialog):
-    """Select one Krita action for a remastered Action item."""
-
-    def __init__(self, actions, parent=None):
-        super().__init__(parent)
-        self._actions = list(actions)
-        self.selected_action = None
-        self.setup_ui()
-        self.populate_table()
-
-    def normalized_item(self, item):
-        if item.type == ACTION_ITEM and item.payload.get("icon_name"):
-            return item.copy_with(col_span=1)
-        return item
-
-    def setup_ui(self):
-        self.setWindowTitle("Krita Actions")
-        self.resize(600, 400)
-        layout = QVBoxLayout()
-
-        self.filter_edit = QLineEdit()
-        self.filter_edit.setPlaceholderText("Filter by internal ID...")
-        self.filter_edit.textChanged.connect(self.apply_filter)
-        layout.addWidget(self.filter_edit)
-
-        self.table = QTableWidget()
-        self.table.setColumnCount(2)
-        self.table.setHorizontalHeaderLabels(["Action ID", "Shortcut Keys"])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.itemDoubleClicked.connect(self.accept_selection)
-        layout.addWidget(self.table)
-
-        button_layout = QHBoxLayout()
-        self.ok_btn = QPushButton("OK")
-        self.cancel_btn = QPushButton("Cancel")
-        self.ok_btn.clicked.connect(self.accept_selection)
-        self.cancel_btn.clicked.connect(self.reject)
-        button_layout.addWidget(self.ok_btn)
-        button_layout.addWidget(self.cancel_btn)
-        layout.addLayout(button_layout)
-
-        self.setLayout(layout)
-
-    def populate_table(self):
-        self._actions.sort(key=lambda action: action.objectName())
-        self.table.setRowCount(len(self._actions))
-        for row, action in enumerate(self._actions):
-            id_item = QTableWidgetItem(action.objectName())
-            self.table.setItem(row, 0, id_item)
-            shortcuts = []
-            if hasattr(action, "shortcuts"):
-                shortcuts = [
-                    str(shortcut.toString()) for shortcut in action.shortcuts()
-                ]
-            self.table.setItem(row, 1, QTableWidgetItem(", ".join(shortcuts)))
-
-    def apply_filter(self, text):
-        needle = text.lower()
-        for row in range(self.table.rowCount()):
-            id_item = self.table.item(row, 0)
-            self.table.setRowHidden(
-                row, bool(needle and needle not in id_item.text().lower())
-            )
-
-    def get_selected_action(self):
-        selected_items = self.table.selectedItems()
-        if selected_items:
-            row = selected_items[0].row()
-            return self._actions[row]
-        return None
-
-    def accept_selection(self):
-        action = self.get_selected_action()
-        if not action:
-            QMessageBox.warning(
-                self, "No Action Selected", "Please select an action from the table."
-            )
-            return
-        self.selected_action = action
-        self.accept()
-
-
 class PaletteConfigDialog(QDialog):
     """Configuration dialog for Quick Access Palette."""
 
@@ -609,6 +528,7 @@ class PaletteConfigDialog(QDialog):
         huesvc_rgb_display_mode="percentage",
         huesvc_popup_width=350,
         huesvc_popup_height=550,
+        huesvc_controls_panel_font_size=12,
         quick_adjust_settings=None,
         config_dialog_width=340,
         config_dialog_height=480,
@@ -734,6 +654,16 @@ class PaletteConfigDialog(QDialog):
         self.huesvc_popup_height_spin.setValue(int(huesvc_popup_height))
         self.huesvc_popup_height_spin.setSuffix(" px")
         huesvc_layout.addWidget(self.huesvc_popup_height_spin)
+
+        huesvc_layout.addWidget(self._separator())
+        huesvc_layout.addWidget(QLabel("Right Panel (brush/layer controls) Font Size:"))
+        self.huesvc_controls_panel_font_size_spin = QSpinBox()
+        self.huesvc_controls_panel_font_size_spin.setRange(6, 24)
+        self.huesvc_controls_panel_font_size_spin.setValue(
+            int(huesvc_controls_panel_font_size)
+        )
+        self.huesvc_controls_panel_font_size_spin.setSuffix(" px")
+        huesvc_layout.addWidget(self.huesvc_controls_panel_font_size_spin)
 
         huesvc_layout.addStretch(1)
         self.tabs.addTab(huesvc_page, "HueSVC")
@@ -920,6 +850,24 @@ class PaletteConfigDialog(QDialog):
         temp_brush_set_btn_layout.addWidget(remove_temp_brush_set_btn)
         quick_adjust_layout.addLayout(temp_brush_set_btn_layout)
 
+        quick_adjust_layout.addWidget(self._separator())
+        quick_adjust_layout.addWidget(
+            QLabel(
+                "Blend Modes (one per line - shown in the Quick Adjust docker "
+                "and the HueSVC popup's blend mode dropdown):"
+            )
+        )
+        self.quick_adjust_blender_mode_edit = QTextEdit()
+        self.quick_adjust_blender_mode_edit.setPlainText(
+            "\n".join(quick_adjust_settings.get("blender_mode_list", []))
+        )
+        self.quick_adjust_blender_mode_edit.setMinimumHeight(100)
+        self.quick_adjust_blender_mode_edit.setMaximumHeight(150)
+        self.quick_adjust_blender_mode_edit.setPlaceholderText(
+            "Enter blend modes, one per line"
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_blender_mode_edit)
+
         quick_adjust_layout.addStretch(1)
         self.tabs.addTab(quick_adjust_page, "Quick Adjust")
 
@@ -989,6 +937,9 @@ class PaletteConfigDialog(QDialog):
     def get_huesvc_popup_height(self):
         return self.huesvc_popup_height_spin.value()
 
+    def get_huesvc_controls_panel_font_size(self):
+        return self.huesvc_controls_panel_font_size_spin.value()
+
     def get_config_dialog_width(self):
         return self.config_dialog_width_spin.value()
 
@@ -1044,7 +995,14 @@ class PaletteConfigDialog(QDialog):
             "tool_options_start_visible": self.quick_adjust_tool_options_visible_checkbox.isChecked(),
             "tool_options_position": self.quick_adjust_tool_options_position_combo.currentData(),
             "temp_brush_sets": self._temp_brush_sets_from_table(),
+            "blender_mode_list": self._blender_mode_list_from_editor(),
         }
+
+    def _blender_mode_list_from_editor(self):
+        modes_str = self.quick_adjust_blender_mode_edit.toPlainText().strip()
+        if not modes_str:
+            return []
+        return [m.strip() for m in modes_str.split("\n") if m.strip()]
 
     def _separator(self):
         separator = QFrame()
