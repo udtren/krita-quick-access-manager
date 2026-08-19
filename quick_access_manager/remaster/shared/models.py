@@ -29,6 +29,13 @@ DEFAULT_ACTION_COL_SPAN = 2
 DEFAULT_ROW_SPAN = 1
 DEFAULT_COL_SPAN = 1
 
+# A neutral mid-gray frame around a Color Swatch item's fill, so the swatch
+# isn't rendered edge-to-edge against its neighbors - simultaneous contrast
+# (a color looking different depending on what's next to it) makes an
+# adjacent-color read unreliable without a neutral buffer between them.
+COLOR_SWATCH_BORDER_COLOR = "#808080"
+COLOR_SWATCH_BORDER_WIDTH = 3
+
 
 @dataclass
 class PaletteItem:
@@ -52,8 +59,6 @@ class PaletteItem:
         if self.type == BRUSH_ITEM:
             self.row_span = 1
             self.col_span = 1
-        elif self.type == ACTION_ITEM and "col_span" not in self.payload:
-            self.col_span = max(1, self.col_span)
 
     @classmethod
     def create_brush(cls, item_id: str, brush_name: str, row: int = 0, col: int = 0):

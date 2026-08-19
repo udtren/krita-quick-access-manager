@@ -40,6 +40,12 @@ BLENDER_MODE_LIST = [
 
 
 def _load():
+    """Merged Quick Adjust settings.
+
+    Every getter below calls this, and building the docker hits a dozen of them
+    in a row, so the underlying JSON reads go through the mtime-validated cache
+    in `infrastructure.json_cache` rather than the filesystem each time.
+    """
     document = PaletteRepository().load()
     settings = dict(DEFAULT_QUICK_ADJUST_SETTINGS)
     settings.update(document.settings.get("quick_adjust", {}))

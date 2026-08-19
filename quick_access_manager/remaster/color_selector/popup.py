@@ -1,9 +1,8 @@
 """HueSVC color-picker popup for the remastered plugin.
 
-Ported from the legacy `color_selector_popup.py`. The embedded brush/layer
-controls panel (BrushLayerControlsWidget/BrushToggleWidget) was intentionally
-left behind, matching the docker port — only the standalone color picker is
-migrated here.
+Ported from the legacy `color_selector_popup.py`. Unlike the legacy version,
+the brush/layer controls panel (BrushLayerControlsWidget/BrushToggleWidget) is
+always shown on the right side rather than being gated by a config toggle.
 """
 
 from krita import Krita, ManagedColor  # type: ignore
@@ -23,6 +22,8 @@ from ..compat import (
     QVBoxLayout,
 )
 from ..infrastructure import PaletteRepository
+from ..quick_adjust.popup_controls_widget import BrushLayerControlsWidget
+from ..quick_adjust.widgets import BrushToggleWidget
 from .docker import DEFAULT_HUESVC_SETTINGS, ChannelBar, FgBgColorWidget, HueBar, SVBox
 
 
@@ -51,9 +52,14 @@ class HueSvcPopup(QFrame):
         self._r, self._g, self._b = color.red(), color.green(), color.blue()
         self._bg_r, self._bg_g, self._bg_b = 255, 255, 255
 
-        outer_layout = QVBoxLayout(self)
-        outer_layout.setContentsMargins(6, 6, 6, 6)
+        root_layout = QHBoxLayout(self)
+        root_layout.setContentsMargins(6, 6, 6, 6)
+        root_layout.setSpacing(6)
+
+        outer_layout = QVBoxLayout()
+        outer_layout.setContentsMargins(0, 0, 0, 0)
         outer_layout.setSpacing(6)
+        root_layout.addLayout(outer_layout)
 
         fg_bg_layout = QHBoxLayout()
         fg_bg_layout.setContentsMargins(0, 0, 0, 0)
@@ -141,6 +147,23 @@ class HueSvcPopup(QFrame):
 
         outer_layout.addLayout(channels_layout)
 
+        # ── Right: brush/layer adjustment controls (vertically centered so
+        # hovering the popup's full height stays inside its bounds and
+        # doesn't trigger leaveEvent) ──
+        controls_layout = QVBoxLayout()
+        controls_layout.setContentsMargins(0, 0, 0, 0)
+        controls_layout.setSpacing(6)
+        self.controls_widget = BrushLayerControlsWidget()
+        self.toggle_widget = BrushToggleWidget()
+        panel_width = self._settings.get("controls_panel_width", 220)
+        self.controls_widget.setFixedWidth(panel_width)
+        self.toggle_widget.setFixedWidth(panel_width)
+        controls_layout.addStretch()
+        controls_layout.addWidget(self.controls_widget)
+        controls_layout.addWidget(self.toggle_widget)
+        controls_layout.addStretch()
+        root_layout.addLayout(controls_layout)
+
         self.hue_bar.hueChanged.connect(self._onHueBarChanged)
         self.sv_box.colorChanged.connect(self._onSVChanged)
 
@@ -175,7 +198,9 @@ class HueSvcPopup(QFrame):
         self.close()
 
     def show_at_cursor(self):
-        self.resize(self._settings["popup_width"], self._settings["popup_height"])
+        panel_width = self._settings.get("controls_panel_width", 220)
+        total_width = self._settings["popup_width"] + panel_width
+        self.resize(total_width, self._settings["popup_height"])
         cursor_pos = QCursor.pos()
         self.move(
             cursor_pos.x() - self.width() // 4, cursor_pos.y() - self.height() // 3
@@ -185,11 +210,14 @@ class HueSvcPopup(QFrame):
         self.activateWindow()
         self._pollKritaColor()
         self._poll_timer.start()
+        self.controls_widget.start_monitoring()
+        self.toggle_widget.refresh_from_current_brush()
 
     def hideEvent(self, event):
         super().hideEvent(event)
         self._poll_timer.stop()
         self._debounce_timer.stop()
+        self.controls_widget.stop_monitoring()
 
     # ------------------------------------------------------------------
     # Sync helpers

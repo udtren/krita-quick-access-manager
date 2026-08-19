@@ -10,6 +10,7 @@ import os
 from krita import Krita  # type: ignore
 
 from ..compat import QApplication, QCursor, QEvent, QObject, Qt
+from ..focus_utils import is_text_input_focused
 from ..infrastructure import get_gesture_data_dir
 from .gesture_actions import execute_gesture
 from .log_utils import write_log
@@ -201,6 +202,10 @@ class GestureDetector(QObject):
                 return False
 
             if event_type == QEvent.KeyPress:
+                # Only the press is gated: a release must always be able to
+                # finish a gesture that started before focus moved to a field.
+                if is_text_input_focused():
+                    return False
                 key_text = self._key_text(event)
                 if key_text and key_text in self.gesture_configs:
                     self.active_key = key_text

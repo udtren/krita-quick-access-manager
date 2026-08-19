@@ -56,8 +56,8 @@ class ControlButtonWidget(QWidget):
         layout.setAlignment(Qt.AlignTop)
 
         application = Krita.instance()
-        app_notifier = application.notifier()
-        app_notifier.windowCreated.connect(self.enableToolOptionsExtension)
+        self._app_notifier = application.notifier()
+        self._app_notifier.windowCreated.connect(self.enableToolOptionsExtension)
 
         self.tool_options_toggle_btn = QPushButton()
         self.tool_options_toggle_btn.setFixedSize(16, 16)
@@ -203,8 +203,30 @@ class ControlButtonWidget(QWidget):
             pause_gesture_event_filter()
         self.update_status()
 
+    def cleanup(self):
+        """Detach from Krita's notifier and stop the status poll.
+
+        Without the disconnect, opening a new window after this widget is gone
+        calls back into a deleted object (or builds a second floating pad).
+        """
+        self.status_update_timer.stop()
+        notifier = getattr(self, "_app_notifier", None)
+        if notifier is not None:
+            try:
+                notifier.windowCreated.disconnect(self.enableToolOptionsExtension)
+            except (TypeError, RuntimeError):
+                pass
+            self._app_notifier = None
+
+    def closeEvent(self, event):
+        self.cleanup()
+        super().closeEvent(event)
+
     def enableToolOptionsExtension(self):
         """Enable the floating Tool Options extension if not already enabled"""
+        if self.float_tool_options is not None:
+            # Already borrowed the docker for a previous window - don't build a second pad.
+            return
         window = Krita.instance().activeWindow()
 
         application = Krita.instance()

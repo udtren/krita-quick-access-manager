@@ -8,6 +8,19 @@ from ..compat import QTimer
 from .utils_adjust import brush_size_to_slider, slider_to_brush_size
 
 
+def _value_changed(current, previous, tolerance=0.01):
+    """Compare two polled brush values.
+
+    Sliders write back rounded integers while Krita reports floats, so an exact
+    comparison reports a change every poll and fights the user's drag.
+    """
+    if current is None or previous is None:
+        return current is not previous
+    if isinstance(current, (int, float)) and isinstance(previous, (int, float)):
+        return abs(current - previous) > tolerance
+    return current != previous
+
+
 class BrushMonitorMixin:
     """Mixin providing brush monitoring and control methods for BrushAdjustmentWidget."""
 
@@ -77,10 +90,16 @@ class BrushMonitorMixin:
                         pass
 
                     brush_changed = brush_name != self.current_brush_name
-                    size_changed = current_size != self.current_brush_size
-                    opacity_changed = current_opacity != self.current_brush_opacity
-                    flow_changed = current_flow != self.current_brush_flow
-                    rotation_changed = current_rotation != self.current_brush_rotation
+                    size_changed = _value_changed(current_size, self.current_brush_size)
+                    opacity_changed = _value_changed(
+                        current_opacity, self.current_brush_opacity, 0.005
+                    )
+                    flow_changed = _value_changed(
+                        current_flow, self.current_brush_flow, 0.005
+                    )
+                    rotation_changed = _value_changed(
+                        current_rotation, self.current_brush_rotation
+                    )
                     blend_changed = current_blend_mode != self.current_blend_mode
 
                     if (

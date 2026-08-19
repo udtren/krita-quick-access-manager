@@ -37,3 +37,16 @@ class QuickAdjustDockerWidget(QDockWidget):
 
         self.setMinimumWidth(100)
         self.setMinimumHeight(100)
+
+    def _set_monitoring(self, active):
+        section = getattr(self, "brush_adjustment_section", None)
+        if section is not None:
+            section.set_monitoring_active(active)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._set_monitoring(True)
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        self._set_monitoring(False)

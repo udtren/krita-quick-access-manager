@@ -21,6 +21,8 @@ from ..compat import (
     QLineEdit,
     QMenu,
     QMessageBox,
+    QPainter,
+    QPen,
     QPixmap,
     QPushButton,
     QRect,
@@ -46,6 +48,8 @@ from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
     COLOR_ITEM,
+    COLOR_SWATCH_BORDER_COLOR,
+    COLOR_SWATCH_BORDER_WIDTH,
     DOCKER_TOGGLE_ITEM,
     LABEL_ITEM,
     SCRIPT_ITEM,
@@ -59,7 +63,7 @@ class ActionItemConfigDialog(QDialog):
 
     def __init__(self, actions, config=None, parent=None, selected_action_id=None):
         super().__init__(parent)
-        self.actions = actions
+        self._actions = actions
         self.config = dict(config or {})
         if selected_action_id:
             self.config["action_id"] = selected_action_id
@@ -83,7 +87,7 @@ class ActionItemConfigDialog(QDialog):
 
         layout.addWidget(QLabel("Action:"))
         self.action_combo = QComboBox()
-        for action_id, action in sorted(self.actions.items()):
+        for action_id, action in sorted(self._actions.items()):
             text = action.text() if hasattr(action, "text") else action_id
             self.action_combo.addItem(f"{text} ({action_id})", action_id)
         layout.addWidget(self.action_combo)
@@ -515,7 +519,7 @@ class ActionSelectorDialog(QDialog):
 
     def __init__(self, actions, parent=None):
         super().__init__(parent)
-        self.actions = list(actions)
+        self._actions = list(actions)
         self.selected_action = None
         self.setup_ui()
         self.populate_table()
@@ -554,9 +558,9 @@ class ActionSelectorDialog(QDialog):
         self.setLayout(layout)
 
     def populate_table(self):
-        self.actions.sort(key=lambda action: action.objectName())
-        self.table.setRowCount(len(self.actions))
-        for row, action in enumerate(self.actions):
+        self._actions.sort(key=lambda action: action.objectName())
+        self.table.setRowCount(len(self._actions))
+        for row, action in enumerate(self._actions):
             id_item = QTableWidgetItem(action.objectName())
             self.table.setItem(row, 0, id_item)
             shortcuts = []
@@ -578,7 +582,7 @@ class ActionSelectorDialog(QDialog):
         selected_items = self.table.selectedItems()
         if selected_items:
             row = selected_items[0].row()
-            return self.actions[row]
+            return self._actions[row]
         return None
 
     def accept_selection(self):
@@ -1057,6 +1061,29 @@ class GridEditCanvas(QWidget):
         self.dialog = dialog
         self.rubber_band = None
         self.origin = None
+        self.grid_rows = 0
+        self.grid_columns = 0
+
+    def paintEvent(self, event):
+        """Draw the cell guides.
+
+        Cheaper than the QFrame-per-cell approach it replaces, which rebuilt
+        rows x columns widgets on every drop.
+        """
+        super().paintEvent(event)
+        if not self.grid_rows or not self.grid_columns:
+            return
+        cell = self.dialog.cell_size
+        spacing = self.dialog.spacing
+        painter = QPainter(self)
+        painter.setPen(QPen(QColor("#3f3f3f"), 1))
+        painter.setBrush(Qt.NoBrush)
+        for row in range(self.grid_rows):
+            y = 4 + row * (cell + spacing)
+            for col in range(self.grid_columns):
+                x = 4 + col * (cell + spacing)
+                painter.drawRect(x, y, cell - 1, cell - 1)
+        painter.end()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -1140,6 +1167,9 @@ class GridEditDialog(QDialog):
         self.spacing = 4
         self.visible_rows = 10
         self.saved_tabs = None
+        # Read once for the lifetime of the dialog: rebuild_grid() runs on every
+        # drop and would otherwise re-read the alias config once per item.
+        self._alias_data = AliasRepository().load()
 
         self.tab_order = [tab.id for tab in tabs]
         self.tab_names = {tab.id: tab.name for tab in tabs}
@@ -1186,14 +1216,12 @@ class GridEditDialog(QDialog):
             self.tab_widget.setCurrentIndex(self.tab_order.index(initial_tab_id))
         self.tab_widget.currentChanged.connect(self._on_tab_changed)
 
+    def alias_entry(self, category, item_id):
+        return self._alias_data.get(category, {}).get(item_id, {})
+
     def normalized_item(self, item):
         if item.type == ACTION_ITEM:
-            alias = (
-                AliasRepository()
-                .load()
-                .get("actions", {})
-                .get(item.payload.get("action_id", ""), {})
-            )
+            alias = self.alias_entry("actions", item.payload.get("action_id", ""))
             if alias.get("icon_name"):
                 return item.copy_with(col_span=1)
         return item
@@ -1310,7 +1338,9 @@ class GridEditDialog(QDialog):
         width = self.columns * self.cell_size + max(0, self.columns - 1) * spacing + 8
         height = rows * self.cell_size + max(0, rows - 1) * spacing + 8
         self.grid_host.setMinimumSize(width, height)
-        self.add_grid_lines(rows, spacing)
+        self.grid_host.grid_rows = rows
+        self.grid_host.grid_columns = self.columns
+        self.grid_host.update()
         for item in sorted(
             self.items, key=lambda entry: (entry.row, entry.col, entry.id)
         ):
@@ -1322,21 +1352,6 @@ class GridEditDialog(QDialog):
             widget.raise_()
             widget.show()
         self.update_selection_styles()
-
-    def add_grid_lines(self, rows, spacing):
-        for row in range(rows):
-            for col in range(self.columns):
-                cell = QFrame(self.grid_host)
-                cell.setGeometry(
-                    4 + col * (self.cell_size + spacing),
-                    4 + row * (self.cell_size + spacing),
-                    self.cell_size,
-                    self.cell_size,
-                )
-                cell.setStyleSheet(
-                    "QFrame { border: 1px solid #3f3f3f; background: transparent; }"
-                )
-                cell.show()
 
     def item_geometry(self, item, spacing):
         x = 4 + item.col * (self.cell_size + spacing)
@@ -1395,26 +1410,18 @@ class GridEditDialog(QDialog):
             except Exception:
                 pass
         elif item.type == ACTION_ITEM:
-            icon_name = (
-                AliasRepository()
-                .load()
-                .get("actions", {})
-                .get(item.payload.get("action_id", ""), {})
-                .get("icon_name")
-            )
+            icon_name = self.alias_entry(
+                "actions", item.payload.get("action_id", "")
+            ).get("icon_name")
             icon_path = self.resolve_icon_path(icon_name)
             if icon_path:
                 button.setIcon(QIcon(icon_path))
                 button.setIconSize(QSize(32, 32))
                 button.setText("")
         elif item.type == DOCKER_TOGGLE_ITEM:
-            icon_name = (
-                AliasRepository()
-                .load()
-                .get("dockers", {})
-                .get(item.payload.get("docker_id", ""), {})
-                .get("icon_name")
-            )
+            icon_name = self.alias_entry(
+                "dockers", item.payload.get("docker_id", "")
+            ).get("icon_name")
             icon_path = self.resolve_icon_path(icon_name)
             if icon_path:
                 button.setIcon(QIcon(icon_path))
@@ -1445,16 +1452,14 @@ class GridEditDialog(QDialog):
             return "Brush"
         if item.type == ACTION_ITEM:
             action_id = item.payload.get("action_id", "Action")
-            alias = AliasRepository().load().get("actions", {}).get(action_id, {})
-            return alias.get("custom_name") or action_id
+            return self.alias_entry("actions", action_id).get("custom_name") or action_id
         if item.type == LABEL_ITEM:
             return item.payload.get("text", "Label")
         if item.type == SEPARATOR_ITEM:
             return "---"
         if item.type == DOCKER_TOGGLE_ITEM:
             docker_id = item.payload.get("docker_id", "Docker")
-            alias = AliasRepository().load().get("dockers", {}).get(docker_id, {})
-            return alias.get("custom_name") or docker_id
+            return self.alias_entry("dockers", docker_id).get("custom_name") or docker_id
         if item.type == COLOR_ITEM:
             return ""
         if item.type == SCRIPT_ITEM:
@@ -1507,11 +1512,17 @@ class GridEditDialog(QDialog):
             ),
             SEPARATOR_ITEM: ("#303030", "#777777"),
             DOCKER_TOGGLE_ITEM: ("#263a2f", "#4a8b6b"),
-            COLOR_ITEM: (item.payload.get("color", "#ffffff"), "#555555"),
+            COLOR_ITEM: (
+                item.payload.get("color", "#ffffff"),
+                COLOR_SWATCH_BORDER_COLOR,
+            ),
             SCRIPT_ITEM: ("#2f2a1f", "#8b7a4a"),
         }
         background, border = colors.get(item.type, ("#333333", "#555555"))
-        border_width = 2 if selected else 1
+        if item.type == COLOR_ITEM and not selected:
+            border_width = COLOR_SWATCH_BORDER_WIDTH
+        else:
+            border_width = 2 if selected else 1
         border_color = "#4FC3F7" if selected else border
         text_color = (
             item.payload.get("fontColor", "#ffffff")
@@ -1650,12 +1661,19 @@ class GridEditDialog(QDialog):
             [item for item in self.items if item.id not in active_ids]
         ):
             candidate = item.copy_with(row=max(0, item.row), col=max(0, item.col))
+            if candidate.col_span > self.columns:
+                placed.append(candidate)
+                continue
             if self.needs_reposition(candidate, placed):
                 candidate = self.first_free_position(candidate, placed)
             placed.append(candidate)
         return placed
 
     def first_free_position(self, item, placed):
+        # An item wider than the grid can never satisfy the column check below,
+        # so leave it where it is instead of scanning forever.
+        if item.col_span > self.columns:
+            return item.copy_with(row=max(0, item.row), col=0)
         cursor = self.linear_index(item.row, item.col)
         while True:
             row = cursor // self.columns
@@ -1699,7 +1717,9 @@ class GridEditDialog(QDialog):
             resized.append(
                 item.copy_with(
                     row_span=max(1, item.row_span + row_delta),
-                    col_span=max(1, item.col_span + col_delta),
+                    # Never let an item grow past the grid width - a wider item
+                    # can never be placed and would stall the layout pass.
+                    col_span=max(1, min(self.columns, item.col_span + col_delta)),
                 )
             )
         self.items = self.place_group_with_push(resized)

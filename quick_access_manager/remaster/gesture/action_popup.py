@@ -19,7 +19,7 @@ class GestureActionPopup(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.actions = []
+        self._actions = []
         self.selected_action_id = None
 
         self.setup_ui()
@@ -102,10 +102,10 @@ class GestureActionPopup(QDialog):
         self.table.itemDoubleClicked.connect(self.accept_selection)
 
     def populate_table(self):
-        self.actions = ActionManager.get_all_actions()
-        self.table.setRowCount(len(self.actions))
+        self._actions = ActionManager.get_all_actions()
+        self.table.setRowCount(len(self._actions))
 
-        for i, action in enumerate(self.actions):
+        for i, action in enumerate(self._actions):
             id_item = QTableWidgetItem(action.objectName())
             self.table.setItem(i, 0, id_item)
 
@@ -121,7 +121,7 @@ class GestureActionPopup(QDialog):
         selected_items = self.table.selectedItems()
         if selected_items:
             row = selected_items[0].row()
-            return self.actions[row]
+            return self._actions[row]
         return None
 
     def accept_selection(self):

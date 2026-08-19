@@ -40,6 +40,8 @@ from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
     COLOR_ITEM,
+    COLOR_SWATCH_BORDER_COLOR,
+    COLOR_SWATCH_BORDER_WIDTH,
     DOCKER_TOGGLE_ITEM,
     LABEL_ITEM,
     SCRIPT_ITEM,
@@ -77,7 +79,10 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.setWindowTitle("Quick Access Palette")
         self.setObjectName("quick_access_palette_docker")
         self.controller = PaletteController()
-        self.actions = ActionManager.get_actions_dict()
+        # Krita's action table is only needed when a button is actually pressed,
+        # so it is discovered lazily instead of walking the widget tree at startup.
+        self._action_map = None
+        self._alias_data = AliasRepository().load()
         self.issue_map = {}
         self.root_widget = QWidget()
         self.setWidget(self.root_widget)
@@ -93,6 +98,9 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.tab_widget = QTabWidget()
         self.tab_widget.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
         self.tab_widget.tabBar().customContextMenuRequested.connect(self.show_tab_menu)
+        # Connected once here, never inside reload_tabs() - reconnecting on every
+        # reload would fire on_tab_changed (and a config save) once per reload.
+        self.tab_widget.currentChanged.connect(self.on_tab_changed)
         self.root_layout.addWidget(self.tab_widget)
         self.reload_tabs()
 
@@ -179,9 +187,15 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
 
     def reload_tabs(self):
         self.issue_map = self.controller.validate_active_grid().issues_by_item()
+        # One alias read per rebuild instead of one per item.
+        self._alias_data = AliasRepository().load()
         self.tab_widget.blockSignals(True)
         while self.tab_widget.count():
+            page = self.tab_widget.widget(0)
             self.tab_widget.removeTab(0)
+            if page is not None:
+                page.setParent(None)
+                page.deleteLater()
 
         for tab in self.controller.document.tabs:
             page = self.create_tab_page(tab)
@@ -190,7 +204,6 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 self.tab_widget.setCurrentWidget(page)
 
         self.tab_widget.blockSignals(False)
-        self.tab_widget.currentChanged.connect(self.on_tab_changed)
 
     def show_tab_menu(self, pos):
         index = self.tab_widget.tabBar().tabAt(pos)
@@ -341,7 +354,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             color = item.payload.get("color", "#ffffff")
             button.setToolTip(color)
             button.setStyleSheet(
-                f"QPushButton {{ background: {color}; border: 1px solid #555; border-radius: 4px; }}"
+                f"QPushButton {{ background: {color}; border: {COLOR_SWATCH_BORDER_WIDTH}px solid {COLOR_SWATCH_BORDER_COLOR}; border-radius: 4px; }}"
             )
             button.clicked.connect(
                 lambda checked=False, color=color: self.activate_color(color)
@@ -438,11 +451,19 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             self.controller.update_script_item(item.id, dialog.get_config())
             self.reload_tabs()
 
+    def action_map(self, refresh=False):
+        """Krita's {objectName: QAction} table, discovered on first use.
+
+        Deliberately not named `actions` - that would shadow QWidget.actions().
+        """
+        if refresh or self._action_map is None:
+            self._action_map = ActionManager.get_actions_dict()
+        return self._action_map
+
     def show_action_property(self, item):
         action_id = item.payload.get("action_id", "")
-        self.actions = ActionManager.get_actions_dict()
         dialog = ActionItemConfigDialog(
-            self.actions,
+            self.action_map(refresh=True),
             parent=self,
             selected_action_id=action_id,
             config=self.action_alias_dialog_config(action_id),
@@ -469,7 +490,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
     # custom name, colors, font size, and icon).
     # ------------------------------------------------------------------
     def alias_entry(self, category, item_id):
-        return AliasRepository().load().get(category, {}).get(item_id, {})
+        return self._alias_data.get(category, {}).get(item_id, {})
 
     def save_alias_entry(self, category, item_id, updates):
         if not item_id:
@@ -480,6 +501,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         entry.update(updates)
         data.setdefault(category, {})[item_id] = entry
         repository.save(data)
+        self._alias_data = data
 
     def action_alias_dialog_config(self, action_id):
         alias = self.alias_entry("actions", action_id)
@@ -568,11 +590,16 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         )
 
     def apply_issue_style(self, widget, item):
-        if item.id in self.issue_map:
-            widget.setToolTip(
-                "; ".join(issue.message for issue in self.issue_map[item.id])
-            )
-            widget.setStyleSheet(widget.styleSheet() + " border: 2px solid #ff4d4d;")
+        issues = self.issue_map.get(item.id)
+        if not issues:
+            return
+        widget.setToolTip("; ".join(issue.message for issue in issues))
+        # The existing sheet is a selector block ("QPushButton { ... }"), so the
+        # override has to be a block too - a bare property would be discarded.
+        class_name = widget.metaObject().className()
+        widget.setStyleSheet(
+            f"{widget.styleSheet()} {class_name} {{ border: 2px solid #ff4d4d; }}"
+        )
 
     def on_tab_changed(self, index):
         if index < 0 or index >= len(self.controller.document.tabs):
@@ -601,13 +628,13 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.reload_tabs()
 
     def add_action(self):
-        self.actions = ActionManager.get_actions_dict()
-        if not self.actions:
+        actions = self.action_map(refresh=True)
+        if not actions:
             QMessageBox.warning(
                 self, "No Actions", "No Krita actions are available yet."
             )
             return
-        selector = ActionSelectorDialog(list(self.actions.values()), parent=self)
+        selector = ActionSelectorDialog(list(actions.values()), parent=self)
         if not selector.exec() or not selector.selected_action:
             return
         self.configure_and_add_action(selector.selected_action)
@@ -615,7 +642,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
     def configure_and_add_action(self, action):
         action_id = action.objectName()
         dialog = ActionItemConfigDialog(
-            self.actions,
+            self.action_map(),
             parent=self,
             selected_action_id=action_id,
             config=self.action_alias_dialog_config(action_id),
@@ -752,7 +779,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             view.setCurrentBrushPreset(preset)
 
     def trigger_action(self, action_id):
-        action = self.actions.get(action_id)
+        action = self.action_map().get(action_id)
         if action:
             action.trigger()
 

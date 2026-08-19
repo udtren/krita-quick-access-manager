@@ -39,6 +39,9 @@ DEFAULT_HUESVC_SETTINGS = {
     "rgb_display_mode": "percentage",
     "popup_width": 350,
     "popup_height": 550,
+    # Width of the brush/layer controls panel on the popup's right side; the
+    # panel is always shown there, unlike the legacy version's config toggle.
+    "controls_panel_width": 220,
 }
 
 
@@ -659,6 +662,21 @@ class ColorSelectorDock(DockWidget):
             QColor(self._r, self._g, self._b),
             QColor(self._bg_r, self._bg_g, self._bg_b),
         )
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # Guarded: Qt can deliver a show event before __init__ has built the timers.
+        if getattr(self, "_poll_timer", None) is not None:
+            self._pollKritaColor()
+            self._poll_timer.start()
+
+    def hideEvent(self, event):
+        """Stop polling Krita's colour while the docker is collapsed or tabbed away."""
+        super().hideEvent(event)
+        if getattr(self, "_poll_timer", None) is not None:
+            self._poll_timer.stop()
+        if getattr(self, "_debounce_timer", None) is not None:
+            self._debounce_timer.stop()
 
     def canvasChanged(self, canvas):
         pass

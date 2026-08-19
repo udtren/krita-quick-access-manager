@@ -19,6 +19,9 @@ class GesturePreviewWidget(QWidget):
         )
         self.setWindowTitle("Gesture Preview")
         self.alias_repository = AliasRepository()
+        # Refreshed once per show_preview() instead of once per direction label -
+        # this runs on the gesture key press, so it must not touch disk 9 times.
+        self._alias_data = self.alias_repository.load()
 
         self.layout = QGridLayout(self)
         self.layout.setSpacing(2)
@@ -67,6 +70,13 @@ class GesturePreviewWidget(QWidget):
 
     def show_preview(self, gesture_map, cursor_pos):
         self.clear_all_labels()
+        self._alias_data = self.alias_repository.load()
+        # Re-read presets too: brushes imported during the session would
+        # otherwise never show up in the preview.
+        try:
+            self.preset_dict = Krita.instance().resources("preset")
+        except Exception:
+            pass
 
         for direction, label in self.direction_labels.items():
             gesture_config = gesture_map.get(direction)
@@ -121,7 +131,7 @@ class GesturePreviewWidget(QWidget):
     def _show_alias_or_text(
         self, label, item_id, category, background, icon_background=None
     ):
-        alias = self.alias_repository.load().get(category, {}).get(item_id, {})
+        alias = self._alias_data.get(category, {}).get(item_id, {})
         icon_path = self.resolve_icon_path(alias.get("icon_name"))
         if icon_path:
             try:

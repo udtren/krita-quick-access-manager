@@ -1,8 +1,22 @@
 from krita import Krita  # type: ignore
 
 from ..compat import QApplication, QEvent, QObject, Qt
+from ..focus_utils import is_text_input_focused
 
 _KEY_EVENT_TYPES = frozenset((QEvent.KeyPress, QEvent.KeyRelease))
+
+_ALL_MODIFIERS = (
+    Qt.ShiftModifier | Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier
+)
+
+# Pressing a modifier key reports that same modifier in event.modifiers(), so it
+# has to be masked out before comparing against the configured combo.
+_SELF_MODIFIER = {
+    Qt.Key_Shift: Qt.ShiftModifier,
+    Qt.Key_Control: Qt.ControlModifier,
+    Qt.Key_Alt: Qt.AltModifier,
+    Qt.Key_Meta: Qt.MetaModifier,
+}
 
 # Map of key name strings to Qt key codes
 _KEY_MAP = {
@@ -54,11 +68,16 @@ def _parse_combo(key_string: str):
     return modifier_flags, key_code
 
 
-class AltEraseListener(QObject):
-    """Application-level event filter that activates Krita's erase mode while
-    a configurable key is held — but only when no other key is pressed simultaneously.
+class HeldKeyListener(QObject):
+    """Base for the application-wide "do X while this key is held" listeners.
+
+    Subclasses implement `on_activate()` / `on_deactivate()`. Set
+    `cancel_on_other_key` to deactivate as soon as another key joins the press,
+    which is what the erase / preserve-alpha toggles want.
     """
 
+    cancel_on_other_key = False
+
     def __init__(self, key_string: str = ""):
         super().__init__()
         self._modifier_flags, self._key_code = (
@@ -66,109 +85,110 @@ class AltEraseListener(QObject):
         )
         self._key_active = False
         self._combo_detected = False
-        if self._key_code is not None:
+        self._installed = False
+        if self._key_code is not None and self._should_install():
             QApplication.instance().installEventFilter(self)
+            self._installed = True
+
+    def _should_install(self):
+        return True
 
     def remove(self):
-        QApplication.instance().removeEventFilter(self)
+        if not self._installed:
+            return
+        app = QApplication.instance()
+        if app is not None:
+            app.removeEventFilter(self)
+        self._installed = False
 
-    def _erase_action(self):
-        return Krita.instance().action("erase_action")
+    def on_activate(self):
+        raise NotImplementedError
+
+    def on_deactivate(self):
+        raise NotImplementedError
+
+    def _matches(self, event):
+        if event.key() != self._key_code:
+            return False
+        # Compare the full modifier state so a plain "A" binding does not also
+        # fire on Ctrl+A, ignoring the bit contributed by the key itself.
+        expected = self._modifier_flags or Qt.NoModifier
+        actual = event.modifiers() & _ALL_MODIFIERS
+        self_modifier = _SELF_MODIFIER.get(self._key_code)
+        if self_modifier is not None:
+            actual = actual & (_ALL_MODIFIERS ^ self_modifier)
+        return actual == expected
 
     def eventFilter(self, _, event):
         t = event.type()
         if t not in _KEY_EVENT_TYPES:
             return False
+        if event.isAutoRepeat():
+            return False
 
-        if t == QEvent.KeyPress and not event.isAutoRepeat():
-            key_matches = event.key() == self._key_code
-            if self._modifier_flags != Qt.NoModifier:
-                key_matches = key_matches and event.modifiers() == self._modifier_flags
-            if key_matches:
+        if t == QEvent.KeyPress:
+            # A release is never gated, otherwise a held key could get stuck on
+            # when focus moves into a text field mid-press.
+            if not self._key_active and is_text_input_focused():
+                return False
+            if self._matches(event):
                 if not self._key_active:
                     self._key_active = True
                     self._combo_detected = False
-                    action = self._erase_action()
-                    if action:
-                        action.setChecked(True)
-            elif self._key_active and not self._combo_detected:
+                    self.on_activate()
+            elif (
+                self.cancel_on_other_key
+                and self._key_active
+                and not self._combo_detected
+            ):
                 self._combo_detected = True
-                action = self._erase_action()
-                if action:
-                    action.setChecked(False)
+                self.on_deactivate()
 
-        elif (
-            t == QEvent.KeyRelease
-            and not event.isAutoRepeat()
-            and event.key() == self._key_code
-        ):
+        elif t == QEvent.KeyRelease and event.key() == self._key_code:
             if self._key_active:
                 self._key_active = False
                 if not self._combo_detected:
-                    action = self._erase_action()
-                    if action:
-                        action.setChecked(False)
+                    self.on_deactivate()
 
         return False
 
 
-class PreserveAlphaListener(QObject):
-    """Temporarily enables Krita's Preserve Alpha mode while a configurable key is held."""
+class _CheckableActionListener(HeldKeyListener):
+    """Holds a checkable Krita action on while the configured key is held."""
 
-    def __init__(self, key_string: str = ""):
-        super().__init__()
-        self._modifier_flags, self._key_code = (
-            _parse_combo(key_string) if key_string else (None, None)
-        )
-        self._key_active = False
-        self._combo_detected = False
-        if self._key_code is not None:
-            QApplication.instance().installEventFilter(self)
-
-    def remove(self):
-        QApplication.instance().removeEventFilter(self)
+    action_id = ""
+    cancel_on_other_key = True
 
     def _action(self):
-        return Krita.instance().action("preserve_alpha")
+        return Krita.instance().action(self.action_id)
 
-    def eventFilter(self, _, event):
-        t = event.type()
-        if t not in _KEY_EVENT_TYPES:
-            return False
+    def _set_checked(self, checked):
+        action = self._action()
+        if action:
+            action.setChecked(checked)
 
-        if t == QEvent.KeyPress and not event.isAutoRepeat():
-            key_matches = event.key() == self._key_code
-            if self._modifier_flags != Qt.NoModifier:
-                key_matches = key_matches and event.modifiers() == self._modifier_flags
-            if key_matches:
-                if not self._key_active:
-                    self._key_active = True
-                    self._combo_detected = False
-                    action = self._action()
-                    if action:
-                        action.setChecked(True)
-            elif self._key_active and not self._combo_detected:
-                self._combo_detected = True
-                action = self._action()
-                if action:
-                    action.setChecked(False)
+    def on_activate(self):
+        self._set_checked(True)
 
-        elif (
-            t == QEvent.KeyRelease
-            and not event.isAutoRepeat()
-            and event.key() == self._key_code
-        ):
-            if self._key_active:
-                self._key_active = False
-                if not self._combo_detected:
-                    action = self._action()
-                    if action:
-                        action.setChecked(False)
-
-        return False
+    def on_deactivate(self):
+        self._set_checked(False)
 
 
-class TempBrushSetListener(QObject):
+class AltEraseListener(_CheckableActionListener):
+    """Activates Krita's erase mode while a configurable key is held - but only
+    when no other key is pressed simultaneously.
+    """
+
+    action_id = "erase_action"
+
+
+class PreserveAlphaListener(_CheckableActionListener):
+    """Temporarily enables Krita's Preserve Alpha mode while a configurable key is held."""
+
+    action_id = "preserve_alpha"
+
+
+class TempBrushSetListener(HeldKeyListener):
     """Temporarily switches to a configured brush preset while a combo key is held,
     then restores the original brush on release.
     """
@@ -176,41 +196,20 @@ class TempBrushSetListener(QObject):
     def __init__(
         self, key_string: str = "", brush_name: str = "", size_scale: float = 0.0
     ):
-        super().__init__()
-        self._modifier_flags, self._key_code = (
-            _parse_combo(key_string) if key_string else (None, None)
-        )
         self._brush_name = brush_name
         self._size_scale = size_scale
-        self._key_active = False
         self._original_preset = None
         self._original_size = None
-        if self._key_code is not None and self._brush_name:
-            QApplication.instance().installEventFilter(self)
+        super().__init__(key_string)
 
-    def remove(self):
-        QApplication.instance().removeEventFilter(self)
+    def _should_install(self):
+        return bool(self._brush_name)
 
-    def eventFilter(self, _, event):
-        t = event.type()
-        if t not in _KEY_EVENT_TYPES:
-            return False
+    def on_activate(self):
+        self._switch_to_temp_brush()
 
-        if t == QEvent.KeyPress and not event.isAutoRepeat():
-            if (
-                event.key() == self._key_code
-                and event.modifiers() == self._modifier_flags
-            ):
-                if not self._key_active:
-                    self._key_active = True
-                    self._switch_to_temp_brush()
-
-        elif t == QEvent.KeyRelease and not event.isAutoRepeat():
-            if event.key() == self._key_code and self._key_active:
-                self._key_active = False
-                self._restore_original_brush()
-
-        return False
+    def on_deactivate(self):
+        self._restore_original_brush()
 
     def _switch_to_temp_brush(self):
         app = Krita.instance()
@@ -238,47 +237,18 @@ class TempBrushSetListener(QObject):
         self._original_size = None
 
 
-class SelectOutlineListener(QObject):
+class SelectOutlineListener(HeldKeyListener):
     """Switches to the Freehand Selection tool while a configurable key is held,
     then returns to the Brush tool on release.
     """
 
-    def __init__(self, key_string: str = ""):
-        super().__init__()
-        self._modifier_flags, self._key_code = (
-            _parse_combo(key_string) if key_string else (None, None)
-        )
-        self._key_active = False
-        if self._key_code is not None:
-            QApplication.instance().installEventFilter(self)
+    def _trigger(self, action_id):
+        action = Krita.instance().action(action_id)
+        if action:
+            action.trigger()
 
-    def remove(self):
-        QApplication.instance().removeEventFilter(self)
+    def on_activate(self):
+        self._trigger("KisToolSelectOutline")
 
-    def eventFilter(self, _, event):
-        t = event.type()
-        if t not in _KEY_EVENT_TYPES:
-            return False
-
-        if t == QEvent.KeyPress and not event.isAutoRepeat():
-            key_matches = event.key() == self._key_code
-            if self._modifier_flags != Qt.NoModifier:
-                key_matches = key_matches and event.modifiers() == self._modifier_flags
-            if key_matches and not self._key_active:
-                self._key_active = True
-                action = Krita.instance().action("KisToolSelectOutline")
-                if action:
-                    action.trigger()
-
-        elif (
-            t == QEvent.KeyRelease
-            and not event.isAutoRepeat()
-            and event.key() == self._key_code
-        ):
-            if self._key_active:
-                self._key_active = False
-                action = Krita.instance().action("KritaShape/KisToolBrush")
-                if action:
-                    action.trigger()
-
-        return False
+    def on_deactivate(self):
+        self._trigger("KritaShape/KisToolBrush")

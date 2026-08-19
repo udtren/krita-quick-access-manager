@@ -71,12 +71,28 @@ class BrushHistoryWidget(QWidget):
         self.setLayout(layout)
 
     def install_event_filter(self):
+        self.set_filter_active(True)
+
+    def set_filter_active(self, active):
+        """Add/remove the application-wide mouse filter.
+
+        This filter sees every click in Krita, so it is only installed while the
+        docker is actually visible. closeEvent is not reliable for a docker
+        child widget, which is why removal cannot depend on it alone.
+        """
+        if active == getattr(self, "_filter_installed", False):
+            return
         try:
             app = QApplication.instance()
-            if app:
+            if app is None:
+                return
+            if active:
                 app.installEventFilter(self)
+            else:
+                app.removeEventFilter(self)
+            self._filter_installed = active
         except Exception as e:
-            print(f"Error installing event filter: {e}")
+            print(f"Error updating event filter: {e}")
 
     def eventFilter(self, obj, event):
         if event.type() != QEvent.MouseButtonPress:
@@ -196,10 +212,5 @@ class BrushHistoryWidget(QWidget):
                 print(f"Error adding test brush: {e}")
 
     def closeEvent(self, event):
-        try:
-            app = QApplication.instance()
-            if app:
-                app.removeEventFilter(self)
-        except Exception as e:
-            print(f"Error removing event filter: {e}")
+        self.set_filter_active(False)
         super().closeEvent(event)

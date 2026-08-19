@@ -34,6 +34,8 @@ from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
     COLOR_ITEM,
+    COLOR_SWATCH_BORDER_COLOR,
+    COLOR_SWATCH_BORDER_WIDTH,
     DOCKER_TOGGLE_ITEM,
     LABEL_ITEM,
     SCRIPT_ITEM,
@@ -293,7 +295,7 @@ class QuickAccessPalettePopup(QDialog):
             color = item.payload.get("color", "#ffffff")
             button.setToolTip(color)
             button.setStyleSheet(
-                f"QPushButton {{ background: {color}; border: 1px solid #555; border-radius: 4px; }}"
+                f"QPushButton {{ background: {color}; border: {COLOR_SWATCH_BORDER_WIDTH}px solid {COLOR_SWATCH_BORDER_COLOR}; border-radius: 4px; }}"
             )
             button.clicked.connect(
                 lambda checked=False, color=color: self.activate_color(color)

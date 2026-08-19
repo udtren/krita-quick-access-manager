@@ -96,6 +96,7 @@ class ntWidgetPad(QWidget):
         self.dockerEventFilter = None
 
         self.user_visible = True
+        self._adjusting = False
 
     def activeView(self):
         """Get the View widget of the active subwindow."""
@@ -114,6 +115,15 @@ class ntWidgetPad(QWidget):
 
     def adjustToView(self):
         """Adjust the position and size of the Pad to that of the active View."""
+        if self._adjusting:
+            return
+        self._adjusting = True
+        try:
+            self._adjustToView()
+        finally:
+            self._adjusting = False
+
+    def _adjustToView(self):
         view = self.activeView()
         if view:
             self.resizeToView()
@@ -137,7 +147,10 @@ class ntWidgetPad(QWidget):
                 globalTargetPos = self._calculateCanvasEdgePosition(view)
 
             local_pos = self.parentWidget().mapFromGlobal(globalTargetPos)
-            self.move(local_pos)
+            # Only move when it actually changes: move()/resize() inside a paint
+            # pass schedules another paint, which would spin forever.
+            if local_pos != self.pos():
+                self.move(local_pos)
 
     def _calculateDockerRelativePosition(self, docker):
         docker_frame_geometry = docker.frameGeometry()
@@ -258,7 +271,8 @@ class ntWidgetPad(QWidget):
                 if view.width() < containerSize.width() + 8 + self.scrollBarMargin():
                     containerSize.setWidth(view.width() - 8 - self.scrollBarMargin())
 
-                self.widget.setFixedSize(containerSize)
+                if containerSize != self.widget.size():
+                    self.widget.setFixedSize(containerSize)
 
             newSize = self.sizeHint()
             if view.height() < newSize.height():
@@ -267,7 +281,8 @@ class ntWidgetPad(QWidget):
             if view.width() < newSize.width():
                 newSize.setWidth(view.width())
 
-            self.resize(newSize)
+            if newSize != self.size():
+                self.resize(newSize)
 
     def returnDocker(self):
         """Return the borrowed docker to its original QDockWidget"""

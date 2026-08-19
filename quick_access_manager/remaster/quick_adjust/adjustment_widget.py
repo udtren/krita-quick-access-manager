@@ -152,6 +152,46 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
 
         self.update_from_current_brush()
 
+    def set_monitoring_active(self, active):
+        """Start/stop the polling timers.
+
+        Driven by the docker's show/hide so a collapsed or tabbed-away docker
+        stops polling Krita five times a second. Qt sends hide events to the
+        QDockWidget, not to this child widget, so the docker calls this for us.
+        """
+        timers = (
+            getattr(self, "brush_check_timer", None),
+            getattr(self, "layer_check_timer", None),
+            getattr(self, "update_timer", None),
+        )
+        intervals = (200, 200, 2000)
+        for timer, interval in zip(timers, intervals):
+            if timer is None:
+                continue
+            if active:
+                if not timer.isActive():
+                    timer.start(interval)
+            else:
+                timer.stop()
+
+        control_buttons = getattr(self, "control_buttons_layout", None)
+        status_timer = getattr(control_buttons, "status_update_timer", None)
+        if status_timer is not None:
+            if active:
+                if not status_timer.isActive():
+                    status_timer.start(1000)
+            else:
+                status_timer.stop()
+
+        # The history widgets filter every mouse press in the application;
+        # take them out of the chain while the docker is not visible.
+        for history in (self.color_history_widget, self.brush_history_widget):
+            if history is not None:
+                history.set_filter_active(active)
+
+        if active:
+            self.force_update()
+
     def force_update(self):
         """Force update from current brush - can be called externally"""
         self.current_brush_name = None
@@ -167,6 +207,14 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             self.brush_history_widget.force_brush_update()
 
     def update_docker_size(self):
+        # Relayouting the whole parent chain twice a second is expensive and
+        # makes the docker flicker, so bail out unless the content actually
+        # wants a different size than last time.
+        size_hint = self.sizeHint()
+        if size_hint == getattr(self, "_last_size_hint", None):
+            return
+        self._last_size_hint = size_hint
+
         self.updateGeometry()
         self.adjustSize()
 
@@ -196,18 +244,10 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
                 label.setStyleSheet(style)
 
     def closeEvent(self, event):
-        """Clean up timers when widget is closed"""
-        if hasattr(self, "brush_check_timer"):
-            self.brush_check_timer.stop()
-        if hasattr(self, "layer_check_timer"):
-            self.layer_check_timer.stop()
-        if self.color_history_widget is not None:
-            self.color_history_widget.closeEvent(event)
-        if self.brush_history_widget is not None:
-            self.brush_history_widget.closeEvent(event)
-        if (
-            self.control_buttons_layout is not None
-            and self.control_buttons_layout.float_tool_options is not None
-        ):
-            self.control_buttons_layout.float_tool_options.close()
+        """Stop every timer, event filter, and notifier connection we own."""
+        self.set_monitoring_active(False)
+        if self.control_buttons_layout is not None:
+            self.control_buttons_layout.cleanup()
+            if self.control_buttons_layout.float_tool_options is not None:
+                self.control_buttons_layout.float_tool_options.close()
         super().closeEvent(event)

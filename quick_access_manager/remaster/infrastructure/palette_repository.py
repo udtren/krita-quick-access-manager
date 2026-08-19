@@ -1,9 +1,9 @@
 """JSON repository for Quick Access Palette remaster data."""
 
-import json
 import os
 
 from ..shared import PaletteDocument, PaletteGrid, PaletteTab
+from .json_cache import read_json, write_json
 from .paths import get_palette_config_path, get_palette_settings_path
 
 DEFAULT_COLUMNS = 8
@@ -28,8 +28,7 @@ class PaletteRepository:
             return document
 
         try:
-            with open(self.path, "r", encoding="utf-8") as handle:
-                data = json.load(handle)
+            data = read_json(self.path, default={})
         except Exception:
             backup_path = self.path + ".broken"
             try:
@@ -52,24 +51,17 @@ class PaletteRepository:
     def save(self, document: PaletteDocument):
         grid_data = document.to_dict()
         grid_data.pop("settings", None)
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
-        with open(self.path, "w", encoding="utf-8") as handle:
-            json.dump(grid_data, handle, indent=2, ensure_ascii=False)
+        write_json(self.path, grid_data)
         self._save_settings(document.settings)
 
     def _load_settings(self) -> dict:
-        if not os.path.exists(self.settings_path):
-            return {}
         try:
-            with open(self.settings_path, "r", encoding="utf-8") as handle:
-                return json.load(handle)
+            return read_json(self.settings_path, default={}) or {}
         except Exception:
             return {}
 
     def _save_settings(self, settings: dict):
-        os.makedirs(os.path.dirname(self.settings_path), exist_ok=True)
-        with open(self.settings_path, "w", encoding="utf-8") as handle:
-            json.dump(settings, handle, indent=2, ensure_ascii=False)
+        write_json(self.settings_path, settings)
 
     def create_default_document(self) -> PaletteDocument:
         grid = PaletteGrid(

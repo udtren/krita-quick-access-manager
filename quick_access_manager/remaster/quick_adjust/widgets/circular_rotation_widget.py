@@ -4,7 +4,12 @@ from ...compat import QBrush, QColor, QPainter, QPen, Qt, QWidget, pyqtSignal
 
 
 class CircularRotationWidget(QWidget):
-    """Custom circular rotation control widget"""
+    """Custom circular rotation control widget.
+
+    Angle convention: 0 points straight up and the value increases clockwise.
+    Both the needle drawing and the mouse mapping use this same convention, so
+    the needle lands exactly where the user clicked.
+    """
 
     valueChanged = pyqtSignal(int)
 
@@ -36,9 +41,9 @@ class CircularRotationWidget(QWidget):
             center_x - radius, center_y - radius, radius * 2, radius * 2
         )
 
-        angle_rad = math.radians(-self.value)
-        end_x = center_x + (radius - 10) * math.cos(angle_rad)
-        end_y = center_y + (radius - 10) * math.sin(angle_rad)
+        angle_rad = math.radians(self.value)
+        end_x = center_x + (radius - 10) * math.sin(angle_rad)
+        end_y = center_y - (radius - 10) * math.cos(angle_rad)
 
         painter.setPen(QPen(QColor(10, 45, 80), 3))
         painter.drawLine(center_x, center_y, int(end_x), int(end_y))
@@ -67,13 +72,10 @@ class CircularRotationWidget(QWidget):
         dx = pos.x() - center_x
         dy = pos.y() - center_y
 
-        angle_rad = math.atan2(dy, dx)
-        angle_deg = -math.degrees(angle_rad) + 90
-
+        # 0 = up, increasing clockwise - the inverse of the needle drawn above.
+        angle_deg = math.degrees(math.atan2(dx, -dy))
         if angle_deg < 0:
             angle_deg += 360
-        elif angle_deg >= 360:
-            angle_deg -= 360
 
         old_value = self.value
         self.value = int(angle_deg)
