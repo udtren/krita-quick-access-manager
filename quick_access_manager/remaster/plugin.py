@@ -5,7 +5,12 @@ from krita import Extension, Krita  # type: ignore
 from .compat import QApplication
 from .features.quick_access_palette.docker import QuickAccessPaletteDockerFactory
 from .features.quick_access_palette.popup import QuickAccessPalettePopup
-
+from .gesture import (
+    ToggleGestureExtension,
+    initialize_gesture_system,
+    is_gesture_enabled,
+    shutdown_gesture_system,
+)
 
 _popup_window = None
 
@@ -54,6 +59,18 @@ class QuickAccessPaletteExtension(Extension):
         self.palette_factory = QuickAccessPaletteDockerFactory()
         Krita.instance().addDockWidgetFactory(self.palette_factory)
 
+        if is_gesture_enabled():
+            try:
+                initialize_gesture_system()
+            except Exception as exc:
+                print(f"Quick Access Palette: error initializing gesture system: {exc}")
+
+    def __del__(self):
+        try:
+            shutdown_gesture_system()
+        except Exception as exc:
+            print(f"Quick Access Palette: error shutting down gesture system: {exc}")
+
     def createActions(self, window):
         action = window.createAction(
             "quick_access_palette_popup", "Quick Access Palette Popup"
@@ -85,3 +102,4 @@ class QuickAccessPaletteExtension(Extension):
 
 app = Krita.instance()
 app.addExtension(QuickAccessPaletteExtension(app))
+app.addExtension(ToggleGestureExtension(app))

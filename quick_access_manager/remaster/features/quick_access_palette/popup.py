@@ -2,27 +2,43 @@
 
 import os
 
-from krita import Krita  # type: ignore
+from krita import Krita, ManagedColor  # type: ignore
 
 from ...compat import (
+    QColor,
     QCursor,
     QDialog,
     QFrame,
     QHBoxLayout,
     QIcon,
     QLabel,
+    QMessageBox,
     QPixmap,
-    QSize,
     QPushButton,
     QScrollArea,
     QShortcut,
+    QSize,
+    Qt,
     QTabWidget,
     QVBoxLayout,
     QWidget,
-    Qt,
 )
-from ...infrastructure import ActionManager, get_default_icons_dir, get_system_icons_dir
-from ...shared import ACTION_ITEM, BRUSH_ITEM, LABEL_ITEM, SEPARATOR_ITEM
+from ...infrastructure import (
+    ActionManager,
+    AliasRepository,
+    DockerManager,
+    get_default_icons_dir,
+    get_system_icons_dir,
+)
+from ...shared import (
+    ACTION_ITEM,
+    BRUSH_ITEM,
+    COLOR_ITEM,
+    DOCKER_TOGGLE_ITEM,
+    LABEL_ITEM,
+    SCRIPT_ITEM,
+    SEPARATOR_ITEM,
+)
 from .controller import PaletteController
 
 
@@ -122,7 +138,9 @@ class QuickAccessPalettePopup(QDialog):
     def show_at_cursor(self):
         self.adjustSize()
         cursor_pos = QCursor.pos()
-        self.move(cursor_pos.x() - self.width() // 2, cursor_pos.y() - self.height() // 3)
+        self.move(
+            cursor_pos.x() - self.width() // 2, cursor_pos.y() - self.height() // 3
+        )
         self.show()
         self.raise_()
         self.activateWindow()
@@ -173,17 +191,28 @@ class QuickAccessPalettePopup(QDialog):
     def create_grid_widget(self, grid):
         widget = QWidget()
         max_bottom = max([item.bottom for item in grid.items], default=1)
-        width = max(1, grid.columns) * self.cell_size + max(0, grid.columns - 1) * self.spacing
+        width = (
+            max(1, grid.columns) * self.cell_size
+            + max(0, grid.columns - 1) * self.spacing
+        )
         height = max_bottom * self.cell_size + max(0, max_bottom - 1) * self.spacing
         widget.setMinimumSize(width, height)
 
-        for item in sorted(grid.items, key=lambda entry: (entry.row, entry.col, entry.id)):
+        for item in sorted(
+            grid.items, key=lambda entry: (entry.row, entry.col, entry.id)
+        ):
             child = self.create_item_widget(item)
             child.setParent(widget)
             x = item.col * (self.cell_size + self.spacing)
             y = item.row * (self.cell_size + self.spacing)
-            child_width = item.col_span * self.cell_size + max(0, item.col_span - 1) * self.spacing
-            child_height = item.row_span * self.cell_size + max(0, item.row_span - 1) * self.spacing
+            child_width = (
+                item.col_span * self.cell_size
+                + max(0, item.col_span - 1) * self.spacing
+            )
+            child_height = (
+                item.row_span * self.cell_size
+                + max(0, item.row_span - 1) * self.spacing
+            )
             child.setGeometry(x, y, child_width, child_height)
             child.show()
         return widget
@@ -195,14 +224,21 @@ class QuickAccessPalettePopup(QDialog):
             brush_name = item.payload.get("brush_name", "")
             button.setToolTip(brush_name)
             self.apply_brush_icon(button, brush_name)
-            button.clicked.connect(lambda checked=False, name=brush_name: self.activate_brush(name))
+            button.clicked.connect(
+                lambda checked=False, name=brush_name: self.activate_brush(name)
+            )
             return button
 
         if item.type == ACTION_ITEM:
-            label = item.payload.get("customName") or item.payload.get("action_id", "Action")
-            button = QPushButton(label)
-            button.clicked.connect(lambda checked=False, action_id=item.payload.get("action_id", ""): self.trigger_action(action_id))
-            icon_name = item.payload.get("icon_name")
+            action_id = item.payload.get("action_id", "")
+            alias = self.alias_entry("actions", action_id)
+            button = QPushButton(alias.get("custom_name") or action_id)
+            button.clicked.connect(
+                lambda checked=False, action_id=action_id: self.trigger_action(
+                    action_id
+                )
+            )
+            icon_name = alias.get("icon_name")
             has_icon = False
             if icon_name:
                 icon_path = self.resolve_icon_path(icon_name)
@@ -212,7 +248,7 @@ class QuickAccessPalettePopup(QDialog):
                     button.setText("")
                     button.setFixedSize(self.cell_size, self.cell_size)
                     has_icon = True
-            self.apply_action_style(button, item, has_icon)
+            self.apply_action_style(button, alias, has_icon)
             return button
 
         if item.type == LABEL_ITEM:
@@ -227,6 +263,60 @@ class QuickAccessPalettePopup(QDialog):
             separator.setFrameShadow(QFrame.Sunken)
             separator.setMinimumHeight(12)
             return separator
+
+        if item.type == DOCKER_TOGGLE_ITEM:
+            docker_id = item.payload.get("docker_id", "")
+            alias = self.alias_entry("dockers", docker_id)
+            icon_path = self.resolve_icon_path(alias.get("icon_name"))
+            has_icon = bool(icon_path)
+            if has_icon:
+                button = QPushButton()
+                button.setFixedSize(self.cell_size, self.cell_size)
+                button.setIcon(QIcon(icon_path))
+                button.setIconSize(self.item_icon_size())
+            else:
+                button = QPushButton(alias.get("custom_name") or docker_id)
+            button.setToolTip(alias.get("custom_name") or docker_id)
+            button.clicked.connect(
+                lambda checked=False, docker_id=docker_id: self.activate_docker_toggle(
+                    docker_id
+                )
+            )
+            self.apply_action_style(
+                button, alias, has_icon, default_bg="#263a2f", default_fg="#ffffff"
+            )
+            return button
+
+        if item.type == COLOR_ITEM:
+            button = QPushButton()
+            button.setFixedSize(self.cell_size, self.cell_size)
+            color = item.payload.get("color", "#ffffff")
+            button.setToolTip(color)
+            button.setStyleSheet(
+                f"QPushButton {{ background: {color}; border: 1px solid #555; border-radius: 4px; }}"
+            )
+            button.clicked.connect(
+                lambda checked=False, color=color: self.activate_color(color)
+            )
+            return button
+
+        if item.type == SCRIPT_ITEM:
+            button = QPushButton()
+            button.setFixedSize(self.cell_size, self.cell_size)
+            script_path = item.payload.get("script_path", "")
+            button.setToolTip(item.payload.get("customName") or script_path)
+            icon_path = self.resolve_icon_path(item.payload.get("icon_name"))
+            if icon_path:
+                button.setIcon(QIcon(icon_path))
+                button.setIconSize(self.item_icon_size())
+            else:
+                button.setText((item.payload.get("customName") or "Sc")[:2])
+            button.clicked.connect(
+                lambda checked=False, script_path=script_path: self.run_script(
+                    script_path
+                )
+            )
+            return button
 
         return QLabel(item.type)
 
@@ -254,32 +344,37 @@ class QuickAccessPalettePopup(QDialog):
                     button.setIcon(QIcon(pixmap))
                     button.setIconSize(self.item_icon_size())
                     button.setText("")
-                    button.setStyleSheet("QPushButton { padding: 0px; border: 1px solid #555; background: #2f2f2f; }")
+                    button.setStyleSheet(
+                        "QPushButton { padding: 0px; border: 1px solid #555; background: #2f2f2f; }"
+                    )
                     return
         except Exception as exc:
-            print("Quick Access Palette popup brush icon error: {0}".format(exc))
+            print(f"Quick Access Palette popup brush icon error: {exc}")
         button.setText(brush_name[:1] if brush_name else "?")
 
-    def apply_action_style(self, button, item, has_icon=False):
-        bg = item.payload.get("backgroundColor", "#3a263f")
-        fg = item.payload.get("fontColor", "#ffffff")
-        size = item.payload.get("fontSize", "18")
+    def apply_action_style(
+        self, button, alias, has_icon=False, default_bg="#3a263f", default_fg="#ffffff"
+    ):
+        bg = alias.get("background_color") or default_bg
+        fg = alias.get("font_color") or default_fg
+        size = alias.get("font_size") or "18"
         padding = "0px" if has_icon else "2px 6px"
         button.setStyleSheet(
-            "QPushButton {{ background: {0}; color: {1}; font-size: {2}px; border: 1px solid #6b4a73; border-radius: 4px; padding: {3}; }}".format(
-                bg, fg, size, padding
-            )
+            f"QPushButton {{ background: {bg}; color: {fg}; font-size: {size}px; border: 1px solid #6b4a73; border-radius: 4px; padding: {padding}; }}"
         )
+
+    def alias_entry(self, category, item_id):
+        return AliasRepository().load().get(category, {}).get(item_id, {})
 
     def apply_label_style(self, label, item):
         bg = item.payload.get("backgroundColor", "transparent")
         fg = item.payload.get("fontColor", "#4FC3F7")
         size = item.payload.get("fontSize", "18")
-        background_rule = "background: {0};".format(bg) if bg != "transparent" else "background: transparent;"
+        background_rule = (
+            f"background: {bg};" if bg != "transparent" else "background: transparent;"
+        )
         label.setStyleSheet(
-            "QLabel {{ {0} color: {1}; font-size: {2}px; font-weight: bold; padding: 0px 4px; }}".format(
-                background_rule, fg, size
-            )
+            f"QLabel {{ {background_rule} color: {fg}; font-size: {size}px; font-weight: bold; padding: 0px 4px; }}"
         )
 
     def activate_brush(self, brush_name):
@@ -295,6 +390,42 @@ class QuickAccessPalettePopup(QDialog):
     def trigger_action(self, action_id):
         if ActionManager.run_action(action_id):
             self.close_after_execute()
+
+    def activate_docker_toggle(self, docker_id):
+        if DockerManager and DockerManager.toggle_docker(docker_id):
+            self.close_after_execute()
+
+    def activate_color(self, color):
+        window = Krita.instance().activeWindow()
+        view = window.activeView() if window else None
+        if not view:
+            return
+        managed_color = ManagedColor("RGBA", "U8", "")
+        qcolor = QColor(color)
+        managed_color.setComponents(
+            [qcolor.blueF(), qcolor.greenF(), qcolor.redF(), 1.0]
+        )
+        view.setForeGroundColor(managed_color)
+        self.close_after_execute()
+
+    def run_script(self, script_path):
+        if not script_path or not os.path.isfile(script_path):
+            QMessageBox.warning(
+                self,
+                "Script Not Found",
+                f"The script file could not be found:\n{script_path}",
+            )
+            return
+        try:
+            with open(script_path, "r", encoding="utf-8") as script_file:
+                source = script_file.read()
+            exec(
+                compile(source, script_path, "exec"),
+                {"__name__": "__main__", "Krita": Krita},
+            )
+            self.close_after_execute()
+        except Exception as exc:
+            QMessageBox.warning(self, "Script Error", f"Failed to run script:\n{exc}")
 
     def close_after_execute(self):
         if not self.is_pinned:

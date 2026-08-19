@@ -4,16 +4,27 @@ These classes intentionally avoid Krita and Qt dependencies so they can be used
 by the Docker, popup, config repository, and tests.
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Optional, Tuple
-
+from typing import Any
 
 BRUSH_ITEM = "brush"
 ACTION_ITEM = "action"
 LABEL_ITEM = "label"
 SEPARATOR_ITEM = "separator"
+DOCKER_TOGGLE_ITEM = "docker_toggle"
+COLOR_ITEM = "color"
+SCRIPT_ITEM = "script"
 
-ITEM_TYPES = {BRUSH_ITEM, ACTION_ITEM, LABEL_ITEM, SEPARATOR_ITEM}
+ITEM_TYPES = {
+    BRUSH_ITEM,
+    ACTION_ITEM,
+    LABEL_ITEM,
+    SEPARATOR_ITEM,
+    DOCKER_TOGGLE_ITEM,
+    COLOR_ITEM,
+    SCRIPT_ITEM,
+}
 DEFAULT_ACTION_COL_SPAN = 2
 DEFAULT_ROW_SPAN = 1
 DEFAULT_COL_SPAN = 1
@@ -29,11 +40,11 @@ class PaletteItem:
     col: int
     row_span: int = DEFAULT_ROW_SPAN
     col_span: int = DEFAULT_COL_SPAN
-    payload: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         if self.type not in ITEM_TYPES:
-            raise ValueError("Unsupported palette item type: {0}".format(self.type))
+            raise ValueError(f"Unsupported palette item type: {self.type}")
         self.row = int(self.row)
         self.col = int(self.col)
         self.row_span = max(1, int(self.row_span))
@@ -65,7 +76,7 @@ class PaletteItem:
         col: int = 0,
         col_span: int = DEFAULT_ACTION_COL_SPAN,
         row_span: int = DEFAULT_ROW_SPAN,
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
     ):
         payload = {"action_id": action_id}
         if config:
@@ -116,6 +127,68 @@ class PaletteItem:
             col_span=col_span,
         )
 
+    @classmethod
+    def create_docker_toggle(
+        cls,
+        item_id: str,
+        docker_id: str,
+        row: int = 0,
+        col: int = 0,
+        config: dict[str, Any] | None = None,
+    ):
+        payload = {"docker_id": docker_id}
+        if config:
+            payload.update(config)
+        return cls(
+            id=item_id,
+            type=DOCKER_TOGGLE_ITEM,
+            row=row,
+            col=col,
+            row_span=1,
+            col_span=1,
+            payload=payload,
+        )
+
+    @classmethod
+    def create_color(
+        cls,
+        item_id: str,
+        color: str = "#ffffff",
+        row: int = 0,
+        col: int = 0,
+    ):
+        return cls(
+            id=item_id,
+            type=COLOR_ITEM,
+            row=row,
+            col=col,
+            row_span=1,
+            col_span=1,
+            payload={"color": color},
+        )
+
+    @classmethod
+    def create_script(
+        cls,
+        item_id: str,
+        script_path: str,
+        row: int = 0,
+        col: int = 0,
+        config: dict[str, Any] | None = None,
+    ):
+        payload = {"script_path": script_path}
+        if config:
+            payload.update(config)
+        return cls(
+            id=item_id,
+            type=SCRIPT_ITEM,
+            row=row,
+            col=col,
+            row_span=1,
+            col_span=1,
+            payload=payload,
+        )
+
     @property
     def right(self) -> int:
         return self.col + self.col_span
@@ -124,7 +197,7 @@ class PaletteItem:
     def bottom(self) -> int:
         return self.row + self.row_span
 
-    def cells(self) -> Iterable[Tuple[int, int]]:
+    def cells(self) -> Iterable[tuple[int, int]]:
         for row in range(self.row, self.bottom):
             for col in range(self.col, self.right):
                 yield row, col
@@ -134,7 +207,7 @@ class PaletteItem:
         data.update(changes)
         return PaletteItem.from_dict(data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "type": self.type,
@@ -146,7 +219,7 @@ class PaletteItem:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]):
         return cls(
             id=str(data["id"]),
             type=str(data["type"]),
@@ -163,18 +236,18 @@ class PaletteGrid:
     id: str
     name: str
     columns: int
-    items: List[PaletteItem] = field(default_factory=list)
+    items: list[PaletteItem] = field(default_factory=list)
 
     def __post_init__(self):
         self.columns = max(1, int(self.columns))
 
-    def get_item(self, item_id: str) -> Optional[PaletteItem]:
+    def get_item(self, item_id: str) -> PaletteItem | None:
         for item in self.items:
             if item.id == item_id:
                 return item
         return None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
@@ -183,7 +256,7 @@ class PaletteGrid:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]):
         return cls(
             id=str(data["id"]),
             name=str(data.get("name", "Grid")),
@@ -196,9 +269,9 @@ class PaletteGrid:
 class PaletteTab:
     id: str
     name: str
-    grids: List[PaletteGrid] = field(default_factory=list)
+    grids: list[PaletteGrid] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
@@ -206,7 +279,7 @@ class PaletteTab:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]):
         return cls(
             id=str(data["id"]),
             name=str(data.get("name", "Tab")),
@@ -216,11 +289,11 @@ class PaletteTab:
 
 @dataclass
 class PaletteDocument:
-    tabs: List[PaletteTab] = field(default_factory=list)
-    active_tab_id: Optional[str] = None
-    settings: Dict[str, Any] = field(default_factory=dict)
+    tabs: list[PaletteTab] = field(default_factory=list)
+    active_tab_id: str | None = None
+    settings: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "version": 1,
             "active_tab_id": self.active_tab_id,
@@ -229,12 +302,9 @@ class PaletteDocument:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]):
         return cls(
             active_tab_id=data.get("active_tab_id"),
             settings=dict(data.get("settings", {})),
             tabs=[PaletteTab.from_dict(tab) for tab in data.get("tabs", [])],
         )
-
-
-

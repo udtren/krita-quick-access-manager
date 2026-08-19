@@ -2,7 +2,6 @@
 
 import os
 
-
 PLUGIN_CONFIG_DIR_NAME = "quick_access_manager"
 PALETTE_CONFIG_FILE = "quick_access_palette.json"
 
@@ -27,6 +26,12 @@ def get_remaster_config_dir():
     return config_dir
 
 
+def get_gesture_data_dir():
+    gesture_dir = os.path.join(get_remaster_config_dir(), "gesture")
+    os.makedirs(gesture_dir, exist_ok=True)
+    return gesture_dir
+
+
 def get_palette_config_path():
     return os.path.join(get_remaster_config_dir(), PALETTE_CONFIG_FILE)
 
@@ -39,3 +44,8 @@ def get_default_icons_dir():
 def get_system_icons_dir():
     remaster_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(remaster_dir, "resources", "system_icons")
+
+
+def get_gesture_images_dir():
+    remaster_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(remaster_dir, "resources", "gesture")

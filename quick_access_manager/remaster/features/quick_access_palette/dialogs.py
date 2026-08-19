@@ -2,9 +2,11 @@
 
 import os
 
+from krita import Krita  # type: ignore
+
 from ...compat import (
-    Qt,
     QApplication,
+    QCheckBox,
     QColor,
     QColorDialog,
     QComboBox,
@@ -13,25 +15,34 @@ from ...compat import (
     QFrame,
     QHBoxLayout,
     QHeaderView,
+    QIcon,
     QLabel,
     QLineEdit,
-    QIcon,
-    QPixmap,
-    QSize,
     QMessageBox,
+    QPixmap,
     QPushButton,
-    QSpinBox,
-    QTabWidget,
     QScrollArea,
+    QSize,
+    QSpinBox,
+    Qt,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
-from krita import Krita  # type: ignore
-
-from ...infrastructure import get_default_icons_dir
-from ...shared import ACTION_ITEM, BRUSH_ITEM, LABEL_ITEM, SEPARATOR_ITEM, PaletteItem
+from ...gesture import is_gesture_enabled
+from ...infrastructure import AliasRepository, DockerManager, get_default_icons_dir
+from ...shared import (
+    ACTION_ITEM,
+    BRUSH_ITEM,
+    COLOR_ITEM,
+    DOCKER_TOGGLE_ITEM,
+    LABEL_ITEM,
+    SCRIPT_ITEM,
+    SEPARATOR_ITEM,
+    PaletteItem,
+)
 
 
 class ActionItemConfigDialog(QDialog):
@@ -54,6 +65,7 @@ class ActionItemConfigDialog(QDialog):
         if item.type == ACTION_ITEM and item.payload.get("icon_name"):
             return item.copy_with(col_span=1)
         return item
+
     def setup_ui(self):
         self.setWindowTitle("Action Button Config")
         self.resize(300, 220)
@@ -64,7 +76,7 @@ class ActionItemConfigDialog(QDialog):
         self.action_combo = QComboBox()
         for action_id, action in sorted(self.actions.items()):
             text = action.text() if hasattr(action, "text") else action_id
-            self.action_combo.addItem("{0} ({1})".format(text, action_id), action_id)
+            self.action_combo.addItem(f"{text} ({action_id})", action_id)
         layout.addWidget(self.action_combo)
         if self.selected_action_id:
             self.action_combo.setEnabled(False)
@@ -158,11 +170,11 @@ class ActionItemConfigDialog(QDialog):
 
     def update_color_buttons(self):
         self.bg_color_button.setStyleSheet(
-            "background-color: {0}; border: 1px solid #888;".format(self.bg_color.name())
+            f"background-color: {self.bg_color.name()}; border: 1px solid #888;"
         )
         self.bg_color_button.setText(self.bg_color.name())
         self.font_color_button.setStyleSheet(
-            "background-color: {0}; border: 1px solid #888;".format(self.font_color.name())
+            f"background-color: {self.font_color.name()}; border: 1px solid #888;"
         )
         self.font_color_button.setText(self.font_color.name())
 
@@ -175,8 +187,6 @@ class ActionItemConfigDialog(QDialog):
             "fontColor": self.font_color.name(),
             "icon_name": self.icon_path,
         }
-
-
 
 
 class LabelItemConfigDialog(QDialog):
@@ -246,11 +256,11 @@ class LabelItemConfigDialog(QDialog):
 
     def update_color_buttons(self):
         self.bg_color_button.setStyleSheet(
-            "background-color: {0}; border: 1px solid #888;".format(self.bg_color.name())
+            f"background-color: {self.bg_color.name()}; border: 1px solid #888;"
         )
         self.bg_color_button.setText(self.bg_color.name())
         self.font_color_button.setStyleSheet(
-            "background-color: {0}; border: 1px solid #888;".format(self.font_color.name())
+            f"background-color: {self.font_color.name()}; border: 1px solid #888;"
         )
         self.font_color_button.setText(self.font_color.name())
 
@@ -261,6 +271,235 @@ class LabelItemConfigDialog(QDialog):
             "backgroundColor": self.bg_color.name(),
             "fontColor": self.font_color.name(),
         }
+
+
+class DockerToggleItemConfigDialog(QDialog):
+    """Configure a Docker Toggle palette item."""
+
+    def __init__(self, config=None, parent=None):
+        super().__init__(parent)
+        self.config = dict(config or {})
+        self.dockers = DockerManager.get_dockers_dict() if DockerManager else {}
+        self.icon_path = self.config.get("icon_name", "")
+        self.setup_ui()
+        self.load_values()
+
+    def setup_ui(self):
+        self.setWindowTitle("Docker Toggle Config")
+        self.resize(320, 220)
+        layout = QVBoxLayout()
+
+        layout.addWidget(QLabel("Docker:"))
+        self.docker_combo = QComboBox()
+        for docker_id, title in sorted(
+            self.dockers.items(), key=lambda entry: entry[1].lower()
+        ):
+            self.docker_combo.addItem(f"{title} ({docker_id})", docker_id)
+        layout.addWidget(self.docker_combo)
+
+        layout.addWidget(QLabel("Button Name:"))
+        self.name_edit = QLineEdit()
+        layout.addWidget(self.name_edit)
+
+        self.icon_button = QPushButton("Icon")
+        self.icon_button.clicked.connect(self.pick_icon)
+        layout.addWidget(self.icon_button)
+
+        self.icon_path_label = QLabel("")
+        self.icon_path_label.setWordWrap(True)
+        self.icon_path_label.setStyleSheet("color: #b8b8b8; font-size: 11px;")
+        layout.addWidget(self.icon_path_label)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def load_values(self):
+        docker_id = self.config.get("docker_id")
+        if docker_id:
+            index = self.docker_combo.findData(docker_id)
+            if index >= 0:
+                self.docker_combo.setCurrentIndex(index)
+        self.name_edit.setText(self.config.get("customName", ""))
+        self.update_icon_label()
+
+    def pick_icon(self):
+        selected, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Icon",
+            get_default_icons_dir(),
+            "Images (*.png *.jpg *.jpeg *.bmp *.gif);;All Files (*)",
+        )
+        if selected:
+            self.icon_path = selected
+            self.update_icon_label()
+
+    def update_icon_label(self):
+        self.icon_path_label.setText(self.icon_path or "No icon selected")
+
+    def get_config(self):
+        return {
+            "docker_id": self.docker_combo.currentData(),
+            "customName": self.name_edit.text().strip(),
+            "icon_name": self.icon_path,
+        }
+
+
+class ColorItemConfigDialog(QDialog):
+    """Configure a Color palette item that sets the foreground color."""
+
+    def __init__(self, config=None, parent=None):
+        super().__init__(parent)
+        self.config = dict(config or {})
+        self.color = QColor(self.config.get("color", "#ffffff"))
+        self.setup_ui()
+        self.load_values()
+
+    def setup_ui(self):
+        self.setWindowTitle("Color Swatch Config")
+        self.resize(280, 150)
+        layout = QVBoxLayout()
+
+        layout.addWidget(QLabel("Color:"))
+        self.color_button = QPushButton()
+        self.color_button.setFixedHeight(28)
+        self.color_button.clicked.connect(self.pick_color)
+        layout.addWidget(self.color_button)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def load_values(self):
+        self.update_color_button()
+
+    def pick_color(self):
+        color = QColorDialog.getColor(self.color, self, "Select Color")
+        if color.isValid():
+            self.color = color
+            self.update_color_button()
+
+    def update_color_button(self):
+        self.color_button.setStyleSheet(
+            f"background-color: {self.color.name()}; border: 1px solid #888;"
+        )
+        self.color_button.setText(self.color.name())
+
+    def get_config(self):
+        return {"color": self.color.name()}
+
+
+class ScriptItemConfigDialog(QDialog):
+    """Configure a Script palette item that runs a user-selected .py file."""
+
+    def __init__(self, config=None, parent=None):
+        super().__init__(parent)
+        self.config = dict(config or {})
+        self.script_path = self.config.get("script_path", "")
+        self.icon_path = self.config.get("icon_name", "")
+        self.setup_ui()
+        self.load_values()
+
+    def setup_ui(self):
+        self.setWindowTitle("Script Item Config")
+        self.resize(340, 240)
+        layout = QVBoxLayout()
+
+        layout.addWidget(QLabel("Button Name:"))
+        self.name_edit = QLineEdit()
+        layout.addWidget(self.name_edit)
+
+        self.script_button = QPushButton("Select Script (.py)")
+        self.script_button.clicked.connect(self.pick_script)
+        layout.addWidget(self.script_button)
+
+        self.script_path_label = QLabel("")
+        self.script_path_label.setWordWrap(True)
+        self.script_path_label.setStyleSheet("color: #b8b8b8; font-size: 11px;")
+        layout.addWidget(self.script_path_label)
+
+        self.icon_button = QPushButton("Icon")
+        self.icon_button.clicked.connect(self.pick_icon)
+        layout.addWidget(self.icon_button)
+
+        self.icon_path_label = QLabel("")
+        self.icon_path_label.setWordWrap(True)
+        self.icon_path_label.setStyleSheet("color: #b8b8b8; font-size: 11px;")
+        layout.addWidget(self.icon_path_label)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept_if_valid)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def load_values(self):
+        self.name_edit.setText(self.config.get("customName", ""))
+        self.update_script_label()
+        self.update_icon_label()
+
+    def pick_script(self):
+        selected, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Script",
+            self.script_path or os.path.expanduser("~"),
+            "Python Scripts (*.py)",
+        )
+        if selected:
+            self.script_path = selected
+            self.update_script_label()
+
+    def update_script_label(self):
+        self.script_path_label.setText(self.script_path or "No script selected")
+
+    def pick_icon(self):
+        selected, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Icon",
+            get_default_icons_dir(),
+            "Images (*.png *.jpg *.jpeg *.bmp *.gif);;All Files (*)",
+        )
+        if selected:
+            self.icon_path = selected
+            self.update_icon_label()
+
+    def update_icon_label(self):
+        self.icon_path_label.setText(self.icon_path or "No icon selected")
+
+    def accept_if_valid(self):
+        if not self.script_path or not os.path.isfile(self.script_path):
+            QMessageBox.warning(
+                self, "No Script Selected", "Please select an existing .py file."
+            )
+            return
+        self.accept()
+
+    def get_config(self):
+        return {
+            "script_path": self.script_path,
+            "customName": self.name_edit.text().strip(),
+            "icon_name": self.icon_path,
+        }
+
 
 class ActionSelectorDialog(QDialog):
     """Select one Krita action for a remastered Action item."""
@@ -276,6 +515,7 @@ class ActionSelectorDialog(QDialog):
         if item.type == ACTION_ITEM and item.payload.get("icon_name"):
             return item.copy_with(col_span=1)
         return item
+
     def setup_ui(self):
         self.setWindowTitle("Krita Actions")
         self.resize(600, 400)
@@ -312,14 +552,18 @@ class ActionSelectorDialog(QDialog):
             self.table.setItem(row, 0, id_item)
             shortcuts = []
             if hasattr(action, "shortcuts"):
-                shortcuts = [str(shortcut.toString()) for shortcut in action.shortcuts()]
+                shortcuts = [
+                    str(shortcut.toString()) for shortcut in action.shortcuts()
+                ]
             self.table.setItem(row, 1, QTableWidgetItem(", ".join(shortcuts)))
 
     def apply_filter(self, text):
         needle = text.lower()
         for row in range(self.table.rowCount()):
             id_item = self.table.item(row, 0)
-            self.table.setRowHidden(row, bool(needle and needle not in id_item.text().lower()))
+            self.table.setRowHidden(
+                row, bool(needle and needle not in id_item.text().lower())
+            )
 
     def get_selected_action(self):
         selected_items = self.table.selectedItems()
@@ -331,10 +575,13 @@ class ActionSelectorDialog(QDialog):
     def accept_selection(self):
         action = self.get_selected_action()
         if not action:
-            QMessageBox.warning(self, "No Action Selected", "Please select an action from the table.")
+            QMessageBox.warning(
+                self, "No Action Selected", "Please select an action from the table."
+            )
             return
         self.selected_action = action
         self.accept()
+
 
 class PaletteConfigDialog(QDialog):
     """Configuration dialog for Quick Access Palette."""
@@ -361,6 +608,12 @@ class PaletteConfigDialog(QDialog):
         self.docker_icon_size_spin.setValue(int(docker_icon_size))
         self.docker_icon_size_spin.setSuffix(" px")
         default_layout.addWidget(self.docker_icon_size_spin)
+
+        default_layout.addWidget(self._separator())
+        default_layout.addWidget(QLabel("Gesture"))
+        self.gesture_enabled_checkbox = QCheckBox("Enable Gesture Recognition")
+        self.gesture_enabled_checkbox.setChecked(is_gesture_enabled())
+        default_layout.addWidget(self.gesture_enabled_checkbox)
 
         default_layout.addStretch(1)
         self.tabs.addTab(default_page, "Default")
@@ -398,6 +651,16 @@ class PaletteConfigDialog(QDialog):
     def get_popup_icon_size(self):
         return self.popup_icon_size_spin.value()
 
+    def get_gesture_enabled(self):
+        return self.gesture_enabled_checkbox.isChecked()
+
+    def _separator(self):
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        return separator
+
+
 class GridEditItemButton(QPushButton):
     """Grid edit item button that supports click selection and cell drag movement."""
 
@@ -434,7 +697,10 @@ class GridEditDialog(QDialog):
     def __init__(self, grid, parent=None):
         super().__init__(parent)
         self.columns = int(grid.columns)
-        self.items = [self.normalized_item(PaletteItem.from_dict(item.to_dict())) for item in grid.items]
+        self.items = [
+            self.normalized_item(PaletteItem.from_dict(item.to_dict()))
+            for item in grid.items
+        ]
         self.selected_ids = set()
         self.item_widgets = {}
         self.cell_size = 42
@@ -444,9 +710,17 @@ class GridEditDialog(QDialog):
         self.rebuild_grid()
 
     def normalized_item(self, item):
-        if item.type == ACTION_ITEM and item.payload.get("icon_name"):
-            return item.copy_with(col_span=1)
+        if item.type == ACTION_ITEM:
+            alias = (
+                AliasRepository()
+                .load()
+                .get("actions", {})
+                .get(item.payload.get("action_id", ""), {})
+            )
+            if alias.get("icon_name"):
+                return item.copy_with(col_span=1)
         return item
+
     def setup_ui(self):
         self.setWindowTitle("Grid Edit")
         self.resize(720, 520)
@@ -497,7 +771,9 @@ class GridEditDialog(QDialog):
         height = rows * self.cell_size + max(0, rows - 1) * spacing + 8
         self.grid_host.setMinimumSize(width, height)
         self.add_grid_lines(rows, spacing)
-        for item in sorted(self.items, key=lambda entry: (entry.row, entry.col, entry.id)):
+        for item in sorted(
+            self.items, key=lambda entry: (entry.row, entry.col, entry.id)
+        ):
             widget = self.create_item_widget(item)
             self.item_widgets[item.id] = widget
             widget.setParent(self.grid_host)
@@ -517,7 +793,9 @@ class GridEditDialog(QDialog):
                     self.cell_size,
                     self.cell_size,
                 )
-                cell.setStyleSheet("QFrame { border: 1px solid #3f3f3f; background: transparent; }")
+                cell.setStyleSheet(
+                    "QFrame { border: 1px solid #3f3f3f; background: transparent; }"
+                )
                 cell.show()
 
     def item_geometry(self, item, spacing):
@@ -526,13 +804,20 @@ class GridEditDialog(QDialog):
         width = item.col_span * self.cell_size + max(0, item.col_span - 1) * spacing
         height = item.row_span * self.cell_size + max(0, item.row_span - 1) * spacing
         return x, y, width, height
+
     def create_item_widget(self, item):
         button = GridEditItemButton(item, self)
         button.setMinimumSize(self.cell_size, 36)
-        if item.type in (BRUSH_ITEM, ACTION_ITEM) and item.col_span == 1:
+        if (
+            item.type
+            in (BRUSH_ITEM, ACTION_ITEM, DOCKER_TOGGLE_ITEM, COLOR_ITEM, SCRIPT_ITEM)
+            and item.col_span == 1
+        ):
             button.setFixedSize(self.cell_size, self.cell_size)
         self.apply_item_icon(button, item)
-        button.clicked.connect(lambda checked=False, item_id=item.id: self.toggle_selection(item_id))
+        button.clicked.connect(
+            lambda checked=False, item_id=item.id: self.toggle_selection(item_id)
+        )
         return button
 
     def apply_item_icon(self, button, item):
@@ -551,12 +836,40 @@ class GridEditDialog(QDialog):
             except Exception:
                 pass
         elif item.type == ACTION_ITEM:
+            icon_name = (
+                AliasRepository()
+                .load()
+                .get("actions", {})
+                .get(item.payload.get("action_id", ""), {})
+                .get("icon_name")
+            )
+            icon_path = self.resolve_icon_path(icon_name)
+            if icon_path:
+                button.setIcon(QIcon(icon_path))
+                button.setIconSize(QSize(32, 32))
+                button.setText("")
+        elif item.type == DOCKER_TOGGLE_ITEM:
+            icon_name = (
+                AliasRepository()
+                .load()
+                .get("dockers", {})
+                .get(item.payload.get("docker_id", ""), {})
+                .get("icon_name")
+            )
+            icon_path = self.resolve_icon_path(icon_name)
+            if icon_path:
+                button.setIcon(QIcon(icon_path))
+                button.setIconSize(QSize(32, 32))
+                button.setText("")
+        elif item.type == SCRIPT_ITEM:
             icon_name = item.payload.get("icon_name")
             icon_path = self.resolve_icon_path(icon_name)
             if icon_path:
                 button.setIcon(QIcon(icon_path))
                 button.setIconSize(QSize(32, 32))
                 button.setText("")
+        elif item.type == COLOR_ITEM:
+            button.setText("")
 
     def resolve_icon_path(self, icon_name):
         if not icon_name:
@@ -572,11 +885,21 @@ class GridEditDialog(QDialog):
         if item.type == BRUSH_ITEM:
             return "Brush"
         if item.type == ACTION_ITEM:
-            return item.payload.get("customName") or item.payload.get("action_id", "Action")
+            action_id = item.payload.get("action_id", "Action")
+            alias = AliasRepository().load().get("actions", {}).get(action_id, {})
+            return alias.get("custom_name") or action_id
         if item.type == LABEL_ITEM:
             return item.payload.get("text", "Label")
         if item.type == SEPARATOR_ITEM:
             return "---"
+        if item.type == DOCKER_TOGGLE_ITEM:
+            docker_id = item.payload.get("docker_id", "Docker")
+            alias = AliasRepository().load().get("dockers", {}).get(docker_id, {})
+            return alias.get("custom_name") or docker_id
+        if item.type == COLOR_ITEM:
+            return ""
+        if item.type == SCRIPT_ITEM:
+            return item.payload.get("customName") or "Script"
         return item.type
 
     def ensure_selected_for_drag(self, item_id):
@@ -606,18 +929,30 @@ class GridEditDialog(QDialog):
         colors = {
             BRUSH_ITEM: ("#2f2f2f", "#555555"),
             ACTION_ITEM: ("#3a263f", "#6b4a73"),
-            LABEL_ITEM: (item.payload.get("backgroundColor", "#263746"), item.payload.get("fontColor", "#4FC3F7")),
+            LABEL_ITEM: (
+                item.payload.get("backgroundColor", "#263746"),
+                item.payload.get("fontColor", "#4FC3F7"),
+            ),
             SEPARATOR_ITEM: ("#303030", "#777777"),
+            DOCKER_TOGGLE_ITEM: ("#263a2f", "#4a8b6b"),
+            COLOR_ITEM: (item.payload.get("color", "#ffffff"), "#555555"),
+            SCRIPT_ITEM: ("#2f2a1f", "#8b7a4a"),
         }
         background, border = colors.get(item.type, ("#333333", "#555555"))
         border_width = 2 if selected else 1
         border_color = "#4FC3F7" if selected else border
-        text_color = item.payload.get("fontColor", "#ffffff") if item.type == LABEL_ITEM else "#ffffff"
-        font_size = item.payload.get("fontSize", "18") if item.type == LABEL_ITEM else "18"
+        text_color = (
+            item.payload.get("fontColor", "#ffffff")
+            if item.type == LABEL_ITEM
+            else "#ffffff"
+        )
+        font_size = (
+            item.payload.get("fontSize", "18") if item.type == LABEL_ITEM else "18"
+        )
         return (
-            "QPushButton {{ background: {0}; color: {1}; font-size: {2}px; border: {3}px solid {4}; "
-            "border-radius: 3px; padding: 0px 4px; }}"
-        ).format(background, text_color, font_size, border_width, border_color)
+            f"QPushButton {{ background: {background}; color: {text_color}; font-size: {font_size}px; border: {border_width}px solid {border_color}; "
+            "border-radius: 3px; padding: 0px 4px; }"
+        )
 
     def update_resize_controls(self):
         selected = self.selected_items()
@@ -643,14 +978,18 @@ class GridEditDialog(QDialog):
         col_delta = max(col_delta, -min_col)
         moved_selected = []
         for item in selected:
-            moved_selected.append(item.copy_with(row=item.row + row_delta, col=item.col + col_delta))
+            moved_selected.append(
+                item.copy_with(row=item.row + row_delta, col=item.col + col_delta)
+            )
         self.items = self.place_group_with_push(moved_selected)
         self.rebuild_grid()
 
     def place_group_with_push(self, active_items):
         active_ids = {item.id for item in active_items}
         placed = sorted(active_items, key=lambda item: (item.row, item.col, item.id))
-        for item in self.sorted_items([item for item in self.items if item.id not in active_ids]):
+        for item in self.sorted_items(
+            [item for item in self.items if item.id not in active_ids]
+        ):
             candidate = item.copy_with(row=max(0, item.row), col=max(0, item.col))
             if self.needs_reposition(candidate, placed):
                 candidate = self.first_free_position(candidate, placed)
@@ -682,14 +1021,18 @@ class GridEditDialog(QDialog):
         )
 
     def sorted_items(self, items):
-        return sorted(items, key=lambda item: (self.linear_index(item.row, item.col), item.id))
+        return sorted(
+            items, key=lambda item: (self.linear_index(item.row, item.col), item.id)
+        )
 
     def linear_index(self, row, col):
         return max(0, int(row)) * self.columns + max(0, int(col))
 
     def resize_selected(self, row_delta, col_delta):
         selected = self.selected_items()
-        if not selected or any(item.type not in (LABEL_ITEM, SEPARATOR_ITEM) for item in selected):
+        if not selected or any(
+            item.type not in (LABEL_ITEM, SEPARATOR_ITEM) for item in selected
+        ):
             return
         resized = []
         for item in selected:
@@ -703,5 +1046,7 @@ class GridEditDialog(QDialog):
         self.rebuild_grid()
 
     def accept_save(self):
-        self.saved_items = [PaletteItem.from_dict(item.to_dict()) for item in self.items]
+        self.saved_items = [
+            PaletteItem.from_dict(item.to_dict()) for item in self.items
+        ]
         self.accept()

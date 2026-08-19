@@ -14,10 +14,10 @@
 
 ## Palette Item Types
 
-- [ ] Implement Docker toggle items.
-- [ ] Implement color picker / color swatch items.
-- [ ] Implement script file execution items.
-- [ ] Decide each new item type's default size, icon, payload schema, and config dialog fields.
+- [X] Implement Docker toggle items.
+- [X] Implement color picker / color swatch items.
+- [X] Implement script file execution items.
+- [X] Decide each new item type's default size, icon, payload schema, and config dialog fields.
 
 ## Grid Editing
 

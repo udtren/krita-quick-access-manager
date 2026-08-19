@@ -13,7 +13,7 @@ Palette data is new-only. Legacy `grids_data.json` and `shortcut_grid_data.json`
 tabs[]
   grids[]
     items[]
-      type: brush | action | label | separator
+      type: brush | action | label | separator | docker_toggle | color | script
       row: int
       col: int
       row_span: int
@@ -46,6 +46,16 @@ When adding an Action item, open a popup configuration dialog based on the legac
 - Use global settings
 
 The remastered dialog should operate on an item config object, not on a live legacy button instance.
+
+## Docker Toggle / Color / Script Items
+
+All three item types are fixed at 1x1 cells and rendered as icon-first buttons, matching the icon variant of Action items.
+
+- Docker toggle: `payload = {docker_id, customName, icon_name}`. Discovers dockers via `QDockWidget` children of the active Krita main window and toggles their visibility on click.
+- Color swatch: `payload = {color}`. Clicking sets the active view's foreground color; the button itself is rendered filled with the stored color instead of an icon.
+- Script execution: `payload = {script_path, customName, icon_name}`. Clicking executes the selected `.py` file's contents with a minimal globals dict (`Krita` only). Errors are shown in a message box instead of raising.
+
+Config dialogs for these three types follow the same "config object in, dict out" pattern as `ActionItemConfigDialog`/`LabelItemConfigDialog`.
 
 ## Popup
 
