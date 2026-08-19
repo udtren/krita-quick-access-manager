@@ -610,6 +610,7 @@ class PaletteConfigDialog(QDialog):
         config_dialog_height=480,
         huesvc_enabled=True,
         quick_adjust_enabled=True,
+        header_button_color="#828282",
         parent=None,
     ):
         super().__init__(parent)
@@ -663,6 +664,15 @@ class PaletteConfigDialog(QDialog):
         self.config_dialog_height_spin.setValue(int(config_dialog_height))
         self.config_dialog_height_spin.setSuffix(" px")
         default_layout.addWidget(self.config_dialog_height_spin)
+
+        default_layout.addWidget(self._separator())
+        default_layout.addWidget(QLabel("Header Button Color"))
+        self.header_button_color = QColor(header_button_color)
+        self.header_button_color_btn = QPushButton()
+        self.header_button_color_btn.setFixedHeight(28)
+        self.header_button_color_btn.clicked.connect(self.pick_header_button_color)
+        self._update_header_button_color_btn()
+        default_layout.addWidget(self.header_button_color_btn)
 
         default_layout.addStretch(1)
         self.tabs.addTab(default_page, "Default")
@@ -930,6 +940,23 @@ class PaletteConfigDialog(QDialog):
 
     def get_docker_icon_size(self):
         return self.docker_icon_size_spin.value()
+
+    def pick_header_button_color(self):
+        color = QColorDialog.getColor(
+            self.header_button_color, self, "Select Header Button Color"
+        )
+        if color.isValid():
+            self.header_button_color = color
+            self._update_header_button_color_btn()
+
+    def _update_header_button_color_btn(self):
+        self.header_button_color_btn.setStyleSheet(
+            f"background-color: {self.header_button_color.name()}; border: 1px solid #888;"
+        )
+        self.header_button_color_btn.setText(self.header_button_color.name())
+
+    def get_header_button_color(self):
+        return self.header_button_color.name()
 
     def get_popup_icon_size(self):
         return self.popup_icon_size_spin.value()

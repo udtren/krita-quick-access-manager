@@ -113,14 +113,16 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.gesture_btn.clicked.connect(self.show_gesture_config_dialog)
         self.config_btn.clicked.connect(self.show_config_dialog)
 
-        header.addWidget(self.menu_btn)
-        for button in (
+        self.header_buttons = (
+            self.menu_btn,
             self.add_brush_btn,
             self.add_action_btn,
             self.grid_edit_btn,
             self.gesture_btn,
             self.config_btn,
-        ):
+        )
+        header.addWidget(self.menu_btn)
+        for button in self.header_buttons[1:]:
             if not button.icon().isNull():
                 button.setFixedSize(24, 24)
                 button.setIconSize(QSize(18, 18))
@@ -129,6 +131,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             header.addWidget(button)
         header.addStretch(1)
         self.root_layout.addLayout(header)
+        self.apply_header_button_color()
 
     def build_menu(self):
         menu = QMenu(self)
@@ -150,12 +153,22 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         elif fallback_text:
             button.setText(fallback_text)
         button.setToolTip(tooltip)
-        button.setStyleSheet(
-            "QPushButton { background-color: #828282; border: none; border-radius: 2px; }"
-            "QPushButton:hover { background-color: #9a9a9a; }"
-            "QPushButton:pressed { background-color: #6a6a6a; }"
-        )
         return button
+
+    def header_button_stylesheet(self):
+        base = QColor(self.controller.header_button_color())
+        hover = base.lighter(115).name()
+        pressed = base.darker(115).name()
+        return (
+            f"QPushButton {{ background-color: {base.name()}; color: #000000; border: none; border-radius: 2px; }}"
+            f"QPushButton:hover {{ background-color: {hover}; }}"
+            f"QPushButton:pressed {{ background-color: {pressed}; }}"
+        )
+
+    def apply_header_button_color(self):
+        stylesheet = self.header_button_stylesheet()
+        for button in self.header_buttons:
+            button.setStyleSheet(stylesheet)
 
     def item_cell_size(self):
         return self.controller.docker_icon_size()
@@ -702,6 +715,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             config_dialog_height=dialog_height,
             huesvc_enabled=self.controller.is_huesvc_enabled(),
             quick_adjust_enabled=self.controller.is_quick_adjust_enabled(),
+            header_button_color=self.controller.header_button_color(),
             parent=self,
         )
         if dialog.exec():
@@ -713,6 +727,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 config_dialog_height=dialog.get_config_dialog_height(),
                 huesvc_enabled=dialog.get_huesvc_enabled(),
                 quick_adjust_enabled=dialog.get_quick_adjust_enabled(),
+                header_button_color=dialog.get_header_button_color(),
             )
             self.controller.update_huesvc_settings(
                 value_font_size=dialog.get_huesvc_value_font_size(),
@@ -725,6 +740,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 **dialog.get_quick_adjust_settings()
             )
             set_gesture_enabled(dialog.get_gesture_enabled())
+            self.apply_header_button_color()
             self.reload_tabs()
 
     def activate_brush(self, brush_name):

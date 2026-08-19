@@ -23,6 +23,7 @@ DEFAULT_SETTINGS = {
         "config_dialog_height": 480,
         "huesvc_enabled": True,
         "quick_adjust_enabled": True,
+        "header_button_color": "#828282",
     },
     "popup": {"popup_icon_size": 42},
     "huesvc": {
@@ -138,6 +139,9 @@ class PaletteController:
     def is_quick_adjust_enabled(self):
         return bool(self.settings()["default"].get("quick_adjust_enabled", True))
 
+    def header_button_color(self):
+        return self.settings()["default"].get("header_button_color", "#828282")
+
     def update_settings(
         self,
         docker_icon_size=None,
@@ -146,6 +150,7 @@ class PaletteController:
         config_dialog_height=None,
         huesvc_enabled=None,
         quick_adjust_enabled=None,
+        header_button_color=None,
     ):
         settings = self.settings()
         if docker_icon_size is not None:
@@ -164,6 +169,8 @@ class PaletteController:
             settings["default"]["huesvc_enabled"] = bool(huesvc_enabled)
         if quick_adjust_enabled is not None:
             settings["default"]["quick_adjust_enabled"] = bool(quick_adjust_enabled)
+        if header_button_color is not None:
+            settings["default"]["header_button_color"] = str(header_button_color)
         self.document.settings = settings
         self.save()
 
