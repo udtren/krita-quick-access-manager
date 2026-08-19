@@ -17,7 +17,13 @@ from ...shared import (
 )
 
 DEFAULT_SETTINGS = {
-    "default": {"docker_icon_size": 42},
+    "default": {
+        "docker_icon_size": 42,
+        "config_dialog_width": 340,
+        "config_dialog_height": 480,
+        "huesvc_enabled": True,
+        "quick_adjust_enabled": True,
+    },
     "popup": {"popup_icon_size": 42},
     "huesvc": {
         "value_font_size": 10,
@@ -42,6 +48,7 @@ DEFAULT_SETTINGS = {
         "tool_options_enabled": False,
         "tool_options_start_visible": True,
         "tool_options_position": "left_align_top",
+        "temp_brush_sets": [],
     },
 }
 
@@ -107,7 +114,28 @@ class PaletteController:
             self.settings()["popup"].get("popup_icon_size", 42)
         )
 
-    def update_settings(self, docker_icon_size=None, popup_icon_size=None):
+    def config_dialog_size(self):
+        default = self.settings()["default"]
+        return (
+            int(default.get("config_dialog_width", 340)),
+            int(default.get("config_dialog_height", 480)),
+        )
+
+    def is_huesvc_enabled(self):
+        return bool(self.settings()["default"].get("huesvc_enabled", True))
+
+    def is_quick_adjust_enabled(self):
+        return bool(self.settings()["default"].get("quick_adjust_enabled", True))
+
+    def update_settings(
+        self,
+        docker_icon_size=None,
+        popup_icon_size=None,
+        config_dialog_width=None,
+        config_dialog_height=None,
+        huesvc_enabled=None,
+        quick_adjust_enabled=None,
+    ):
         settings = self.settings()
         if docker_icon_size is not None:
             settings["default"]["docker_icon_size"] = self._bounded_icon_size(
@@ -117,6 +145,14 @@ class PaletteController:
             settings["popup"]["popup_icon_size"] = self._bounded_icon_size(
                 popup_icon_size
             )
+        if config_dialog_width is not None:
+            settings["default"]["config_dialog_width"] = int(config_dialog_width)
+        if config_dialog_height is not None:
+            settings["default"]["config_dialog_height"] = int(config_dialog_height)
+        if huesvc_enabled is not None:
+            settings["default"]["huesvc_enabled"] = bool(huesvc_enabled)
+        if quick_adjust_enabled is not None:
+            settings["default"]["quick_adjust_enabled"] = bool(quick_adjust_enabled)
         self.document.settings = settings
         self.save()
 

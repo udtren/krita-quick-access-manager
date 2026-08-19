@@ -4,6 +4,7 @@ from krita import Extension, Krita  # type: ignore
 
 from .color_selector.docker import ColorSelectorDockFactory
 from .compat import QApplication
+from .features.quick_access_palette.controller import PaletteController
 from .features.quick_access_palette.docker import QuickAccessPaletteDockerFactory
 from .features.quick_access_palette.popup import QuickAccessPalettePopup
 from .gesture import (
@@ -63,11 +64,15 @@ class QuickAccessPaletteExtension(Extension):
         self.palette_factory = QuickAccessPaletteDockerFactory()
         Krita.instance().addDockWidgetFactory(self.palette_factory)
 
-        self.color_selector_factory = ColorSelectorDockFactory()
-        Krita.instance().addDockWidgetFactory(self.color_selector_factory)
+        controller = PaletteController()
 
-        self.quick_adjust_factory = QuickAdjustDockerFactory()
-        Krita.instance().addDockWidgetFactory(self.quick_adjust_factory)
+        if controller.is_huesvc_enabled():
+            self.color_selector_factory = ColorSelectorDockFactory()
+            Krita.instance().addDockWidgetFactory(self.color_selector_factory)
+
+        if controller.is_quick_adjust_enabled():
+            self.quick_adjust_factory = QuickAdjustDockerFactory()
+            Krita.instance().addDockWidgetFactory(self.quick_adjust_factory)
 
         if is_gesture_enabled():
             try:

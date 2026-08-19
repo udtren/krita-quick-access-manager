@@ -22,6 +22,7 @@ DEFAULT_QUICK_ADJUST_SETTINGS = {
     "tool_options_enabled": False,
     "tool_options_start_visible": True,
     "tool_options_position": "left_align_top",
+    "temp_brush_sets": [],
 }
 
 BLENDER_MODE_LIST = [
@@ -135,8 +136,7 @@ def get_select_outline_key():
 
 
 def get_temp_brush_sets():
-    """Not exposed in the Settings UI yet; always empty."""
-    return []
+    return _load().get("temp_brush_sets", [])
 
 
 def is_tool_options_enabled():

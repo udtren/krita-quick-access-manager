@@ -4,6 +4,7 @@ import os
 
 PLUGIN_CONFIG_DIR_NAME = "quick_access_manager"
 PALETTE_CONFIG_FILE = "quick_access_palette.json"
+PALETTE_SETTINGS_FILE = "settings.json"
 
 
 def get_package_dir():
@@ -34,6 +35,10 @@ def get_gesture_data_dir():
 
 def get_palette_config_path():
     return os.path.join(get_remaster_config_dir(), PALETTE_CONFIG_FILE)
+
+
+def get_palette_settings_path():
+    return os.path.join(get_remaster_config_dir(), PALETTE_SETTINGS_FILE)
 
 
 def get_default_icons_dir():

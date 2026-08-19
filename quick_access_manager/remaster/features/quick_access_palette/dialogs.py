@@ -602,11 +602,15 @@ class PaletteConfigDialog(QDialog):
         huesvc_poll_interval=250,
         huesvc_rgb_display_mode="percentage",
         quick_adjust_settings=None,
+        config_dialog_width=340,
+        config_dialog_height=480,
+        huesvc_enabled=True,
+        quick_adjust_enabled=True,
         parent=None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("Quick Access Palette Config")
-        self.resize(300, 190)
+        self.setWindowTitle("Settings")
+        self.resize(int(config_dialog_width), int(config_dialog_height))
         layout = QVBoxLayout()
 
         self.tabs = QTabWidget()
@@ -627,10 +631,34 @@ class PaletteConfigDialog(QDialog):
         default_layout.addWidget(self.docker_icon_size_spin)
 
         default_layout.addWidget(self._separator())
-        default_layout.addWidget(QLabel("Gesture"))
+        default_layout.addWidget(QLabel("Features"))
         self.gesture_enabled_checkbox = QCheckBox("Enable Gesture Recognition")
         self.gesture_enabled_checkbox.setChecked(is_gesture_enabled())
         default_layout.addWidget(self.gesture_enabled_checkbox)
+
+        self.huesvc_enabled_checkbox = QCheckBox("Enable HueSVC Docker")
+        self.huesvc_enabled_checkbox.setChecked(bool(huesvc_enabled))
+        default_layout.addWidget(self.huesvc_enabled_checkbox)
+
+        self.quick_adjust_enabled_checkbox = QCheckBox("Enable Quick Adjust Docker")
+        self.quick_adjust_enabled_checkbox.setChecked(bool(quick_adjust_enabled))
+        default_layout.addWidget(self.quick_adjust_enabled_checkbox)
+
+        default_layout.addWidget(self._separator())
+        default_layout.addWidget(QLabel("Settings Dialog Size"))
+        default_layout.addWidget(QLabel("Width:"))
+        self.config_dialog_width_spin = QSpinBox()
+        self.config_dialog_width_spin.setRange(280, 1200)
+        self.config_dialog_width_spin.setValue(int(config_dialog_width))
+        self.config_dialog_width_spin.setSuffix(" px")
+        default_layout.addWidget(self.config_dialog_width_spin)
+
+        default_layout.addWidget(QLabel("Height:"))
+        self.config_dialog_height_spin = QSpinBox()
+        self.config_dialog_height_spin.setRange(200, 1200)
+        self.config_dialog_height_spin.setValue(int(config_dialog_height))
+        self.config_dialog_height_spin.setSuffix(" px")
+        default_layout.addWidget(self.config_dialog_height_spin)
 
         default_layout.addStretch(1)
         self.tabs.addTab(default_page, "Default")
@@ -824,10 +852,47 @@ class PaletteConfigDialog(QDialog):
             )
         quick_adjust_layout.addWidget(self.quick_adjust_tool_options_position_combo)
 
+        quick_adjust_layout.addWidget(self._separator())
+        quick_adjust_layout.addWidget(
+            QLabel("Temporary Brush Sets (key hold \u2192 switch brush):")
+        )
+        self.temp_brush_set_table = QTableWidget()
+        self.temp_brush_set_table.setColumnCount(3)
+        self.temp_brush_set_table.setHorizontalHeaderLabels(
+            ["Key", "Brush Name", "Size Scale"]
+        )
+        self.temp_brush_set_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Stretch
+        )
+        self.temp_brush_set_table.setMinimumHeight(120)
+        for entry in (quick_adjust_settings or {}).get("temp_brush_sets", []):
+            self._add_temp_brush_set_row(
+                entry.get("key", ""),
+                entry.get("brush", ""),
+                entry.get("size_scale", 0.0),
+            )
+        quick_adjust_layout.addWidget(self.temp_brush_set_table)
+
+        temp_brush_set_btn_layout = QHBoxLayout()
+        add_temp_brush_set_btn = QPushButton("Add Row")
+        add_temp_brush_set_btn.clicked.connect(
+            lambda: self._add_temp_brush_set_row("", "", 0.0)
+        )
+        remove_temp_brush_set_btn = QPushButton("Remove Selected")
+        remove_temp_brush_set_btn.clicked.connect(
+            self._remove_selected_temp_brush_set_row
+        )
+        temp_brush_set_btn_layout.addWidget(add_temp_brush_set_btn)
+        temp_brush_set_btn_layout.addWidget(remove_temp_brush_set_btn)
+        quick_adjust_layout.addLayout(temp_brush_set_btn_layout)
+
         quick_adjust_layout.addStretch(1)
         self.tabs.addTab(quick_adjust_page, "Quick Adjust")
 
-        layout.addWidget(self.tabs)
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(self.tabs)
+        layout.addWidget(scroll_area)
 
         button_layout = QHBoxLayout()
         self.ok_btn = QPushButton("OK")
@@ -852,6 +917,12 @@ class PaletteConfigDialog(QDialog):
     def get_gesture_enabled(self):
         return self.gesture_enabled_checkbox.isChecked()
 
+    def get_huesvc_enabled(self):
+        return self.huesvc_enabled_checkbox.isChecked()
+
+    def get_quick_adjust_enabled(self):
+        return self.quick_adjust_enabled_checkbox.isChecked()
+
     def get_huesvc_value_font_size(self):
         return self.huesvc_font_size_spin.value()
 
@@ -860,6 +931,41 @@ class PaletteConfigDialog(QDialog):
 
     def get_huesvc_rgb_display_mode(self):
         return self.huesvc_rgb_mode_combo.currentData()
+
+    def get_config_dialog_width(self):
+        return self.config_dialog_width_spin.value()
+
+    def get_config_dialog_height(self):
+        return self.config_dialog_height_spin.value()
+
+    def _add_temp_brush_set_row(self, key, brush, size_scale):
+        row = self.temp_brush_set_table.rowCount()
+        self.temp_brush_set_table.insertRow(row)
+        self.temp_brush_set_table.setItem(row, 0, QTableWidgetItem(key))
+        self.temp_brush_set_table.setItem(row, 1, QTableWidgetItem(brush))
+        self.temp_brush_set_table.setItem(row, 2, QTableWidgetItem(str(size_scale)))
+
+    def _remove_selected_temp_brush_set_row(self):
+        rows = {index.row() for index in self.temp_brush_set_table.selectedIndexes()}
+        for row in sorted(rows, reverse=True):
+            self.temp_brush_set_table.removeRow(row)
+
+    def _temp_brush_sets_from_table(self):
+        entries = []
+        for row in range(self.temp_brush_set_table.rowCount()):
+            key_item = self.temp_brush_set_table.item(row, 0)
+            brush_item = self.temp_brush_set_table.item(row, 1)
+            scale_item = self.temp_brush_set_table.item(row, 2)
+            key = key_item.text().strip() if key_item else ""
+            brush = brush_item.text().strip() if brush_item else ""
+            if not key or not brush:
+                continue
+            try:
+                size_scale = float(scale_item.text().strip()) if scale_item else 0.0
+            except ValueError:
+                size_scale = 0.0
+            entries.append({"key": key, "brush": brush, "size_scale": size_scale})
+        return entries
 
     def get_quick_adjust_settings(self):
         return {
@@ -880,6 +986,7 @@ class PaletteConfigDialog(QDialog):
             "tool_options_enabled": self.quick_adjust_tool_options_checkbox.isChecked(),
             "tool_options_start_visible": self.quick_adjust_tool_options_visible_checkbox.isChecked(),
             "tool_options_position": self.quick_adjust_tool_options_position_combo.currentData(),
+            "temp_brush_sets": self._temp_brush_sets_from_table(),
         }
 
     def _separator(self):

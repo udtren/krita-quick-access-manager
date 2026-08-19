@@ -697,6 +697,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         if not grid:
             return
         huesvc_settings = self.controller.huesvc_settings()
+        dialog_width, dialog_height = self.controller.config_dialog_size()
         dialog = PaletteConfigDialog(
             grid.columns,
             docker_icon_size=self.controller.docker_icon_size(),
@@ -705,6 +706,10 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             huesvc_poll_interval=huesvc_settings["poll_interval"],
             huesvc_rgb_display_mode=huesvc_settings["rgb_display_mode"],
             quick_adjust_settings=self.controller.quick_adjust_settings(),
+            config_dialog_width=dialog_width,
+            config_dialog_height=dialog_height,
+            huesvc_enabled=self.controller.is_huesvc_enabled(),
+            quick_adjust_enabled=self.controller.is_quick_adjust_enabled(),
             parent=self,
         )
         if dialog.exec():
@@ -712,6 +717,10 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             self.controller.update_settings(
                 docker_icon_size=dialog.get_docker_icon_size(),
                 popup_icon_size=dialog.get_popup_icon_size(),
+                config_dialog_width=dialog.get_config_dialog_width(),
+                config_dialog_height=dialog.get_config_dialog_height(),
+                huesvc_enabled=dialog.get_huesvc_enabled(),
+                quick_adjust_enabled=dialog.get_quick_adjust_enabled(),
             )
             self.controller.update_huesvc_settings(
                 value_font_size=dialog.get_huesvc_value_font_size(),
