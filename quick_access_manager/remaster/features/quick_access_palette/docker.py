@@ -8,7 +8,6 @@ from ...infrastructure import get_default_icons_dir, get_system_icons_dir
 from ...compat import (
     QDockWidget,
     QFrame,
-    QGridLayout,
     QHBoxLayout,
     QIcon,
     QInputDialog,
@@ -62,6 +61,8 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.root_layout.setSpacing(4)
         self.build_header()
         self.tab_widget = QTabWidget()
+        self.tab_widget.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tab_widget.tabBar().customContextMenuRequested.connect(self.show_tab_menu)
         self.root_layout.addWidget(self.tab_widget)
         self.reload_tabs()
 
@@ -69,11 +70,13 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         header = QHBoxLayout()
         self.add_brush_btn = self.create_header_button("add_brush.png", "Add Brush")
         self.add_action_btn = self.create_header_button("actions.png", "Add Action")
+        self.add_tab_btn = self.create_header_button("add_tab.png", "Add Tab")
         self.add_label_btn = self.create_header_button("label.png", "Add Label")
         self.add_separator_btn = self.create_header_button("seperator.png", "Add Separator")
         self.grid_edit_btn = self.create_header_button("manage_grid.png", "Edit Grid")
         self.config_btn = self.create_header_button("setting.png", "Config")
 
+        self.add_tab_btn.clicked.connect(self.add_tab)
         self.add_brush_btn.clicked.connect(self.add_current_brush)
         self.add_action_btn.clicked.connect(self.add_action)
         self.add_label_btn.clicked.connect(self.add_label)
@@ -82,6 +85,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.config_btn.clicked.connect(self.show_config_dialog)
 
         for button in (
+            self.add_tab_btn,
             self.add_brush_btn,
             self.add_action_btn,
             self.add_label_btn,
@@ -110,6 +114,13 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             "QPushButton:pressed { background-color: #6a6a6a; }"
         )
         return button
+
+    def item_cell_size(self):
+        return self.controller.docker_icon_size()
+
+    def item_icon_size(self):
+        size = max(16, self.item_cell_size() - 4)
+        return QSize(size, size)
     def reload_tabs(self):
         self.issue_map = self.controller.validate_active_grid().issues_by_item()
         self.tab_widget.blockSignals(True)
@@ -125,6 +136,27 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.tab_widget.blockSignals(False)
         self.tab_widget.currentChanged.connect(self.on_tab_changed)
 
+    def show_tab_menu(self, pos):
+        index = self.tab_widget.tabBar().tabAt(pos)
+        if index < 0 or index >= len(self.controller.document.tabs):
+            return
+        tab = self.controller.document.tabs[index]
+        menu = QMenu(self)
+        rename_action = menu.addAction("Rename")
+        remove_action = menu.addAction("Remove")
+        remove_action.setEnabled(len(self.controller.document.tabs) > 1)
+        selected = menu.exec(self.tab_widget.tabBar().mapToGlobal(pos))
+        if selected == rename_action:
+            self.rename_tab(tab, index)
+        elif selected == remove_action:
+            self.controller.remove_tab(tab.id)
+            self.reload_tabs()
+
+    def rename_tab(self, tab, index):
+        name, ok = QInputDialog.getText(self, "Rename Tab", "Tab name:", text=tab.name)
+        if ok and name.strip():
+            self.controller.rename_tab(tab.id, name.strip())
+            self.tab_widget.setTabText(index, name.strip())
     def create_tab_page(self, tab):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -140,22 +172,29 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
 
     def create_grid_widget(self, grid):
         widget = QWidget()
-        layout = QGridLayout(widget)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
-        layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        for col in range(grid.columns):
-            layout.setColumnMinimumWidth(col, 36)
+        cell_size = self.item_cell_size()
+        spacing = 2
+        max_bottom = max([item.bottom for item in grid.items], default=1)
+        width = max(1, grid.columns) * cell_size + max(0, grid.columns - 1) * spacing
+        height = max_bottom * cell_size + max(0, max_bottom - 1) * spacing
+        widget.setMinimumSize(width, height)
+
         for item in sorted(grid.items, key=lambda entry: (entry.row, entry.col, entry.id)):
             child = self.create_item_widget(item)
             self.attach_item_context_menu(child, item)
-            layout.addWidget(child, item.row, item.col, item.row_span, item.col_span)
+            child.setParent(widget)
+            x = item.col * (cell_size + spacing)
+            y = item.row * (cell_size + spacing)
+            child_width = item.col_span * cell_size + max(0, item.col_span - 1) * spacing
+            child_height = item.row_span * cell_size + max(0, item.row_span - 1) * spacing
+            child.setGeometry(x, y, child_width, child_height)
+            child.show()
         return widget
 
     def create_item_widget(self, item):
         if item.type == BRUSH_ITEM:
             button = QPushButton()
-            button.setFixedSize(42, 42)
+            button.setFixedSize(self.item_cell_size(), self.item_cell_size())
             brush_name = item.payload.get("brush_name", "")
             button.setToolTip(brush_name)
             self.apply_brush_icon(button, brush_name)
@@ -174,9 +213,9 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 icon_path = self.resolve_icon_path(icon_name)
                 if icon_path:
                     button.setIcon(QIcon(icon_path))
-                    button.setIconSize(QSize(32, 32))
+                    button.setIconSize(self.item_icon_size())
                     button.setText("")
-                    button.setFixedSize(42, 42)
+                    button.setFixedSize(self.item_cell_size(), self.item_cell_size())
                     has_icon = True
             self.apply_action_style(button, item, has_icon=has_icon)
             self.apply_issue_style(button, item)
@@ -263,7 +302,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 pixmap = QPixmap.fromImage(image)
                 if not pixmap.isNull():
                     button.setIcon(QIcon(pixmap))
-                    button.setIconSize(QSize(38, 38))
+                    button.setIconSize(self.item_icon_size())
                     button.setText("")
                     button.setStyleSheet(
                         "QPushButton { padding: 0px; border: 1px solid #555; background: #2f2f2f; }"
@@ -303,6 +342,16 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             return
         self.controller.set_active_tab(self.controller.document.tabs[index].id)
 
+    def add_tab(self):
+        name, ok = QInputDialog.getText(
+            self,
+            "Add Tab",
+            "Tab name:",
+            text="Tab {0}".format(len(self.controller.document.tabs) + 1),
+        )
+        if ok and name.strip():
+            self.controller.add_tab(name.strip())
+            self.reload_tabs()
     def add_current_brush(self):
         view = self.active_view()
         if not view:
@@ -359,9 +408,18 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         grid = self.controller.active_grid()
         if not grid:
             return
-        dialog = PaletteConfigDialog(grid.columns, parent=self)
+        dialog = PaletteConfigDialog(
+            grid.columns,
+            docker_icon_size=self.controller.docker_icon_size(),
+            popup_icon_size=self.controller.popup_icon_size(),
+            parent=self,
+        )
         if dialog.exec():
             self.controller.set_columns(dialog.get_columns())
+            self.controller.update_settings(
+                docker_icon_size=dialog.get_docker_icon_size(),
+                popup_icon_size=dialog.get_popup_icon_size(),
+            )
             self.reload_tabs()
 
     def activate_brush(self, brush_name):
@@ -391,3 +449,5 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         self.build_ui()
         if old_widget:
             old_widget.deleteLater()
+
+

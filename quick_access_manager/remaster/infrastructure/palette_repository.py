@@ -44,4 +44,5 @@ class PaletteRepository:
     def create_default_document(self) -> PaletteDocument:
         grid = PaletteGrid(id="main-grid", name="Main", columns=DEFAULT_COLUMNS, items=[])
         tab = PaletteTab(id="main-tab", name="Main", grids=[grid])
-        return PaletteDocument(tabs=[tab], active_tab_id=tab.id)
+        return PaletteDocument(tabs=[tab], active_tab_id=tab.id, settings={"default": {"docker_icon_size": 42}, "popup": {"popup_icon_size": 42}})
+

@@ -11,7 +11,6 @@ from ...compat import (
     QDialog,
     QFileDialog,
     QFrame,
-    QGridLayout,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -340,10 +339,10 @@ class ActionSelectorDialog(QDialog):
 class PaletteConfigDialog(QDialog):
     """Configuration dialog for Quick Access Palette."""
 
-    def __init__(self, columns, parent=None):
+    def __init__(self, columns, docker_icon_size=42, popup_icon_size=42, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Quick Access Palette Config")
-        self.resize(280, 140)
+        self.resize(300, 190)
         layout = QVBoxLayout()
 
         self.tabs = QTabWidget()
@@ -355,8 +354,28 @@ class PaletteConfigDialog(QDialog):
         self.columns_spin.setRange(1, 64)
         self.columns_spin.setValue(int(columns))
         default_layout.addWidget(self.columns_spin)
+
+        default_layout.addWidget(QLabel("Docker Icon Size:"))
+        self.docker_icon_size_spin = QSpinBox()
+        self.docker_icon_size_spin.setRange(24, 96)
+        self.docker_icon_size_spin.setValue(int(docker_icon_size))
+        self.docker_icon_size_spin.setSuffix(" px")
+        default_layout.addWidget(self.docker_icon_size_spin)
+
         default_layout.addStretch(1)
         self.tabs.addTab(default_page, "Default")
+
+        popup_page = QWidget()
+        popup_layout = QVBoxLayout(popup_page)
+        popup_layout.addWidget(QLabel("Popup Icon Size:"))
+        self.popup_icon_size_spin = QSpinBox()
+        self.popup_icon_size_spin.setRange(24, 96)
+        self.popup_icon_size_spin.setValue(int(popup_icon_size))
+        self.popup_icon_size_spin.setSuffix(" px")
+        popup_layout.addWidget(self.popup_icon_size_spin)
+        popup_layout.addStretch(1)
+        self.tabs.addTab(popup_page, "Popup")
+
         layout.addWidget(self.tabs)
 
         button_layout = QHBoxLayout()
@@ -373,6 +392,11 @@ class PaletteConfigDialog(QDialog):
     def get_columns(self):
         return self.columns_spin.value()
 
+    def get_docker_icon_size(self):
+        return self.docker_icon_size_spin.value()
+
+    def get_popup_icon_size(self):
+        return self.popup_icon_size_spin.value()
 
 class GridEditItemButton(QPushButton):
     """Grid edit item button that supports click selection and cell drag movement."""
@@ -447,10 +471,6 @@ class GridEditDialog(QDialog):
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.grid_host = QWidget()
-        self.grid_layout = QGridLayout(self.grid_host)
-        self.grid_layout.setContentsMargins(4, 4, 4, 4)
-        self.grid_layout.setSpacing(4)
-        self.grid_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.scroll.setWidget(self.grid_host)
         layout.addWidget(self.scroll)
 
@@ -467,31 +487,45 @@ class GridEditDialog(QDialog):
         self.setLayout(layout)
 
     def rebuild_grid(self):
-        while self.grid_layout.count():
-            item = self.grid_layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+        for child in self.grid_host.findChildren(QWidget):
+            child.deleteLater()
         self.item_widgets = {}
-        self.add_grid_lines()
-        for col in range(self.columns):
-            self.grid_layout.setColumnMinimumWidth(col, self.cell_size)
+        spacing = 4
+        max_bottom = max([item.bottom for item in self.items], default=0)
+        rows = max(self.visible_rows, max_bottom + 2)
+        width = self.columns * self.cell_size + max(0, self.columns - 1) * spacing + 8
+        height = rows * self.cell_size + max(0, rows - 1) * spacing + 8
+        self.grid_host.setMinimumSize(width, height)
+        self.add_grid_lines(rows, spacing)
         for item in sorted(self.items, key=lambda entry: (entry.row, entry.col, entry.id)):
             widget = self.create_item_widget(item)
             self.item_widgets[item.id] = widget
-            self.grid_layout.addWidget(widget, item.row, item.col, item.row_span, item.col_span)
+            widget.setParent(self.grid_host)
+            x, y, item_width, item_height = self.item_geometry(item, spacing)
+            widget.setGeometry(x, y, item_width, item_height)
+            widget.raise_()
+            widget.show()
         self.update_selection_styles()
 
-    def add_grid_lines(self):
-        max_bottom = max([item.bottom for item in self.items], default=0)
-        rows = max(self.visible_rows, max_bottom + 2)
+    def add_grid_lines(self, rows, spacing):
         for row in range(rows):
-            self.grid_layout.setRowMinimumHeight(row, self.cell_size)
             for col in range(self.columns):
-                cell = QFrame()
-                cell.setMinimumSize(self.cell_size, self.cell_size)
+                cell = QFrame(self.grid_host)
+                cell.setGeometry(
+                    4 + col * (self.cell_size + spacing),
+                    4 + row * (self.cell_size + spacing),
+                    self.cell_size,
+                    self.cell_size,
+                )
                 cell.setStyleSheet("QFrame { border: 1px solid #3f3f3f; background: transparent; }")
-                self.grid_layout.addWidget(cell, row, col)
+                cell.show()
+
+    def item_geometry(self, item, spacing):
+        x = 4 + item.col * (self.cell_size + spacing)
+        y = 4 + item.row * (self.cell_size + spacing)
+        width = item.col_span * self.cell_size + max(0, item.col_span - 1) * spacing
+        height = item.row_span * self.cell_size + max(0, item.row_span - 1) * spacing
+        return x, y, width, height
     def create_item_widget(self, item):
         button = GridEditItemButton(item, self)
         button.setMinimumSize(self.cell_size, 36)

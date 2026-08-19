@@ -218,11 +218,13 @@ class PaletteTab:
 class PaletteDocument:
     tabs: List[PaletteTab] = field(default_factory=list)
     active_tab_id: Optional[str] = None
+    settings: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "version": 1,
             "active_tab_id": self.active_tab_id,
+            "settings": dict(self.settings),
             "tabs": [tab.to_dict() for tab in self.tabs],
         }
 
@@ -230,5 +232,9 @@ class PaletteDocument:
     def from_dict(cls, data: Dict[str, Any]):
         return cls(
             active_tab_id=data.get("active_tab_id"),
+            settings=dict(data.get("settings", {})),
             tabs=[PaletteTab.from_dict(tab) for tab in data.get("tabs", [])],
         )
+
+
+

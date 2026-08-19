@@ -7,6 +7,12 @@ from ...infrastructure import PaletteRepository
 from ...shared import ACTION_ITEM, LABEL_ITEM, FreeGridLayoutEngine, LayoutResult, PaletteDocument, PaletteGrid, PaletteItem
 
 
+DEFAULT_SETTINGS = {
+    "default": {"docker_icon_size": 42},
+    "popup": {"popup_icon_size": 42},
+}
+
+
 class PaletteController:
     """Owns palette document state and applies layout mutations."""
 
@@ -35,6 +41,37 @@ class PaletteController:
     def save(self):
         self.repository.save(self.document)
 
+
+    def settings(self):
+        merged = {
+            "default": dict(DEFAULT_SETTINGS["default"]),
+            "popup": dict(DEFAULT_SETTINGS["popup"]),
+        }
+        for section, values in self.document.settings.items():
+            if isinstance(values, dict):
+                merged.setdefault(section, {}).update(values)
+        return merged
+
+    def docker_icon_size(self):
+        return self._bounded_icon_size(self.settings()["default"].get("docker_icon_size", 42))
+
+    def popup_icon_size(self):
+        return self._bounded_icon_size(self.settings()["popup"].get("popup_icon_size", 42))
+
+    def update_settings(self, docker_icon_size=None, popup_icon_size=None):
+        settings = self.settings()
+        if docker_icon_size is not None:
+            settings["default"]["docker_icon_size"] = self._bounded_icon_size(docker_icon_size)
+        if popup_icon_size is not None:
+            settings["popup"]["popup_icon_size"] = self._bounded_icon_size(popup_icon_size)
+        self.document.settings = settings
+        self.save()
+
+    def _bounded_icon_size(self, value):
+        try:
+            return max(24, min(96, int(value)))
+        except Exception:
+            return 42
     def active_tab(self):
         if self.document.active_tab_id:
             for tab in self.document.tabs:
@@ -67,6 +104,22 @@ class PaletteController:
         self.save()
         return tab
 
+    def rename_tab(self, tab_id: str, name: str):
+        for tab in self.document.tabs:
+            if tab.id == tab_id:
+                tab.name = name
+                self.save()
+                return tab
+        raise ValueError("Palette tab not found: {0}".format(tab_id))
+
+    def remove_tab(self, tab_id: str):
+        if len(self.document.tabs) <= 1:
+            return False
+        self.document.tabs = [tab for tab in self.document.tabs if tab.id != tab_id]
+        if self.document.active_tab_id == tab_id:
+            self.document.active_tab_id = self.document.tabs[0].id if self.document.tabs else None
+        self.save()
+        return True
     def add_brush(self, brush_name: str, row: int = 0, col: int = 0) -> LayoutResult:
         grid = self._require_active_grid()
         item = PaletteItem.create_brush(self._new_id("brush"), brush_name, row=row, col=col)
@@ -111,7 +164,7 @@ class PaletteController:
                 payload.update(config)
                 col_span = 1 if payload.get("icon_name") else max(2, item.col_span)
                 grid.items[index] = item.copy_with(payload=payload, col_span=col_span)
-                result = FreeGridLayoutEngine(grid.columns).compact(grid.items)
+                result = FreeGridLayoutEngine(grid.columns).validate(grid.items)
                 return self._apply_result(grid, result, compact=False)
         raise ValueError("Palette item not found: {0}".format(item_id))
 
@@ -124,7 +177,7 @@ class PaletteController:
                 payload = dict(item.payload)
                 payload.update(config)
                 grid.items[index] = item.copy_with(payload=payload)
-                result = FreeGridLayoutEngine(grid.columns).compact(grid.items)
+                result = FreeGridLayoutEngine(grid.columns).validate(grid.items)
                 return self._apply_result(grid, result, compact=False)
         raise ValueError("Palette item not found: {0}".format(item_id))
     def compact_active_grid(self) -> LayoutResult:
@@ -176,3 +229,4 @@ class PaletteController:
 
     def _new_id(self, prefix: str) -> str:
         return "{0}-{1}".format(prefix, uuid4().hex[:12])
+
