@@ -21,6 +21,8 @@ from ...compat import (
     QMessageBox,
     QPixmap,
     QPushButton,
+    QRect,
+    QRubberBand,
     QScrollArea,
     QSize,
     QSpinBox,
@@ -661,6 +663,42 @@ class PaletteConfigDialog(QDialog):
         return separator
 
 
+class GridEditCanvas(QWidget):
+    """Grid background that supports rubber-band (marquee) multi-select."""
+
+    def __init__(self, dialog):
+        super().__init__()
+        self.dialog = dialog
+        self.rubber_band = None
+        self.origin = None
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.origin = event.pos()
+            if self.rubber_band is None:
+                self.rubber_band = QRubberBand(QRubberBand.Rectangle, self)
+            self.rubber_band.setGeometry(QRect(self.origin, QSize()))
+            self.rubber_band.show()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.origin is not None and self.rubber_band is not None:
+            self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self.origin is not None and self.rubber_band is not None:
+            selection_rect = self.rubber_band.geometry()
+            self.rubber_band.hide()
+            self.origin = None
+            additive = QApplication.keyboardModifiers() == Qt.ControlModifier
+            self.dialog.select_items_in_rect(selection_rect, additive=additive)
+            return
+        super().mouseReleaseEvent(event)
+
+
 class GridEditItemButton(QPushButton):
     """Grid edit item button that supports click selection and cell drag movement."""
 
@@ -759,7 +797,7 @@ class GridEditDialog(QDialog):
 
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
-        self.grid_host = QWidget()
+        self.grid_host = GridEditCanvas(self)
         self.scroll.setWidget(self.grid_host)
         layout.addWidget(self.scroll)
 
@@ -780,6 +818,8 @@ class GridEditDialog(QDialog):
             child.deleteLater()
         self.item_widgets = {}
         self.drop_highlight = None
+        self.grid_host.rubber_band = None
+        self.grid_host.origin = None
         spacing = self.spacing
         max_bottom = max([item.bottom for item in self.items], default=0)
         rows = max(self.visible_rows, max_bottom + 2)
@@ -941,6 +981,19 @@ class GridEditDialog(QDialog):
         if item_id not in self.selected_ids:
             self.selected_ids = {item_id}
             self.update_selection_styles()
+
+    def select_items_in_rect(self, rect, additive=False):
+        """Select every item whose cell footprint intersects the marquee rect."""
+        hit_ids = set()
+        for item in self.items:
+            x, y, width, height = self.item_geometry(item, self.spacing)
+            if rect.intersects(QRect(x, y, width, height)):
+                hit_ids.add(item.id)
+        if additive:
+            self.selected_ids |= hit_ids
+        else:
+            self.selected_ids = hit_ids
+        self.update_selection_styles()
 
     def toggle_selection(self, item_id):
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
