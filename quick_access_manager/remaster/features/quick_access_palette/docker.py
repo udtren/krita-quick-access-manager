@@ -676,12 +676,15 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             self.reload_tabs()
 
     def show_grid_edit_dialog(self):
-        grid = self.controller.active_grid()
-        if not grid:
+        tabs = self.controller.document.tabs
+        if not tabs:
             return
-        dialog = GridEditDialog(grid, parent=self)
-        if dialog.exec() and dialog.saved_items is not None:
-            self.controller.replace_active_grid_items(dialog.saved_items, compact=False)
+        dialog = GridEditDialog(
+            tabs, active_tab_id=self.controller.active_tab_id, parent=self
+        )
+        if dialog.exec() and dialog.saved_tabs is not None:
+            for tab_id, items in dialog.saved_tabs.items():
+                self.controller.replace_tab_grid_items(tab_id, items, compact=False)
             self.reload_tabs()
 
     def show_gesture_config_dialog(self):

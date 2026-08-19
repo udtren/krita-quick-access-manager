@@ -455,6 +455,17 @@ class PaletteController:
         result = FreeGridLayoutEngine(grid.columns).validate(items)
         return self._apply_result(grid, result, compact=compact)
 
+    def replace_tab_grid_items(
+        self, tab_id: str, items, compact: bool = False
+    ) -> LayoutResult:
+        """Replace the items of a specific tab's grid (used by the multi-tab Grid Edit dialog)."""
+        for tab in self.document.tabs:
+            if tab.id == tab_id and tab.grids:
+                grid = tab.grids[0]
+                result = FreeGridLayoutEngine(grid.columns).validate(items)
+                return self._apply_result(grid, result, compact=compact)
+        raise ValueError(f"Palette tab not found: {tab_id}")
+
     def set_columns(self, columns: int) -> LayoutResult:
         grid = self._require_active_grid()
         grid.columns = max(1, int(columns))

@@ -1,6 +1,7 @@
 """Action item configuration dialog for the remastered palette."""
 
 import os
+from uuid import uuid4
 
 from krita import Krita  # type: ignore
 
@@ -18,6 +19,7 @@ from ...compat import (
     QIcon,
     QLabel,
     QLineEdit,
+    QMenu,
     QMessageBox,
     QPixmap,
     QPushButton,
@@ -1069,6 +1071,9 @@ class GridEditItemButton(QPushButton):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drag_start_global_pos = event.globalPos()
+        elif event.button() == Qt.RightButton:
+            self.dialog.show_item_context_menu(self.item, event.globalPos())
+            return
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -1100,25 +1105,59 @@ class GridEditItemButton(QPushButton):
 
 
 class GridEditDialog(QDialog):
-    """Edit the active grid in a separate dialog without auto-compacting on save."""
+    """Edit every tab's grid in a separate dialog without auto-compacting on save."""
 
-    def __init__(self, grid, parent=None):
+    def __init__(self, tabs, active_tab_id=None, parent=None):
         super().__init__(parent)
-        self.columns = int(grid.columns)
-        self.items = [
-            self.normalized_item(PaletteItem.from_dict(item.to_dict()))
-            for item in grid.items
-        ]
-        self.selected_ids = set()
-        self.item_widgets = {}
         self.cell_size = 42
         self.spacing = 4
         self.visible_rows = 10
-        self.saved_items = None
-        self.drop_highlight = None
+        self.saved_tabs = None
+
+        self.tab_order = [tab.id for tab in tabs]
+        self.tab_names = {tab.id: tab.name for tab in tabs}
+        self.tab_state = {}
+        for tab in tabs:
+            grid = tab.grids[0] if tab.grids else None
+            items = [
+                self.normalized_item(PaletteItem.from_dict(item.to_dict()))
+                for item in (grid.items if grid else [])
+            ]
+            self.tab_state[tab.id] = {
+                "columns": int(grid.columns) if grid else 8,
+                "items": items,
+                "selected_ids": set(),
+                "history": [],
+                "item_widgets": {},
+                "drop_highlight": None,
+                "canvas": None,
+            }
+
+        # Current-tab context, swapped by _load_tab_state/_save_current_tab_state.
+        self.current_tab_id = None
+        self.columns = 8
+        self.items = []
+        self.selected_ids = set()
         self.history = []
+        self.item_widgets = {}
+        self.drop_highlight = None
+        self.grid_host = None
+
         self.setup_ui()
-        self.rebuild_grid()
+
+        initial_tab_id = (
+            active_tab_id
+            if active_tab_id in self.tab_state
+            else (self.tab_order[0] if self.tab_order else None)
+        )
+        for tab_id in self.tab_order:
+            self._load_tab_state(tab_id)
+            self.rebuild_grid()
+            self._save_current_tab_state()
+        if initial_tab_id is not None:
+            self._load_tab_state(initial_tab_id)
+            self.tab_widget.setCurrentIndex(self.tab_order.index(initial_tab_id))
+        self.tab_widget.currentChanged.connect(self._on_tab_changed)
 
     def normalized_item(self, item):
         if item.type == ACTION_ITEM:
@@ -1166,11 +1205,15 @@ class GridEditDialog(QDialog):
         control_layout.addStretch(1)
         layout.addLayout(control_layout)
 
-        self.scroll = QScrollArea()
-        self.scroll.setWidgetResizable(True)
-        self.grid_host = GridEditCanvas(self)
-        self.scroll.setWidget(self.grid_host)
-        layout.addWidget(self.scroll)
+        self.tab_widget = QTabWidget()
+        for tab_id in self.tab_order:
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            canvas = GridEditCanvas(self)
+            scroll.setWidget(canvas)
+            self.tab_state[tab_id]["canvas"] = canvas
+            self.tab_widget.addTab(scroll, self.tab_names[tab_id])
+        layout.addWidget(self.tab_widget)
 
         button_layout = QHBoxLayout()
         self.save_btn = QPushButton("Save")
@@ -1183,6 +1226,49 @@ class GridEditDialog(QDialog):
         layout.addLayout(button_layout)
 
         self.setLayout(layout)
+
+    def _save_current_tab_state(self):
+        if self.current_tab_id is None:
+            return
+        state = self.tab_state[self.current_tab_id]
+        state["items"] = self.items
+        state["selected_ids"] = self.selected_ids
+        state["history"] = self.history
+        state["item_widgets"] = self.item_widgets
+        state["drop_highlight"] = self.drop_highlight
+
+    def _load_tab_state(self, tab_id):
+        self.current_tab_id = tab_id
+        state = self.tab_state[tab_id]
+        self.columns = state["columns"]
+        self.items = state["items"]
+        self.selected_ids = state["selected_ids"]
+        self.history = state["history"]
+        self.item_widgets = state["item_widgets"]
+        self.drop_highlight = state["drop_highlight"]
+        self.grid_host = state["canvas"]
+        self.undo_btn.setEnabled(bool(self.history))
+        self.update_selection_styles()
+
+    def _on_tab_changed(self, index):
+        if index < 0 or index >= len(self.tab_order):
+            return
+        tab_id = self.tab_order[index]
+        if tab_id == self.current_tab_id:
+            return
+        self._save_current_tab_state()
+        self._load_tab_state(tab_id)
+
+    def _rebuild_tab(self, tab_id):
+        """Rebuild a tab's canvas immediately, even if it isn't the one currently shown."""
+        previous_tab_id = self.current_tab_id
+        if previous_tab_id != tab_id:
+            self._save_current_tab_state()
+        self._load_tab_state(tab_id)
+        self.rebuild_grid()
+        self._save_current_tab_state()
+        if previous_tab_id is not None and previous_tab_id != tab_id:
+            self._load_tab_state(previous_tab_id)
 
     def rebuild_grid(self):
         for child in self.grid_host.findChildren(QWidget):
@@ -1427,6 +1513,73 @@ class GridEditDialog(QDialog):
     def selected_items(self):
         return [item for item in self.items if item.id in self.selected_ids]
 
+    def show_item_context_menu(self, item, global_pos):
+        if item.id not in self.selected_ids:
+            self.selected_ids = {item.id}
+            self.update_selection_styles()
+        if not self.selected_items():
+            return
+        other_tab_ids = [tid for tid in self.tab_order if tid != self.current_tab_id]
+        menu = QMenu(self)
+        copy_menu = menu.addMenu("Copy to Tab")
+        move_menu = menu.addMenu("Move to Tab")
+        copy_menu.setEnabled(bool(other_tab_ids))
+        move_menu.setEnabled(bool(other_tab_ids))
+        for tab_id in other_tab_ids:
+            name = self.tab_names.get(tab_id, tab_id)
+            copy_action = copy_menu.addAction(name)
+            copy_action.triggered.connect(
+                lambda checked=False, tid=tab_id: self.copy_selected_to_tab(tid)
+            )
+            move_action = move_menu.addAction(name)
+            move_action.triggered.connect(
+                lambda checked=False, tid=tab_id: self.move_selected_to_tab(tid)
+            )
+        menu.exec(global_pos)
+
+    def _new_item_id(self, item_type):
+        return f"{item_type}-{uuid4().hex[:12]}"
+
+    def copy_selected_to_tab(self, target_tab_id):
+        selected = self.selected_items()
+        if not selected or target_tab_id == self.current_tab_id:
+            return
+        self._push_history()
+        clones = [item.copy_with(id=self._new_item_id(item.type)) for item in selected]
+        self._append_items_to_tab(target_tab_id, clones)
+
+    def move_selected_to_tab(self, target_tab_id):
+        selected = self.selected_items()
+        if not selected or target_tab_id == self.current_tab_id:
+            return
+        self._push_history()
+        moved_ids = {item.id for item in selected}
+        clones = [item.copy_with(id=self._new_item_id(item.type)) for item in selected]
+        self.items = [item for item in self.items if item.id not in moved_ids]
+        self.selected_ids -= moved_ids
+        self.rebuild_grid()
+        self._append_items_to_tab(target_tab_id, clones)
+
+    def _append_items_to_tab(self, target_tab_id, new_items):
+        """Place copied/moved items below the target tab's last existing row, same as a new item add."""
+        if not new_items:
+            return
+        target_state = self.tab_state[target_tab_id]
+        target_items = target_state["items"]
+        target_columns = target_state["columns"]
+        base_row = max((it.bottom for it in target_items), default=0)
+        min_row = min(it.row for it in new_items)
+        min_col = min(it.col for it in new_items)
+        placed = []
+        for it in new_items:
+            new_col = min(
+                max(0, it.col - min_col), max(0, target_columns - it.col_span)
+            )
+            placed.append(it.copy_with(row=base_row + (it.row - min_row), col=new_col))
+        target_state["items"] = target_items + placed
+        target_state["selected_ids"] = {it.id for it in placed}
+        self._rebuild_tab(target_tab_id)
+
     MAX_HISTORY = 20
 
     def _push_history(self):
@@ -1526,7 +1679,9 @@ class GridEditDialog(QDialog):
         self.rebuild_grid()
 
     def accept_save(self):
-        self.saved_items = [
-            PaletteItem.from_dict(item.to_dict()) for item in self.items
-        ]
+        self._save_current_tab_state()
+        self.saved_tabs = {
+            tab_id: [PaletteItem.from_dict(item.to_dict()) for item in state["items"]]
+            for tab_id, state in self.tab_state.items()
+        }
         self.accept()
