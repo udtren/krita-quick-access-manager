@@ -2,6 +2,7 @@
 
 from krita import Extension, Krita  # type: ignore
 
+from .color_selector.docker import ColorSelectorDockFactory
 from .compat import QApplication
 from .features.quick_access_palette.docker import QuickAccessPaletteDockerFactory
 from .features.quick_access_palette.popup import QuickAccessPalettePopup
@@ -52,12 +53,16 @@ class QuickAccessPaletteExtension(Extension):
     def __init__(self, parent):
         super().__init__(parent)
         self.palette_factory = None
+        self.color_selector_factory = None
         self.popup_window = None
         self.popup_action = None
 
     def setup(self):
         self.palette_factory = QuickAccessPaletteDockerFactory()
         Krita.instance().addDockWidgetFactory(self.palette_factory)
+
+        self.color_selector_factory = ColorSelectorDockFactory()
+        Krita.instance().addDockWidgetFactory(self.color_selector_factory)
 
         if is_gesture_enabled():
             try:

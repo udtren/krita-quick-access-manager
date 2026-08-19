@@ -19,6 +19,11 @@ from ...shared import (
 DEFAULT_SETTINGS = {
     "default": {"docker_icon_size": 42},
     "popup": {"popup_icon_size": 42},
+    "huesvc": {
+        "value_font_size": 10,
+        "poll_interval": 250,
+        "rgb_display_mode": "percentage",
+    },
 }
 
 
@@ -65,6 +70,7 @@ class PaletteController:
         merged = {
             "default": dict(DEFAULT_SETTINGS["default"]),
             "popup": dict(DEFAULT_SETTINGS["popup"]),
+            "huesvc": dict(DEFAULT_SETTINGS["huesvc"]),
         }
         for section, values in self.document.settings.items():
             if isinstance(values, dict):
@@ -91,6 +97,22 @@ class PaletteController:
             settings["popup"]["popup_icon_size"] = self._bounded_icon_size(
                 popup_icon_size
             )
+        self.document.settings = settings
+        self.save()
+
+    def huesvc_settings(self):
+        return self.settings()["huesvc"]
+
+    def update_huesvc_settings(
+        self, value_font_size=None, poll_interval=None, rgb_display_mode=None
+    ):
+        settings = self.settings()
+        if value_font_size is not None:
+            settings["huesvc"]["value_font_size"] = int(value_font_size)
+        if poll_interval is not None:
+            settings["huesvc"]["poll_interval"] = int(poll_interval)
+        if rgb_display_mode is not None:
+            settings["huesvc"]["rgb_display_mode"] = rgb_display_mode
         self.document.settings = settings
         self.save()
 

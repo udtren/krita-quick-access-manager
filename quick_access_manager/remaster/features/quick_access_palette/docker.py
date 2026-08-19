@@ -696,10 +696,14 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         grid = self.controller.active_grid()
         if not grid:
             return
+        huesvc_settings = self.controller.huesvc_settings()
         dialog = PaletteConfigDialog(
             grid.columns,
             docker_icon_size=self.controller.docker_icon_size(),
             popup_icon_size=self.controller.popup_icon_size(),
+            huesvc_value_font_size=huesvc_settings["value_font_size"],
+            huesvc_poll_interval=huesvc_settings["poll_interval"],
+            huesvc_rgb_display_mode=huesvc_settings["rgb_display_mode"],
             parent=self,
         )
         if dialog.exec():
@@ -707,6 +711,11 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             self.controller.update_settings(
                 docker_icon_size=dialog.get_docker_icon_size(),
                 popup_icon_size=dialog.get_popup_icon_size(),
+            )
+            self.controller.update_huesvc_settings(
+                value_font_size=dialog.get_huesvc_value_font_size(),
+                poll_interval=dialog.get_huesvc_poll_interval(),
+                rgb_display_mode=dialog.get_huesvc_rgb_display_mode(),
             )
             set_gesture_enabled(dialog.get_gesture_enabled())
             self.reload_tabs()

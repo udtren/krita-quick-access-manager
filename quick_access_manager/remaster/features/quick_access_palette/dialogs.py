@@ -593,7 +593,16 @@ class ActionSelectorDialog(QDialog):
 class PaletteConfigDialog(QDialog):
     """Configuration dialog for Quick Access Palette."""
 
-    def __init__(self, columns, docker_icon_size=42, popup_icon_size=42, parent=None):
+    def __init__(
+        self,
+        columns,
+        docker_icon_size=42,
+        popup_icon_size=42,
+        huesvc_value_font_size=10,
+        huesvc_poll_interval=250,
+        huesvc_rgb_display_mode="percentage",
+        parent=None,
+    ):
         super().__init__(parent)
         self.setWindowTitle("Quick Access Palette Config")
         self.resize(300, 190)
@@ -636,6 +645,36 @@ class PaletteConfigDialog(QDialog):
         popup_layout.addStretch(1)
         self.tabs.addTab(popup_page, "Popup")
 
+        huesvc_page = QWidget()
+        huesvc_layout = QVBoxLayout(huesvc_page)
+
+        huesvc_layout.addWidget(QLabel("Value Font Size:"))
+        self.huesvc_font_size_spin = QSpinBox()
+        self.huesvc_font_size_spin.setRange(6, 24)
+        self.huesvc_font_size_spin.setValue(int(huesvc_value_font_size))
+        self.huesvc_font_size_spin.setSuffix(" pt")
+        huesvc_layout.addWidget(self.huesvc_font_size_spin)
+
+        huesvc_layout.addWidget(QLabel("Foreground Color Poll Interval:"))
+        self.huesvc_poll_interval_spin = QSpinBox()
+        self.huesvc_poll_interval_spin.setRange(50, 5000)
+        self.huesvc_poll_interval_spin.setSingleStep(50)
+        self.huesvc_poll_interval_spin.setValue(int(huesvc_poll_interval))
+        self.huesvc_poll_interval_spin.setSuffix(" ms")
+        huesvc_layout.addWidget(self.huesvc_poll_interval_spin)
+
+        huesvc_layout.addWidget(QLabel("RGB Display Mode:"))
+        self.huesvc_rgb_mode_combo = QComboBox()
+        self.huesvc_rgb_mode_combo.addItem("Percentage (0-100)", "percentage")
+        self.huesvc_rgb_mode_combo.addItem("Value (0-255)", "value")
+        index = self.huesvc_rgb_mode_combo.findData(huesvc_rgb_display_mode)
+        if index >= 0:
+            self.huesvc_rgb_mode_combo.setCurrentIndex(index)
+        huesvc_layout.addWidget(self.huesvc_rgb_mode_combo)
+
+        huesvc_layout.addStretch(1)
+        self.tabs.addTab(huesvc_page, "HueSVC")
+
         layout.addWidget(self.tabs)
 
         button_layout = QHBoxLayout()
@@ -660,6 +699,15 @@ class PaletteConfigDialog(QDialog):
 
     def get_gesture_enabled(self):
         return self.gesture_enabled_checkbox.isChecked()
+
+    def get_huesvc_value_font_size(self):
+        return self.huesvc_font_size_spin.value()
+
+    def get_huesvc_poll_interval(self):
+        return self.huesvc_poll_interval_spin.value()
+
+    def get_huesvc_rgb_display_mode(self):
+        return self.huesvc_rgb_mode_combo.currentData()
 
     def _separator(self):
         separator = QFrame()
