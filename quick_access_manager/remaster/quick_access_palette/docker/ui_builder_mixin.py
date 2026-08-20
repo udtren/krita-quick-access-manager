@@ -48,20 +48,23 @@ class UIBuilderMixin:
         self.menu_btn.setFixedHeight(24)
         self.menu_btn.setMenu(self.build_menu())
         self.add_brush_btn = self.create_header_button("add_brush.png", "Add Brush")
-        self.grid_edit_btn = self.create_header_button("manage_grid.png", "Edit Grid")
+        self.grid_edit_btn = self.create_header_button("grid_edit.png", "Edit Grid")
         self.gesture_btn = self.create_header_button("gesture.png", "Gesture Settings")
         self.config_btn = self.create_header_button("setting.png", "Config")
+        self.resources_btn = self.create_header_button("resources.png", "Resources")
 
         self.add_brush_btn.clicked.connect(self.add_current_brush)
         self.grid_edit_btn.clicked.connect(self.show_grid_edit_dialog)
         self.gesture_btn.clicked.connect(self.show_gesture_config_dialog)
         self.config_btn.clicked.connect(self.show_config_dialog)
+        self.resources_btn.clicked.connect(self.show_alias_config_dialog)
 
         self.header_buttons = (
             self.menu_btn,
             self.add_brush_btn,
-            self.grid_edit_btn,
+            self.resources_btn,
             self.gesture_btn,
+            self.grid_edit_btn,
             self.config_btn,
         )
         header.addWidget(self.menu_btn)
@@ -86,8 +89,6 @@ class UIBuilderMixin:
         menu.addAction("Add Brush Size", self.add_brush_size)
         menu.addAction("Add Brush Blend Mode", self.add_brush_blend_mode)
         menu.addAction("Add Script", self.add_script)
-        menu.addSeparator()
-        menu.addAction("Resources", self.show_alias_config_dialog)
         return menu
 
     def create_header_button(self, icon_name, tooltip, fallback_text=""):

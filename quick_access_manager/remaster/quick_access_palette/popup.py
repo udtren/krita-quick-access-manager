@@ -268,19 +268,20 @@ class QuickAccessPalettePopup(QDialog, ItemStyleMixin):
             vertical = item.payload.get("orientation") == SEPARATOR_ORIENTATION_VERTICAL
             container = QWidget()
             separator = QFrame()
+            separator.setFrameShape(QFrame.NoFrame)
+            thickness = max(1, int(item.payload.get("thickness", 2)))
+            color = item.payload.get("color", "#5a5a5a")
+            separator.setStyleSheet(f"background-color: {color};")
             if vertical:
                 layout = QHBoxLayout(container)
                 layout.setContentsMargins(0, 0, 0, 0)
-                separator.setFrameShape(QFrame.VLine)
-                separator.setFixedWidth(12)
+                separator.setFixedWidth(thickness)
                 layout.addWidget(separator, alignment=Qt.AlignHCenter)
             else:
                 layout = QVBoxLayout(container)
                 layout.setContentsMargins(0, 0, 0, 0)
-                separator.setFrameShape(QFrame.HLine)
-                separator.setFixedHeight(12)
+                separator.setFixedHeight(thickness)
                 layout.addWidget(separator, alignment=Qt.AlignVCenter)
-            separator.setFrameShadow(QFrame.Sunken)
             return container
 
         if item.type == DOCKER_TOGGLE_ITEM:

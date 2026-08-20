@@ -83,9 +83,6 @@ class GridEditDialog(QDialog):
         self.item_widgets = {}
         self.drop_highlight = None
         self.grid_host = None
-        # "row" or "col" - which span the current selection's Wider/Narrower
-        # click resizes; set by update_resize_controls().
-        self._resize_axis_state = None
 
         self.setup_ui()
 
@@ -131,19 +128,6 @@ class GridEditDialog(QDialog):
         self.undo_btn.setFixedHeight(24)
         self.undo_btn.clicked.connect(self.undo)
         control_layout.addWidget(self.undo_btn)
-
-        self.wider_btn = QPushButton("Wider")
-        self.narrower_btn = QPushButton("Narrower")
-
-        self.wider_btn.clicked.connect(lambda: self.grow_selected(1))
-        self.narrower_btn.clicked.connect(lambda: self.grow_selected(-1))
-
-        for button in (
-            self.wider_btn,
-            self.narrower_btn,
-        ):
-            button.setFixedHeight(24)
-            control_layout.addWidget(button)
         control_layout.addStretch(1)
         layout.addLayout(control_layout)
 
@@ -418,7 +402,6 @@ class GridEditDialog(QDialog):
             if not widget:
                 continue
             widget.setStyleSheet(self.item_style(item, item.id in self.selected_ids))
-        self.update_resize_controls()
 
     def item_style(self, item, selected):
         colors = {
@@ -488,33 +471,6 @@ class GridEditDialog(QDialog):
             action_id = item.payload.get("action_id", "")
             return not self.alias_entry("actions", action_id).get("icon_name")
         return False
-
-    def update_resize_controls(self):
-        selected = self.selected_items()
-        resizable = [item for item in selected if self.is_resizable(item)]
-        axes = {self.resize_axis(item) for item in resizable}
-        # Mixed row/col selections (e.g. a Label plus a vertical Separator)
-        # have no single delta that means the same thing for both, so the
-        # buttons stay disabled until the selection resizes along one axis.
-        can_resize = bool(selected) and len(resizable) == len(selected) and len(axes) == 1
-        self._resize_axis_state = next(iter(axes)) if can_resize else None
-        if self._resize_axis_state == "row":
-            self.wider_btn.setText("Taller")
-            self.narrower_btn.setText("Shorter")
-        else:
-            self.wider_btn.setText("Wider")
-            self.narrower_btn.setText("Narrower")
-        self.wider_btn.setEnabled(can_resize)
-        self.narrower_btn.setEnabled(can_resize)
-        tooltip = "Resize selected Label/Separator items only"
-        self.wider_btn.setToolTip(tooltip)
-        self.narrower_btn.setToolTip(tooltip)
-
-    def grow_selected(self, delta):
-        if self._resize_axis_state == "row":
-            self.resize_selected(delta, 0)
-        else:
-            self.resize_selected(0, delta)
 
     def selected_items(self):
         return [item for item in self.items if item.id in self.selected_ids]

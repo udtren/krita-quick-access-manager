@@ -9,6 +9,7 @@ from ...shared import (
     DOCKER_TOGGLE_ITEM,
     LABEL_ITEM,
     SCRIPT_ITEM,
+    SEPARATOR_ITEM,
     SEPARATOR_ORIENTATION_HORIZONTAL,
     SEPARATOR_ORIENTATION_VERTICAL,
     FreeGridLayoutEngine,
@@ -199,6 +200,9 @@ class ItemCrudMixin:
 
     def update_brush_blend_mode_item(self, item_id: str, config) -> LayoutResult:
         return self._update_payload(item_id, BRUSH_BLEND_MODE_ITEM, config)
+
+    def update_separator_item(self, item_id: str, config) -> LayoutResult:
+        return self._update_payload(item_id, SEPARATOR_ITEM, config)
 
     def _update_payload(self, item_id: str, expected_type: str, config) -> LayoutResult:
         grid = self._require_active_grid()

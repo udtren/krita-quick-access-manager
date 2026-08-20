@@ -280,6 +280,78 @@ class LabelItemConfigDialog(QDialog):
         }
 
 
+class SeparatorItemConfigDialog(QDialog):
+    """Configure a Separator palette item's line thickness and color."""
+
+    def __init__(self, config=None, parent=None):
+        super().__init__(parent)
+        self.config = dict(config or {})
+        self.color = QColor(self.config.get("color", "#5a5a5a"))
+        self.setup_ui()
+        self.load_values()
+
+    def setup_ui(self):
+        self.setWindowTitle("Separator Config")
+        self.resize(280, 160)
+        self.setMinimumWidth(280)
+        layout = QVBoxLayout()
+
+        layout.addWidget(QLabel("Thickness (px):"))
+        self.thickness_edit = QLineEdit()
+        self.thickness_edit.setValidator(QIntValidator(1, 50, self.thickness_edit))
+        layout.addWidget(self.thickness_edit)
+
+        layout.addWidget(QLabel("Color:"))
+        self.color_button = QPushButton()
+        self.color_button.setFixedHeight(24)
+        self.color_button.clicked.connect(self.pick_color)
+        layout.addWidget(self.color_button)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.setToolTip("Reset thickness and color")
+        self.reset_btn.clicked.connect(self.reset_to_defaults)
+        layout.addWidget(self.reset_btn)
+
+        self.setLayout(layout)
+
+    def reset_to_defaults(self):
+        self.thickness_edit.setText("2")
+        self.color = QColor("#5a5a5a")
+        self.update_color_button()
+
+    def load_values(self):
+        self.thickness_edit.setText(str(self.config.get("thickness", "2")))
+        self.update_color_button()
+
+    def pick_color(self):
+        color = QColorDialog.getColor(self.color, self, "Select Color")
+        if color.isValid():
+            self.color = color
+            self.update_color_button()
+
+    def update_color_button(self):
+        self.color_button.setStyleSheet(
+            f"background-color: {self.color.name()}; border: 1px solid #888;"
+        )
+        self.color_button.setText(self.color.name())
+
+    def get_config(self):
+        digits = "".join(ch for ch in self.thickness_edit.text() if ch.isdigit())
+        return {
+            "thickness": digits or "2",
+            "color": self.color.name(),
+        }
+
+
 class BrushSizeItemConfigDialog(QDialog):
     """Configure a Brush Size palette item - a 1x1 button that sets the
     active brush's size to a fixed number when clicked."""

@@ -37,6 +37,7 @@ from ..infrastructure import (
 
 COLUMN_LABELS = [
     "ID",
+    "Shortcut",
     "Custom Name",
     "Background Color",
     "Font Color",
@@ -50,6 +51,7 @@ COLUMN_LABELS = [
 # take up the remaining space - the ID text is the only thing here that
 # varies enough in length to need it.
 FIXED_COLUMN_WIDTHS = {
+    "Shortcut": 140,
     "Custom Name": 150,
     "Background Color": 110,
     "Font Color": 110,
@@ -104,6 +106,7 @@ class AliasConfigDialog(QDialog):
             self.data.get("actions", {}),
             self.action_entries(),
             self._add_action_item,
+            shortcut_lookup=self.action_shortcut_text,
         )
         self.tabs.addTab(self._wrap_with_id_filter(actions_table), "Actions")
         dockers_table = self.build_tab(
@@ -135,6 +138,14 @@ class AliasConfigDialog(QDialog):
             label = action.text() if hasattr(action, "text") else action_id
             entries.append((action_id, label))
         return entries
+
+    def action_shortcut_text(self, action_id):
+        action = ActionManager.get_action_by_id(action_id) if ActionManager else None
+        if action is None or not hasattr(action, "shortcuts"):
+            return ""
+        return ", ".join(
+            shortcut.toString() for shortcut in action.shortcuts() if not shortcut.isEmpty()
+        )
 
     def docker_entries(self):
         dockers = DockerManager.get_dockers_dict() if DockerManager else {}
@@ -243,7 +254,9 @@ class AliasConfigDialog(QDialog):
     # ------------------------------------------------------------------
     # Table construction
     # ------------------------------------------------------------------
-    def build_tab(self, rows_store, saved_entries, id_label_pairs, add_callback):
+    def build_tab(
+        self, rows_store, saved_entries, id_label_pairs, add_callback, shortcut_lookup=None
+    ):
         table = QTableWidget()
         table.setColumnCount(len(COLUMN_LABELS))
         table.setHorizontalHeaderLabels(COLUMN_LABELS)
@@ -262,24 +275,28 @@ class AliasConfigDialog(QDialog):
             id_item.setData(Qt.UserRole, item_id)
             table.setItem(row, 0, id_item)
 
+            shortcut_text = shortcut_lookup(item_id) if shortcut_lookup else ""
+            shortcut_item = QTableWidgetItem(shortcut_text)
+            table.setItem(row, 1, shortcut_item)
+
             name_edit = QLineEdit(saved.get("custom_name", ""))
-            table.setCellWidget(row, 1, name_edit)
+            table.setCellWidget(row, 2, name_edit)
 
             bg_color = QColor(saved.get("background_color") or "#3a263f")
             bg_button = self.create_color_button(
                 bg_color, bool(saved.get("background_color"))
             )
-            table.setCellWidget(row, 2, bg_button)
+            table.setCellWidget(row, 3, bg_button)
 
             font_color = QColor(saved.get("font_color") or "#ffffff")
             font_button = self.create_color_button(
                 font_color, bool(saved.get("font_color"))
             )
-            table.setCellWidget(row, 3, font_button)
+            table.setCellWidget(row, 4, font_button)
 
             size_edit = QLineEdit(str(saved.get("font_size", "")))
             size_edit.setPlaceholderText("18")
-            table.setCellWidget(row, 4, size_edit)
+            table.setCellWidget(row, 5, size_edit)
 
             icon_button = QPushButton("Icon")
             icon_button.setProperty("icon_path", saved.get("icon_name", ""))
@@ -287,7 +304,7 @@ class AliasConfigDialog(QDialog):
             icon_button.clicked.connect(
                 lambda checked=False, btn=icon_button: self.pick_icon(btn)
             )
-            table.setCellWidget(row, 5, icon_button)
+            table.setCellWidget(row, 6, icon_button)
 
             reset_button = QPushButton("Reset")
             reset_button.setToolTip(
@@ -298,7 +315,7 @@ class AliasConfigDialog(QDialog):
                     store, iid
                 )
             )
-            table.setCellWidget(row, 6, reset_button)
+            table.setCellWidget(row, 7, reset_button)
 
             add_button = QPushButton("Add")
             add_button.setToolTip(f"Add to the active grid: {label} ({item_id})")
@@ -307,7 +324,7 @@ class AliasConfigDialog(QDialog):
                     add_callback, iid, btn
                 )
             )
-            table.setCellWidget(row, 7, add_button)
+            table.setCellWidget(row, 8, add_button)
 
             rows_store[item_id] = {
                 "name_edit": name_edit,

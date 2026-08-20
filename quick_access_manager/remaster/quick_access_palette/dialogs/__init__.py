@@ -17,6 +17,7 @@ from .item_config_dialogs import (
     DockerToggleItemConfigDialog,
     LabelItemConfigDialog,
     ScriptItemConfigDialog,
+    SeparatorItemConfigDialog,
 )
 from .palette_settings_dialog import PaletteConfigDialog
 from .grid_edit import (
@@ -34,6 +35,7 @@ __all__ = [
     "DockerToggleItemConfigDialog",
     "LabelItemConfigDialog",
     "ScriptItemConfigDialog",
+    "SeparatorItemConfigDialog",
     "PaletteConfigDialog",
     "GridEditCanvas",
     "GridEditItemButton",

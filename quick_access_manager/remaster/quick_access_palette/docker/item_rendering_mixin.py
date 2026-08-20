@@ -34,6 +34,7 @@ from ..dialogs import (
     DockerToggleItemConfigDialog,
     LabelItemConfigDialog,
     ScriptItemConfigDialog,
+    SeparatorItemConfigDialog,
 )
 from .drag_filter import GRID_CELL_SPACING
 
@@ -94,19 +95,20 @@ class ItemRenderingMixin:
             vertical = item.payload.get("orientation") == SEPARATOR_ORIENTATION_VERTICAL
             container = QWidget()
             separator = QFrame()
+            separator.setFrameShape(QFrame.NoFrame)
+            thickness = max(1, int(item.payload.get("thickness", 2)))
+            color = item.payload.get("color", "#5a5a5a")
+            separator.setStyleSheet(f"background-color: {color};")
             if vertical:
                 layout = QHBoxLayout(container)
                 layout.setContentsMargins(0, 0, 0, 0)
-                separator.setFrameShape(QFrame.VLine)
-                separator.setFixedWidth(12)
+                separator.setFixedWidth(thickness)
                 layout.addWidget(separator, alignment=Qt.AlignHCenter)
             else:
                 layout = QVBoxLayout(container)
                 layout.setContentsMargins(0, 0, 0, 0)
-                separator.setFrameShape(QFrame.HLine)
-                separator.setFixedHeight(12)
+                separator.setFixedHeight(thickness)
                 layout.addWidget(separator, alignment=Qt.AlignVCenter)
-            separator.setFrameShadow(QFrame.Sunken)
             self.apply_issue_style(container, item)
             return container
 
@@ -251,6 +253,7 @@ class ItemRenderingMixin:
             SCRIPT_ITEM,
             BRUSH_SIZE_ITEM,
             BRUSH_BLEND_MODE_ITEM,
+            SEPARATOR_ITEM,
         ):
             property_action = menu.addAction("Property")
         selected = menu.exec(widget.mapToGlobal(pos))
@@ -272,6 +275,8 @@ class ItemRenderingMixin:
                 self.show_brush_size_property(item)
             elif item.type == BRUSH_BLEND_MODE_ITEM:
                 self.show_brush_blend_mode_property(item)
+            elif item.type == SEPARATOR_ITEM:
+                self.show_separator_property(item)
 
     def show_label_property(self, item):
         dialog = LabelItemConfigDialog(dict(item.payload), parent=self)
@@ -313,6 +318,12 @@ class ItemRenderingMixin:
         dialog = BrushBlendModeItemConfigDialog(dict(item.payload), parent=self)
         if dialog.exec():
             self.controller.update_brush_blend_mode_item(item.id, dialog.get_config())
+            self.reload_tabs()
+
+    def show_separator_property(self, item):
+        dialog = SeparatorItemConfigDialog(dict(item.payload), parent=self)
+        if dialog.exec():
+            self.controller.update_separator_item(item.id, dialog.get_config())
             self.reload_tabs()
 
     def show_action_property(self, item):

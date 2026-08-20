@@ -317,7 +317,7 @@ class ControlButtonWidget(QWidget):
 
         start_visible = is_rotation_widget_start_visible()
         if start_visible:
-            self.float_rotation.pad.show()
+            self.float_rotation.pad.setUserVisible(True)
             rotation_widget.show()
             rotation_label.show()
             self.rotation_toggle_btn.setChecked(True)
@@ -325,7 +325,7 @@ class ControlButtonWidget(QWidget):
                 QIcon(os.path.join(self.icon_dir, "rotate-on.png"))
             )
         else:
-            self.float_rotation.pad.hide()
+            self.float_rotation.pad.setUserVisible(False)
             rotation_widget.hide()
             rotation_label.hide()
             self.rotation_toggle_btn.setChecked(False)
@@ -340,15 +340,14 @@ class ControlButtonWidget(QWidget):
 
         is_checked = self.rotation_toggle_btn.isChecked()
         if is_checked:
-            self.float_rotation.pad.show()
+            self.float_rotation.pad.setUserVisible(True)
             self.float_rotation.rotation_widget.show()
             self.float_rotation.rotation_label.show()
-            self.float_rotation.pad.adjustToView()
             self.rotation_toggle_btn.setIcon(
                 QIcon(os.path.join(self.icon_dir, "rotate-on.png"))
             )
         else:
-            self.float_rotation.pad.hide()
+            self.float_rotation.pad.setUserVisible(False)
             self.float_rotation.rotation_widget.hide()
             self.float_rotation.rotation_label.hide()
             self.rotation_toggle_btn.setIcon(
