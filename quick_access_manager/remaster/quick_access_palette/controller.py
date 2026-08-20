@@ -7,6 +7,7 @@ from ..shared import (
     ACTION_ITEM,
     COLOR_ITEM,
     DEFAULT_ACTION_COL_SPAN,
+    DEFAULT_COL_SPAN,
     DOCKER_TOGGLE_ITEM,
     LABEL_ITEM,
     SCRIPT_ITEM,
@@ -76,7 +77,58 @@ class PaletteController:
     def __init__(self, repository: PaletteRepository | None = None):
         self.repository = repository or PaletteRepository()
         self.document = self.repository.load()
+        # Set while a Resources-style "add many items in a row" session is
+        # open; see begin_sequential_placement().
+        self._sequential_cursor = None
         self.normalize_action_spans()
+
+    # ------------------------------------------------------------------
+    # Sequential placement (Resources dialog)
+    # ------------------------------------------------------------------
+    def begin_sequential_placement(self):
+        """Pin the grid's first empty row as the start of a fill sequence.
+
+        Header menu adds keep dropping every new item on the current last
+        empty row, but the Resources dialog can add many items in one sitting:
+        there the items should fill that one row left-to-right and only then
+        wrap to the next row, instead of every Add pushing the previous item
+        down a row. The cursor is captured when the dialog opens and released
+        by end_sequential_placement() when it closes.
+        """
+        grid = self.active_grid()
+        if grid is None:
+            self._sequential_cursor = None
+            return
+        self._sequential_cursor = {
+            "grid_id": grid.id,
+            "row": max((item.bottom for item in grid.items), default=0),
+            "col": 0,
+        }
+
+    def end_sequential_placement(self):
+        self._sequential_cursor = None
+
+    def _active_cursor(self, grid: PaletteGrid):
+        """The sequential cursor, but only while it belongs to `grid`."""
+        cursor = self._sequential_cursor
+        if cursor is not None and cursor.get("grid_id") == grid.id:
+            return cursor
+        return None
+
+    def _advance_sequential_cursor(
+        self, grid: PaletteGrid, result: LayoutResult, item_id: str
+    ):
+        """Park the cursor just right of where the item actually landed."""
+        cursor = self._active_cursor(grid)
+        if cursor is None:
+            return
+        placed = next((item for item in result.items if item.id == item_id), None)
+        if placed is None:
+            return
+        row, col = placed.row, placed.col + placed.col_span
+        if col >= grid.columns:
+            row, col = placed.row + placed.row_span, 0
+        cursor["row"], cursor["col"] = row, col
 
     def normalize_action_spans(self):
         changed = False
@@ -292,41 +344,32 @@ class PaletteController:
         item = PaletteItem.create_brush(
             self._new_id("brush"), brush_name, row=row, col=col
         )
-        return self._apply_result(
-            grid,
-            FreeGridLayoutEngine(grid.columns).add_item(grid.items, item),
-            compact=False,
-        )
+        return self._add_new_item(grid, item)
 
     def add_action(
         self, action_id: str, row: int | None = None, col: int | None = None
     ) -> LayoutResult:
         grid = self._require_active_grid()
-        row, col = self._resolve_position(grid, row, col)
+        col_span = self._action_col_span(action_id)
+        row, col = self._resolve_position(grid, row, col, col_span=col_span)
         item = PaletteItem.create_action(
             self._new_id("action"),
             action_id,
             row=row,
             col=col,
-            col_span=self._action_col_span(action_id),
+            col_span=col_span,
         )
-        return self._apply_result(
-            grid,
-            FreeGridLayoutEngine(grid.columns).add_item(grid.items, item),
-            compact=False,
-        )
+        return self._add_new_item(grid, item)
 
     def add_label(
         self, text: str, row: int | None = None, col: int | None = None
     ) -> LayoutResult:
         grid = self._require_active_grid()
-        row, col = self._resolve_position(grid, row, col)
-        item = PaletteItem.create_label(self._new_id("label"), text, row=row, col=col)
-        return self._apply_result(
-            grid,
-            FreeGridLayoutEngine(grid.columns).add_item(grid.items, item),
-            compact=False,
+        row, col = self._resolve_position(
+            grid, row, col, col_span=DEFAULT_ACTION_COL_SPAN
         )
+        item = PaletteItem.create_label(self._new_id("label"), text, row=row, col=col)
+        return self._add_new_item(grid, item)
 
     def add_separator(
         self, row: int | None = None, col: int | None = None
@@ -334,11 +377,7 @@ class PaletteController:
         grid = self._require_active_grid()
         row, col = self._resolve_position(grid, row, col)
         item = PaletteItem.create_separator(self._new_id("separator"), row=row, col=col)
-        return self._apply_result(
-            grid,
-            FreeGridLayoutEngine(grid.columns).add_item(grid.items, item),
-            compact=False,
-        )
+        return self._add_new_item(grid, item)
 
     def add_docker_toggle(
         self, docker_id: str, row: int | None = None, col: int | None = None
@@ -348,11 +387,7 @@ class PaletteController:
         item = PaletteItem.create_docker_toggle(
             self._new_id("docker_toggle"), docker_id, row=row, col=col
         )
-        return self._apply_result(
-            grid,
-            FreeGridLayoutEngine(grid.columns).add_item(grid.items, item),
-            compact=False,
-        )
+        return self._add_new_item(grid, item)
 
     def add_color(
         self, color: str = "#ffffff", row: int | None = None, col: int | None = None
@@ -360,11 +395,7 @@ class PaletteController:
         grid = self._require_active_grid()
         row, col = self._resolve_position(grid, row, col)
         item = PaletteItem.create_color(self._new_id("color"), color, row=row, col=col)
-        return self._apply_result(
-            grid,
-            FreeGridLayoutEngine(grid.columns).add_item(grid.items, item),
-            compact=False,
-        )
+        return self._add_new_item(grid, item)
 
     def add_script(
         self,
@@ -378,11 +409,16 @@ class PaletteController:
         item = PaletteItem.create_script(
             self._new_id("script"), script_path, row=row, col=col, config=config
         )
-        return self._apply_result(
+        return self._add_new_item(grid, item)
+
+    def _add_new_item(self, grid: PaletteGrid, item: PaletteItem) -> LayoutResult:
+        result = self._apply_result(
             grid,
             FreeGridLayoutEngine(grid.columns).add_item(grid.items, item),
             compact=False,
         )
+        self._advance_sequential_cursor(grid, result, item.id)
+        return result
 
     def remove_item(self, item_id: str) -> LayoutResult:
         grid = self._require_active_grid()
@@ -519,9 +555,24 @@ class PaletteController:
         return grid
 
     def _resolve_position(
-        self, grid: PaletteGrid, row: int | None, col: int | None
+        self,
+        grid: PaletteGrid,
+        row: int | None,
+        col: int | None,
+        col_span: int = DEFAULT_COL_SPAN,
     ) -> tuple[int, int]:
-        """Default an unspecified position to the row right below the last item."""
+        """Default an unspecified position to the row right below the last item.
+
+        While a sequential placement session is open the default is the
+        session cursor instead, so consecutive adds fill one row left-to-right
+        and wrap to the next row once the item no longer fits.
+        """
+        if row is None and col is None:
+            cursor = self._active_cursor(grid)
+            if cursor is not None:
+                if cursor["col"] + max(1, int(col_span)) > grid.columns:
+                    cursor["row"], cursor["col"] = cursor["row"] + 1, 0
+                return cursor["row"], cursor["col"]
         if row is None:
             row = max((item.bottom for item in grid.items), default=0)
         if col is None:

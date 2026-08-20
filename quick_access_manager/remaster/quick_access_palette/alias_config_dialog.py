@@ -79,7 +79,19 @@ class AliasConfigDialog(QDialog):
         self.on_item_added = on_item_added
         self.action_rows = {}
         self.docker_rows = {}
+        # Items added from this dialog fill the grid's last empty row from its
+        # left column onward (wrapping to the next row when full) instead of
+        # each Add starting a new row. The cursor lives for as long as this
+        # window is open; done() releases it.
+        if self.controller is not None:
+            self.controller.begin_sequential_placement()
         self.setup_ui()
+
+    def done(self, result):
+        # Covers Save, Cancel, Esc, and the window's close button alike.
+        if self.controller is not None:
+            self.controller.end_sequential_placement()
+        super().done(result)
 
     def setup_ui(self):
         layout = QVBoxLayout()
