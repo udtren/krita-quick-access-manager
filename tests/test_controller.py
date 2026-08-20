@@ -175,6 +175,50 @@ class SeparatorOrientationTests(ControllerTestCase):
         self.assertEqual((by_kind["A"].row, by_kind["A"].col), (0, 1))
 
 
+class TabBarStyleSettingsTests(ControllerTestCase):
+    def test_defaults_are_populated_without_any_saved_settings(self):
+        controller = self.make_controller()
+        style = controller.tab_bar_settings()
+        self.assertEqual(
+            set(style),
+            {
+                "active_font_size",
+                "active_font_color",
+                "active_background_color",
+                "inactive_font_size",
+                "inactive_font_color",
+                "inactive_background_color",
+            },
+        )
+        self.assertIsInstance(style["active_font_size"], int)
+
+    def test_update_settings_persists_tab_style_and_survives_reload(self):
+        controller = self.make_controller()
+        controller.update_settings(
+            tab_active_font_size=16,
+            tab_active_font_color="#111111",
+            tab_active_background_color="#222222",
+            tab_inactive_font_size=9,
+            tab_inactive_font_color="#333333",
+            tab_inactive_background_color="#444444",
+        )
+        reloaded = self.make_controller()
+        style = reloaded.tab_bar_settings()
+        self.assertEqual(style["active_font_size"], 16)
+        self.assertEqual(style["active_font_color"], "#111111")
+        self.assertEqual(style["active_background_color"], "#222222")
+        self.assertEqual(style["inactive_font_size"], 9)
+        self.assertEqual(style["inactive_font_color"], "#333333")
+        self.assertEqual(style["inactive_background_color"], "#444444")
+
+    def test_update_settings_leaves_tab_style_untouched_when_omitted(self):
+        controller = self.make_controller()
+        controller.update_settings(tab_active_font_color="#111111")
+        controller.update_settings(docker_icon_size=48)  # unrelated update
+        style = controller.tab_bar_settings()
+        self.assertEqual(style["active_font_color"], "#111111")
+
+
 class TabManagementTests(ControllerTestCase):
     def test_add_tab_becomes_active(self):
         controller = self.make_controller()

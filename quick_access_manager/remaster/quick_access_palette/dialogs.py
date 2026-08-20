@@ -536,6 +536,12 @@ class PaletteConfigDialog(QDialog):
         huesvc_enabled=True,
         quick_adjust_enabled=True,
         header_button_color="#828282",
+        tab_active_font_size=12,
+        tab_active_font_color="#ffffff",
+        tab_active_background_color="#3f3f3f",
+        tab_inactive_font_size=12,
+        tab_inactive_font_color="#a0a0a0",
+        tab_inactive_background_color="#2b2b2b",
         parent=None,
     ):
         super().__init__(parent)
@@ -598,6 +604,40 @@ class PaletteConfigDialog(QDialog):
         self.header_button_color_btn.clicked.connect(self.pick_header_button_color)
         self._update_header_button_color_btn()
         default_layout.addWidget(self.header_button_color_btn)
+
+        default_layout.addWidget(self._separator())
+        default_layout.addWidget(QLabel("Active Tab Style"))
+        default_layout.addWidget(QLabel("Font Size:"))
+        self.tab_active_font_size_spin = QSpinBox()
+        self.tab_active_font_size_spin.setRange(6, 24)
+        self.tab_active_font_size_spin.setValue(int(tab_active_font_size))
+        self.tab_active_font_size_spin.setSuffix(" px")
+        default_layout.addWidget(self.tab_active_font_size_spin)
+        default_layout.addWidget(QLabel("Font Color:"))
+        self.tab_active_font_color_btn = self._add_tab_color_row(
+            default_layout, tab_active_font_color, "tab_active_font_color"
+        )
+        default_layout.addWidget(QLabel("Background Color:"))
+        self.tab_active_background_color_btn = self._add_tab_color_row(
+            default_layout, tab_active_background_color, "tab_active_background_color"
+        )
+
+        default_layout.addWidget(self._separator())
+        default_layout.addWidget(QLabel("Other Tabs Style"))
+        default_layout.addWidget(QLabel("Font Size:"))
+        self.tab_inactive_font_size_spin = QSpinBox()
+        self.tab_inactive_font_size_spin.setRange(6, 24)
+        self.tab_inactive_font_size_spin.setValue(int(tab_inactive_font_size))
+        self.tab_inactive_font_size_spin.setSuffix(" px")
+        default_layout.addWidget(self.tab_inactive_font_size_spin)
+        default_layout.addWidget(QLabel("Font Color:"))
+        self.tab_inactive_font_color_btn = self._add_tab_color_row(
+            default_layout, tab_inactive_font_color, "tab_inactive_font_color"
+        )
+        default_layout.addWidget(QLabel("Background Color:"))
+        self.tab_inactive_background_color_btn = self._add_tab_color_row(
+            default_layout, tab_inactive_background_color, "tab_inactive_background_color"
+        )
 
         default_layout.addStretch(1)
         self.tabs.addTab(default_page, "Default")
@@ -910,6 +950,51 @@ class PaletteConfigDialog(QDialog):
 
     def get_header_button_color(self):
         return self.header_button_color.name()
+
+    def _add_tab_color_row(self, layout, initial_hex, attr_name):
+        """A full-width color-picker button, storing its QColor on
+        self.<attr_name> - used for the Active/Other Tab Style rows, which
+        need four independent color pickers with the same click/repaint logic
+        as header_button_color_btn above."""
+        setattr(self, attr_name, QColor(initial_hex))
+        button = QPushButton()
+        button.setFixedHeight(28)
+        button.clicked.connect(
+            lambda checked=False: self._pick_tab_color(attr_name, button)
+        )
+        self._update_tab_color_btn(attr_name, button)
+        layout.addWidget(button)
+        return button
+
+    def _pick_tab_color(self, attr_name, button):
+        current = getattr(self, attr_name)
+        color = QColorDialog.getColor(current, self, "Select Color")
+        if color.isValid():
+            setattr(self, attr_name, color)
+            self._update_tab_color_btn(attr_name, button)
+
+    def _update_tab_color_btn(self, attr_name, button):
+        color = getattr(self, attr_name)
+        button.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
+        button.setText(color.name())
+
+    def get_tab_active_font_size(self):
+        return self.tab_active_font_size_spin.value()
+
+    def get_tab_active_font_color(self):
+        return self.tab_active_font_color.name()
+
+    def get_tab_active_background_color(self):
+        return self.tab_active_background_color.name()
+
+    def get_tab_inactive_font_size(self):
+        return self.tab_inactive_font_size_spin.value()
+
+    def get_tab_inactive_font_color(self):
+        return self.tab_inactive_font_color.name()
+
+    def get_tab_inactive_background_color(self):
+        return self.tab_inactive_background_color.name()
 
     def get_popup_icon_size(self):
         return self.popup_icon_size_spin.value()

@@ -307,7 +307,27 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         size = max(16, self.item_cell_size() - 4)
         return QSize(size, size)
 
+    def tab_bar_stylesheet(self):
+        style = self.controller.tab_bar_settings()
+        return (
+            "QTabBar::tab {"
+            f" background: {style['inactive_background_color']};"
+            f" color: {style['inactive_font_color']};"
+            f" font-size: {style['inactive_font_size']}px;"
+            " padding: 4px 10px;"
+            " }"
+            "QTabBar::tab:selected {"
+            f" background: {style['active_background_color']};"
+            f" color: {style['active_font_color']};"
+            f" font-size: {style['active_font_size']}px;"
+            " }"
+        )
+
+    def apply_tab_bar_style(self):
+        self.tab_widget.setStyleSheet(self.tab_bar_stylesheet())
+
     def reload_tabs(self):
+        self.apply_tab_bar_style()
         self.issue_map = self.controller.validate_active_grid().issues_by_item()
         # One alias read per rebuild instead of one per item.
         self._alias_data = AliasRepository().load()
@@ -880,6 +900,10 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             huesvc_enabled=self.controller.is_huesvc_enabled(),
             quick_adjust_enabled=self.controller.is_quick_adjust_enabled(),
             header_button_color=self.controller.header_button_color(),
+            **{
+                f"tab_{key}": value
+                for key, value in self.controller.tab_bar_settings().items()
+            },
             parent=self,
         )
         if dialog.exec():
@@ -892,6 +916,12 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 huesvc_enabled=dialog.get_huesvc_enabled(),
                 quick_adjust_enabled=dialog.get_quick_adjust_enabled(),
                 header_button_color=dialog.get_header_button_color(),
+                tab_active_font_size=dialog.get_tab_active_font_size(),
+                tab_active_font_color=dialog.get_tab_active_font_color(),
+                tab_active_background_color=dialog.get_tab_active_background_color(),
+                tab_inactive_font_size=dialog.get_tab_inactive_font_size(),
+                tab_inactive_font_color=dialog.get_tab_inactive_font_color(),
+                tab_inactive_background_color=dialog.get_tab_inactive_background_color(),
             )
             self.controller.update_huesvc_settings(
                 value_font_size=dialog.get_huesvc_value_font_size(),

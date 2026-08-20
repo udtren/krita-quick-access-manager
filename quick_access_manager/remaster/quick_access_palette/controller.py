@@ -27,6 +27,12 @@ DEFAULT_SETTINGS = {
         "huesvc_enabled": True,
         "quick_adjust_enabled": True,
         "header_button_color": "#828282",
+        "tab_active_font_size": 12,
+        "tab_active_font_color": "#ffffff",
+        "tab_active_background_color": "#3f3f3f",
+        "tab_inactive_font_size": 12,
+        "tab_inactive_font_color": "#a0a0a0",
+        "tab_inactive_background_color": "#2b2b2b",
     },
     "popup": {"popup_icon_size": 42},
     "huesvc": {
@@ -215,6 +221,27 @@ class PaletteController:
     def header_button_color(self):
         return self.settings()["default"].get("header_button_color", "#828282")
 
+    def tab_bar_settings(self):
+        """Active-vs-other tab styling for the docker/popup's QTabBar.
+
+        A single pair of styles applies across every tab, not per-tab -
+        matching the "individual tab styling not needed" scope this was
+        built for.
+        """
+        default = self.settings()["default"]
+        return {
+            "active_font_size": int(default.get("tab_active_font_size", 12)),
+            "active_font_color": default.get("tab_active_font_color", "#ffffff"),
+            "active_background_color": default.get(
+                "tab_active_background_color", "#3f3f3f"
+            ),
+            "inactive_font_size": int(default.get("tab_inactive_font_size", 12)),
+            "inactive_font_color": default.get("tab_inactive_font_color", "#a0a0a0"),
+            "inactive_background_color": default.get(
+                "tab_inactive_background_color", "#2b2b2b"
+            ),
+        }
+
     def update_settings(
         self,
         docker_icon_size=None,
@@ -224,6 +251,12 @@ class PaletteController:
         huesvc_enabled=None,
         quick_adjust_enabled=None,
         header_button_color=None,
+        tab_active_font_size=None,
+        tab_active_font_color=None,
+        tab_active_background_color=None,
+        tab_inactive_font_size=None,
+        tab_inactive_font_color=None,
+        tab_inactive_background_color=None,
     ):
         settings = self.settings()
         if docker_icon_size is not None:
@@ -244,6 +277,24 @@ class PaletteController:
             settings["default"]["quick_adjust_enabled"] = bool(quick_adjust_enabled)
         if header_button_color is not None:
             settings["default"]["header_button_color"] = str(header_button_color)
+        if tab_active_font_size is not None:
+            settings["default"]["tab_active_font_size"] = int(tab_active_font_size)
+        if tab_active_font_color is not None:
+            settings["default"]["tab_active_font_color"] = str(tab_active_font_color)
+        if tab_active_background_color is not None:
+            settings["default"]["tab_active_background_color"] = str(
+                tab_active_background_color
+            )
+        if tab_inactive_font_size is not None:
+            settings["default"]["tab_inactive_font_size"] = int(tab_inactive_font_size)
+        if tab_inactive_font_color is not None:
+            settings["default"]["tab_inactive_font_color"] = str(
+                tab_inactive_font_color
+            )
+        if tab_inactive_background_color is not None:
+            settings["default"]["tab_inactive_background_color"] = str(
+                tab_inactive_background_color
+            )
         self.document.settings = settings
         self.save()
 

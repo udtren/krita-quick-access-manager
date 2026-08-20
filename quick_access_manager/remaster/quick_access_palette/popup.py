@@ -169,7 +169,24 @@ class QuickAccessPalettePopup(QDialog):
             return
         super().mouseReleaseEvent(event)
 
+    def tab_bar_stylesheet(self):
+        style = self.controller.tab_bar_settings()
+        return (
+            "QTabBar::tab {"
+            f" background: {style['inactive_background_color']};"
+            f" color: {style['inactive_font_color']};"
+            f" font-size: {style['inactive_font_size']}px;"
+            " padding: 4px 10px;"
+            " }"
+            "QTabBar::tab:selected {"
+            f" background: {style['active_background_color']};"
+            f" color: {style['active_font_color']};"
+            f" font-size: {style['active_font_size']}px;"
+            " }"
+        )
+
     def reload_tabs(self):
+        self.tab_widget.setStyleSheet(self.tab_bar_stylesheet())
         while self.tab_widget.count():
             self.tab_widget.removeTab(0)
         for tab in self.controller.document.tabs:

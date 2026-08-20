@@ -38,6 +38,7 @@
 - [X] Split settings out of `quick_access_palette.json` into a dedicated `settings.json` (grid file now holds only tab/grid data).
 - [X] Settings dialog renamed to "Settings"; vertical scrollbar added; configurable dialog width/height.
 - [X] "Features" section with Gesture/HueSVC/Quick Adjust enable checkboxes, wired into `plugin.py`'s conditional docker registration.
+- [X] Active-vs-other tab bar styling (font size/color, background color) in the Default tab, applied via `QTabBar::tab`/`QTabBar::tab:selected` in both the docker and popup. One shared style pair across all tabs, not per-tab.
 
 ### Grid Editing
 - [X] Marquee (rubber-band) multi-select.
