@@ -1180,7 +1180,7 @@ class GridEditItemButton(QPushButton):
 
     @property
     def _resizable(self):
-        return self.item.type in (LABEL_ITEM, SEPARATOR_ITEM)
+        return self.dialog.is_resizable(self.item)
 
     @property
     def _resize_axis(self):
@@ -1686,7 +1686,8 @@ class GridEditDialog(QDialog):
 
     def resize_axis(self, item):
         """"row" for a vertical Separator (it grows/shrinks by row_span);
-        "col" for everything else resizable (Label, horizontal Separator)."""
+        "col" for everything else resizable (Label, horizontal Separator,
+        Action)."""
         if (
             item.type == SEPARATOR_ITEM
             and item.payload.get("orientation") == SEPARATOR_ORIENTATION_VERTICAL
@@ -1694,9 +1695,21 @@ class GridEditDialog(QDialog):
             return "row"
         return "col"
 
+    def is_resizable(self, item):
+        """Label/Separator resize freely; an Action item resizes only when it
+        has no alias icon - an icon-mode Action is pinned to col_span=1 by
+        PaletteController._action_col_span() on every load, so letting it
+        widen here would just get silently reverted."""
+        if item.type in (LABEL_ITEM, SEPARATOR_ITEM):
+            return True
+        if item.type == ACTION_ITEM:
+            action_id = item.payload.get("action_id", "")
+            return not self.alias_entry("actions", action_id).get("icon_name")
+        return False
+
     def update_resize_controls(self):
         selected = self.selected_items()
-        resizable = [item for item in selected if item.type in (LABEL_ITEM, SEPARATOR_ITEM)]
+        resizable = [item for item in selected if self.is_resizable(item)]
         axes = {self.resize_axis(item) for item in resizable}
         # Mixed row/col selections (e.g. a Label plus a vertical Separator)
         # have no single delta that means the same thing for both, so the
@@ -1880,9 +1893,7 @@ class GridEditDialog(QDialog):
 
     def resize_selected(self, row_delta, col_delta):
         selected = self.selected_items()
-        if not selected or any(
-            item.type not in (LABEL_ITEM, SEPARATOR_ITEM) for item in selected
-        ):
+        if not selected or any(not self.is_resizable(item) for item in selected):
             return
         self._push_history()
         resized = []
