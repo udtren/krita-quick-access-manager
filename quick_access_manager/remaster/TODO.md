@@ -63,7 +63,7 @@
 - [ ] Add optional popup width/height settings if icon-size-only control is not enough (already done for HueSVC popup; still open for the Quick Access Palette popup).
 
 ### Grid Editing
-- [ ] Add drag resize handles for Label and Separator width changes (currently Wider/Narrower buttons only).
+- [X] Add drag resize handles for Label and Separator width changes (right-edge grip on the item button; Wider/Narrower buttons still work too).
 - [ ] Extend multi-select UX: Shift+click range selection, Ctrl+A select-all, Escape-to-clear.
 - [ ] Add "confirm discard on close if dirty" safety net around Grid Edit changes (undo history currently covers move/resize only).
 
