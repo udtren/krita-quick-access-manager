@@ -4,6 +4,7 @@ from .layout_engine import FreeGridLayoutEngine, LayoutResult, PlacementIssue
 from .models import (
     ACTION_ITEM,
     BRUSH_ITEM,
+    BRUSH_SIZE_ITEM,
     COLOR_ITEM,
     COLOR_SWATCH_BORDER_COLOR,
     COLOR_SWATCH_BORDER_WIDTH,
@@ -25,6 +26,7 @@ from .models import (
 __all__ = [
     "ACTION_ITEM",
     "BRUSH_ITEM",
+    "BRUSH_SIZE_ITEM",
     "COLOR_ITEM",
     "COLOR_SWATCH_BORDER_COLOR",
     "COLOR_SWATCH_BORDER_WIDTH",

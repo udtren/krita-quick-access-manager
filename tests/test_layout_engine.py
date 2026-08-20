@@ -4,6 +4,7 @@ import unittest
 
 from quick_access_manager.remaster.shared import (
     ACTION_ITEM,
+    BRUSH_SIZE_ITEM,
     DEFAULT_V_SEPARATOR_ROW_SPAN,
     SEPARATOR_ITEM,
     SEPARATOR_ORIENTATION_HORIZONTAL,
@@ -215,6 +216,40 @@ class SeparatorOrientationTests(unittest.TestCase):
         by_id = {item.id: item for item in result.items}
         self.assertEqual((by_id["b"].row, by_id["b"].col), (1, 0))
         self.assertNotEqual((by_id["sep"].row, by_id["sep"].col), (0, 0))
+
+
+class BrushSizeItemTests(unittest.TestCase):
+    def test_create_brush_size_is_a_fixed_one_by_one_cell(self):
+        item = PaletteItem.create_brush_size("bs", "25")
+        self.assertEqual(item.type, BRUSH_SIZE_ITEM)
+        self.assertEqual((item.row_span, item.col_span), (1, 1))
+        self.assertEqual(item.payload.get("text"), "25")
+
+    def test_create_brush_size_merges_style_config_into_payload(self):
+        item = PaletteItem.create_brush_size(
+            "bs",
+            "10",
+            config={
+                "fontSize": "22",
+                "backgroundColor": "#112233",
+                "fontColor": "#445566",
+            },
+        )
+        self.assertEqual(item.payload["text"], "10")
+        self.assertEqual(item.payload["fontSize"], "22")
+        self.assertEqual(item.payload["backgroundColor"], "#112233")
+        self.assertEqual(item.payload["fontColor"], "#445566")
+
+    def test_add_brush_size_participates_in_normal_grid_placement(self):
+        engine = FreeGridLayoutEngine(columns=4)
+        first = PaletteItem.create_brush_size("bs1", "10", row=0, col=0)
+        result = engine.add_item([], first)
+        second = PaletteItem.create_brush_size("bs2", "25", row=0, col=0)
+        result = engine.add_item(result.items, second)
+        self.assertTrue(engine.validate(result.items).valid)
+        by_id = {item.id: item for item in result.items}
+        self.assertEqual((by_id["bs2"].row, by_id["bs2"].col), (0, 0))
+        self.assertNotEqual((by_id["bs1"].row, by_id["bs1"].col), (0, 0))
 
 
 if __name__ == "__main__":

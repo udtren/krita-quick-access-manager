@@ -33,6 +33,7 @@ from ..infrastructure import (
 from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
+    BRUSH_SIZE_ITEM,
     COLOR_ITEM,
     COLOR_SWATCH_BORDER_COLOR,
     COLOR_SWATCH_BORDER_WIDTH,
@@ -350,6 +351,19 @@ class QuickAccessPalettePopup(QDialog):
             )
             return button
 
+        if item.type == BRUSH_SIZE_ITEM:
+            button = QPushButton(item.payload.get("text", ""))
+            button.setFixedSize(self.cell_size, self.cell_size)
+            button.setToolTip(f"Set brush size to {item.payload.get('text', '')}")
+            self.apply_brush_size_style(button, item)
+            size_text = item.payload.get("text", "")
+            button.clicked.connect(
+                lambda checked=False, size_text=size_text: self.activate_brush_size(
+                    size_text
+                )
+            )
+            return button
+
         return QLabel(item.type)
 
     def item_icon_size(self):
@@ -409,6 +423,14 @@ class QuickAccessPalettePopup(QDialog):
             f"QLabel {{ {background_rule} color: {fg}; font-size: {size}px; font-weight: bold; padding: 0px 4px; }}"
         )
 
+    def apply_brush_size_style(self, button, item):
+        bg = item.payload.get("backgroundColor", "#3a263f")
+        fg = item.payload.get("fontColor", "#ffffff")
+        size = item.payload.get("fontSize", "18")
+        button.setStyleSheet(
+            f"QPushButton {{ background: {bg}; color: {fg}; font-size: {size}px; font-weight: bold; border: 1px solid #6b4a73; border-radius: 4px; }}"
+        )
+
     def activate_brush(self, brush_name):
         if not brush_name:
             return
@@ -438,6 +460,18 @@ class QuickAccessPalettePopup(QDialog):
             [qcolor.blueF(), qcolor.greenF(), qcolor.redF(), 1.0]
         )
         view.setForeGroundColor(managed_color)
+        self.close_after_execute()
+
+    def activate_brush_size(self, size_text):
+        window = Krita.instance().activeWindow()
+        view = window.activeView() if window else None
+        if not view or not size_text:
+            return
+        try:
+            size = float(size_text)
+        except ValueError:
+            return
+        view.setBrushSize(size)
         self.close_after_execute()
 
     def run_script(self, script_path):

@@ -15,6 +15,7 @@ SEPARATOR_ITEM = "separator"
 DOCKER_TOGGLE_ITEM = "docker_toggle"
 COLOR_ITEM = "color"
 SCRIPT_ITEM = "script"
+BRUSH_SIZE_ITEM = "brush_size"
 
 ITEM_TYPES = {
     BRUSH_ITEM,
@@ -24,6 +25,7 @@ ITEM_TYPES = {
     DOCKER_TOGGLE_ITEM,
     COLOR_ITEM,
     SCRIPT_ITEM,
+    BRUSH_SIZE_ITEM,
 }
 DEFAULT_ACTION_COL_SPAN = 2
 DEFAULT_ROW_SPAN = 1
@@ -205,6 +207,31 @@ class PaletteItem:
         return cls(
             id=item_id,
             type=SCRIPT_ITEM,
+            row=row,
+            col=col,
+            row_span=1,
+            col_span=1,
+            payload=payload,
+        )
+
+    @classmethod
+    def create_brush_size(
+        cls,
+        item_id: str,
+        text: str,
+        row: int = 0,
+        col: int = 0,
+        config: dict[str, Any] | None = None,
+    ):
+        """A 1x1 button that sets the active brush's size to `text` (digits
+        only - validated by the config dialogs, not enforced here) when
+        clicked."""
+        payload = {"text": text}
+        if config:
+            payload.update(config)
+        return cls(
+            id=item_id,
+            type=BRUSH_SIZE_ITEM,
             row=row,
             col=col,
             row_span=1,

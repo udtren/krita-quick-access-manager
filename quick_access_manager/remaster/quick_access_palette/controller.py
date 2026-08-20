@@ -5,6 +5,7 @@ from uuid import uuid4
 from ..infrastructure import AliasRepository, PaletteRepository
 from ..shared import (
     ACTION_ITEM,
+    BRUSH_SIZE_ITEM,
     COLOR_ITEM,
     DEFAULT_ACTION_COL_SPAN,
     DEFAULT_COL_SPAN,
@@ -475,6 +476,20 @@ class PaletteController:
         )
         return self._add_new_item(grid, item)
 
+    def add_brush_size(
+        self,
+        text: str,
+        config=None,
+        row: int | None = None,
+        col: int | None = None,
+    ) -> LayoutResult:
+        grid = self._require_active_grid()
+        row, col = self._resolve_position(grid, row, col)
+        item = PaletteItem.create_brush_size(
+            self._new_id("brush_size"), text, row=row, col=col, config=config
+        )
+        return self._add_new_item(grid, item)
+
     def _add_new_item(self, grid: PaletteGrid, item: PaletteItem) -> LayoutResult:
         result = self._apply_result(
             grid,
@@ -536,6 +551,9 @@ class PaletteController:
 
     def update_script_item(self, item_id: str, config) -> LayoutResult:
         return self._update_payload(item_id, SCRIPT_ITEM, config)
+
+    def update_brush_size_item(self, item_id: str, config) -> LayoutResult:
+        return self._update_payload(item_id, BRUSH_SIZE_ITEM, config)
 
     def _update_payload(self, item_id: str, expected_type: str, config) -> LayoutResult:
         grid = self._require_active_grid()

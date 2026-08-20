@@ -139,6 +139,55 @@ class MoveResizeRemoveTests(ControllerTestCase):
         self.assertFalse(result.valid)
 
 
+class BrushSizeItemTests(ControllerTestCase):
+    def test_add_brush_size_creates_a_one_by_one_item_with_text(self):
+        controller = self.make_controller()
+        controller.add_brush_size("25")
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.type, "brush_size")
+        self.assertEqual(item.payload.get("text"), "25")
+        self.assertEqual((item.row_span, item.col_span), (1, 1))
+
+    def test_add_brush_size_accepts_style_config(self):
+        controller = self.make_controller()
+        controller.add_brush_size(
+            "10",
+            config={
+                "fontSize": "20",
+                "backgroundColor": "#111111",
+                "fontColor": "#eeeeee",
+            },
+        )
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.payload["fontSize"], "20")
+        self.assertEqual(item.payload["backgroundColor"], "#111111")
+        self.assertEqual(item.payload["fontColor"], "#eeeeee")
+
+    def test_update_brush_size_item_replaces_payload_fields(self):
+        controller = self.make_controller()
+        controller.add_brush_size("10")
+        item_id = controller.active_grid().items[0].id
+        controller.update_brush_size_item(item_id, {"text": "50", "fontSize": "24"})
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.payload["text"], "50")
+        self.assertEqual(item.payload["fontSize"], "24")
+
+    def test_update_brush_size_item_rejects_wrong_item_type(self):
+        controller = self.make_controller()
+        controller.add_brush("A")
+        item_id = controller.active_grid().items[0].id
+        with self.assertRaises(ValueError):
+            controller.update_brush_size_item(item_id, {"text": "50"})
+
+    def test_brush_size_survives_reload_from_disk(self):
+        controller = self.make_controller()
+        controller.add_brush_size("42", config={"fontColor": "#abcdef"})
+        reloaded = self.make_controller()
+        item = reloaded.active_grid().items[0]
+        self.assertEqual(item.payload["text"], "42")
+        self.assertEqual(item.payload["fontColor"], "#abcdef")
+
+
 class SeparatorOrientationTests(ControllerTestCase):
     def test_add_separator_defaults_to_horizontal(self):
         controller = self.make_controller()

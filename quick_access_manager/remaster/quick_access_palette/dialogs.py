@@ -17,6 +17,7 @@ from ..compat import (
     QHBoxLayout,
     QHeaderView,
     QIcon,
+    QIntValidator,
     QLabel,
     QLineEdit,
     QMenu,
@@ -48,6 +49,7 @@ from ..infrastructure import (
 from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
+    BRUSH_SIZE_ITEM,
     COLOR_ITEM,
     COLOR_SWATCH_BORDER_COLOR,
     COLOR_SWATCH_BORDER_WIDTH,
@@ -282,6 +284,96 @@ class LabelItemConfigDialog(QDialog):
     def get_config(self):
         return {
             "text": self.name_edit.text().strip() or "Label",
+            "fontSize": self.font_size_edit.text().strip() or "18",
+            "backgroundColor": self.bg_color.name(),
+            "fontColor": self.font_color.name(),
+        }
+
+
+class BrushSizeItemConfigDialog(QDialog):
+    """Configure a Brush Size palette item - a 1x1 button that sets the
+    active brush's size to a fixed number when clicked."""
+
+    def __init__(self, config=None, parent=None):
+        super().__init__(parent)
+        self.config = dict(config or {})
+        self.bg_color = QColor(self.config.get("backgroundColor", "#3a263f"))
+        self.font_color = QColor(self.config.get("fontColor", "#ffffff"))
+        self.setup_ui()
+        self.load_values()
+
+    def setup_ui(self):
+        self.setWindowTitle("Brush Size Config")
+        self.resize(300, 180)
+        self.setMinimumWidth(280)
+        layout = QVBoxLayout()
+
+        layout.addWidget(QLabel("Size (numbers only):"))
+        self.text_edit = QLineEdit()
+        # Digits only - this is a brush size, not free text like a Label.
+        self.text_edit.setValidator(QIntValidator(1, 10000, self.text_edit))
+        layout.addWidget(self.text_edit)
+
+        layout.addWidget(QLabel("Font Size:"))
+        self.font_size_edit = QLineEdit()
+        layout.addWidget(self.font_size_edit)
+
+        layout.addWidget(QLabel("Background Color:"))
+        self.bg_color_button = QPushButton()
+        self.bg_color_button.setFixedHeight(24)
+        self.bg_color_button.clicked.connect(self.pick_bg_color)
+        layout.addWidget(self.bg_color_button)
+
+        layout.addWidget(QLabel("Font Color:"))
+        self.font_color_button = QPushButton()
+        self.font_color_button.setFixedHeight(24)
+        self.font_color_button.clicked.connect(self.pick_font_color)
+        layout.addWidget(self.font_color_button)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def load_values(self):
+        self.text_edit.setText(str(self.config.get("text", "")))
+        self.font_size_edit.setText(str(self.config.get("fontSize", "18")))
+        self.update_color_buttons()
+
+    def pick_bg_color(self):
+        color = QColorDialog.getColor(self.bg_color, self, "Select Background Color")
+        if color.isValid():
+            self.bg_color = color
+            self.update_color_buttons()
+
+    def pick_font_color(self):
+        color = QColorDialog.getColor(self.font_color, self, "Select Font Color")
+        if color.isValid():
+            self.font_color = color
+            self.update_color_buttons()
+
+    def update_color_buttons(self):
+        self.bg_color_button.setStyleSheet(
+            f"background-color: {self.bg_color.name()}; border: 1px solid #888;"
+        )
+        self.bg_color_button.setText(self.bg_color.name())
+        self.font_color_button.setStyleSheet(
+            f"background-color: {self.font_color.name()}; border: 1px solid #888;"
+        )
+        self.font_color_button.setText(self.font_color.name())
+
+    def get_config(self):
+        # The validator already blocks non-digit input, but strip defensively
+        # (e.g. an empty field on OK) rather than saving a blank size.
+        digits = "".join(ch for ch in self.text_edit.text() if ch.isdigit())
+        return {
+            "text": digits or "1",
             "fontSize": self.font_size_edit.text().strip() or "18",
             "backgroundColor": self.bg_color.name(),
             "fontColor": self.font_color.name(),
@@ -1530,7 +1622,14 @@ class GridEditDialog(QDialog):
         button.setMinimumSize(self.cell_size, 36)
         if (
             item.type
-            in (BRUSH_ITEM, ACTION_ITEM, DOCKER_TOGGLE_ITEM, COLOR_ITEM, SCRIPT_ITEM)
+            in (
+                BRUSH_ITEM,
+                ACTION_ITEM,
+                DOCKER_TOGGLE_ITEM,
+                COLOR_ITEM,
+                SCRIPT_ITEM,
+                BRUSH_SIZE_ITEM,
+            )
             and item.col_span == 1
         ):
             button.setFixedSize(self.cell_size, self.cell_size)
@@ -1611,6 +1710,8 @@ class GridEditDialog(QDialog):
             return ""
         if item.type == SCRIPT_ITEM:
             return item.payload.get("customName") or "Script"
+        if item.type == BRUSH_SIZE_ITEM:
+            return item.payload.get("text", "")
         return item.type
 
     def ensure_selected_for_drag(self, item_id):
@@ -1664,6 +1765,10 @@ class GridEditDialog(QDialog):
                 COLOR_SWATCH_BORDER_COLOR,
             ),
             SCRIPT_ITEM: ("#2f2a1f", "#8b7a4a"),
+            BRUSH_SIZE_ITEM: (
+                item.payload.get("backgroundColor", "#3a263f"),
+                "#6b4a73",
+            ),
         }
         background, border = colors.get(item.type, ("#333333", "#555555"))
         if item.type == COLOR_ITEM and not selected:
@@ -1671,13 +1776,16 @@ class GridEditDialog(QDialog):
         else:
             border_width = 2 if selected else 1
         border_color = "#4FC3F7" if selected else border
+        custom_text_color_types = (LABEL_ITEM, BRUSH_SIZE_ITEM)
         text_color = (
             item.payload.get("fontColor", "#ffffff")
-            if item.type == LABEL_ITEM
+            if item.type in custom_text_color_types
             else "#ffffff"
         )
         font_size = (
-            item.payload.get("fontSize", "18") if item.type == LABEL_ITEM else "18"
+            item.payload.get("fontSize", "18")
+            if item.type in custom_text_color_types
+            else "18"
         )
         return (
             f"QPushButton {{ background: {background}; color: {text_color}; font-size: {font_size}px; border: {border_width}px solid {border_color}; "
