@@ -98,7 +98,22 @@ class ActionItemConfigDialog(QDialog):
         button_layout.addWidget(self.cancel_btn)
         layout.addLayout(button_layout)
 
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.setToolTip(
+            "Reset font size and colors, and clear the icon (keeps Button Name)"
+        )
+        self.reset_btn.clicked.connect(self.reset_to_defaults)
+        layout.addWidget(self.reset_btn)
+
         self.setLayout(layout)
+
+    def reset_to_defaults(self):
+        self.font_size_edit.setText("18")
+        self.bg_color = QColor("#3a263f")
+        self.font_color = QColor("#ffffff")
+        self.icon_path = ""
+        self.update_color_buttons()
+        self.update_icon_label()
 
     def load_values(self):
         action_id = self.config.get("action_id")
@@ -214,7 +229,20 @@ class LabelItemConfigDialog(QDialog):
         button_layout.addWidget(self.cancel_btn)
         layout.addLayout(button_layout)
 
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.setToolTip(
+            "Reset font size and colors (keeps Label Name)"
+        )
+        self.reset_btn.clicked.connect(self.reset_to_defaults)
+        layout.addWidget(self.reset_btn)
+
         self.setLayout(layout)
+
+    def reset_to_defaults(self):
+        self.font_size_edit.setText("18")
+        self.bg_color = QColor("#263746")
+        self.font_color = QColor("#4FC3F7")
+        self.update_color_buttons()
 
     def load_values(self):
         self.name_edit.setText(self.config.get("text", "Label"))
@@ -301,7 +329,18 @@ class BrushSizeItemConfigDialog(QDialog):
         button_layout.addWidget(self.cancel_btn)
         layout.addLayout(button_layout)
 
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.setToolTip("Reset font size and colors (keeps Size)")
+        self.reset_btn.clicked.connect(self.reset_to_defaults)
+        layout.addWidget(self.reset_btn)
+
         self.setLayout(layout)
+
+    def reset_to_defaults(self):
+        self.font_size_edit.setText("18")
+        self.bg_color = QColor("#3a263f")
+        self.font_color = QColor("#ffffff")
+        self.update_color_buttons()
 
     def load_values(self):
         self.text_edit.setText(str(self.config.get("text", "")))
@@ -390,7 +429,18 @@ class BrushBlendModeItemConfigDialog(QDialog):
         button_layout.addWidget(self.cancel_btn)
         layout.addLayout(button_layout)
 
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.setToolTip("Reset font size and colors (keeps Text)")
+        self.reset_btn.clicked.connect(self.reset_to_defaults)
+        layout.addWidget(self.reset_btn)
+
         self.setLayout(layout)
+
+    def reset_to_defaults(self):
+        self.font_size_edit.setText("18")
+        self.bg_color = QColor("#263a3a")
+        self.font_color = QColor("#ffffff")
+        self.update_color_buttons()
 
     def load_values(self):
         self.text_edit.setText(str(self.config.get("text", "")))
@@ -474,7 +524,16 @@ class DockerToggleItemConfigDialog(QDialog):
         button_layout.addWidget(self.cancel_btn)
         layout.addLayout(button_layout)
 
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.setToolTip("Clear the icon (keeps Button Name)")
+        self.reset_btn.clicked.connect(self.reset_to_defaults)
+        layout.addWidget(self.reset_btn)
+
         self.setLayout(layout)
+
+    def reset_to_defaults(self):
+        self.icon_path = ""
+        self.update_icon_label()
 
     def load_values(self):
         docker_id = self.config.get("docker_id")
@@ -605,7 +664,16 @@ class ScriptItemConfigDialog(QDialog):
         button_layout.addWidget(self.cancel_btn)
         layout.addLayout(button_layout)
 
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.setToolTip("Clear the icon (keeps Button Name)")
+        self.reset_btn.clicked.connect(self.reset_to_defaults)
+        layout.addWidget(self.reset_btn)
+
         self.setLayout(layout)
+
+    def reset_to_defaults(self):
+        self.icon_path = ""
+        self.update_icon_label()
 
     def load_values(self):
         self.name_edit.setText(self.config.get("customName", ""))
