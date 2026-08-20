@@ -48,11 +48,11 @@ It also registers two popup actions (`quick_access_palette_popup`, `hue_svc_popu
 
 | Module | Responsibility |
 |--------|---------------|
-| [quick_access_palette/](quick_access_manager/remaster/quick_access_palette/) | The Quick Access Palette: `docker.py` (docker widget + rendering + drag-move), `popup.py` (execution-only popup, mirrors the docker's renderers), `controller.py` (`PaletteController` — all document mutations and settings), `dialogs.py` (per-item-type config dialogs + `GridEditDialog`), `alias_config_dialog.py` (shared "Resources" dialog for Action/Docker aliases and bulk Add) |
+| [quick_access_palette/](quick_access_manager/remaster/quick_access_palette/) | The Quick Access Palette: `docker/` (docker widget, split into mixins — see below), `popup.py` (execution-only popup, mirrors the docker's renderers), `controller/` (`PaletteController` — document mutations and settings, split into mixins — see below), `dialogs/` (per-item-type config dialogs, the Settings dialog, and the Grid Edit feature — see below), `item_style_mixin.py` (`ItemStyleMixin`, shared item styling/icon-lookup logic used by both `docker/` and `popup.py`), `alias_config_dialog.py` (shared "Resources" dialog for Action/Docker aliases and bulk Add) |
 | [shared/](quick_access_manager/remaster/shared/) | `models.py` (`PaletteItem`, `PaletteGrid`, `PaletteTab`, `PaletteDocument` — Krita/Qt-free) and `layout_engine.py` (`FreeGridLayoutEngine` — placement/overlap/bounds/compact, also Krita/Qt-free). This is what `tests/` exercises directly. |
 | [infrastructure/](quick_access_manager/remaster/infrastructure/) | `PaletteRepository`/`AliasRepository` (JSON load/save, both take an optional `path`/constructor override for test isolation), `json_cache.py` (mtime-validated read cache), `paths.py` (config dir resolution), `ActionManager`/`DockerManager` (Krita action/docker discovery — `None` outside Krita, see below) |
 | [gesture/](quick_access_manager/remaster/gesture/) | Application-level key+mouse gesture detection and execution; own config storage under `remaster/gesture/` |
-| [color_selector/](quick_access_manager/remaster/color_selector/) | HueSVC docker + popup. Unlike the legacy popup, the popup's right-side panel (`BrushLayerControlsWidget`/`BrushToggleWidget`, both imported from `quick_adjust/`) is always shown, not config-gated. |
+| [color_selector/](quick_access_manager/remaster/color_selector/) | HueSVC docker + popup. `docker.py` holds `ColorSelectorDock`/`ColorSelectorDockFactory`; the generic, docker-independent picker widgets (`HueBar`, `SVBox`, `ChannelBar`, `FgBgColorWidget`) live in `color_selector/widgets/`, re-exported from `docker.py` for `popup.py`'s import. Unlike the legacy popup, the popup's right-side panel (`BrushLayerControlsWidget`/`BrushToggleWidget`, both imported from `quick_adjust/`) is always shown, not config-gated. |
 | [quick_adjust/](quick_access_manager/remaster/quick_adjust/) | Brush/layer adjustment docker: sliders, color/brush history, temp-action keys, Tool Options floating pad. Ported from legacy minus `DockerButtonWidget` and every floating widget except Tool Options. |
 | [compat.py](quick_access_manager/remaster/compat.py) | PyQt5/PyQt6 shim — **always import Qt symbols from here**, never directly from PyQt5/PyQt6 |
 | [focus_utils.py](quick_access_manager/remaster/focus_utils.py) | `is_text_input_focused()` — used by the gesture system to avoid firing gestures while the user is typing |
@@ -60,6 +60,14 @@ It also registers two popup actions (`quick_access_palette_popup`, `hue_svc_popu
 | [resources/](quick_access_manager/remaster/resources/) | Bundled default icons (`default_icons/`, `system_icons/`, `quick_adjust/`, `gesture/`) |
 
 `ActionManager`/`DockerManager` (from `infrastructure/`) are `None` when the `krita` module isn't importable — `infrastructure/__init__.py` catches that specific `ModuleNotFoundError` so the rest of `infrastructure/` (and everything built on `PaletteRepository`/`AliasRepository`) still imports cleanly outside Krita.
+
+### The mixin-package pattern used across `quick_access_palette/`
+
+`docker.py`, `dialogs.py` and `controller.py` were each large enough (1000+, 2000+, 650+ lines) to split by responsibility into a same-named package: `docker/`, `dialogs/`, `controller/`. In every case the package's `__init__.py` re-exports exactly what the old flat module exposed, so every external import (`from .controller import PaletteController`, `from .dialogs import GridEditDialog`, `from .quick_access_palette.docker import QuickAccessPaletteDockerFactory`, ...) still works unchanged — only files *inside* the split module needed new imports. When adding a method, find its natural mixin by responsibility rather than reaching for the composed class file (`docker/widget.py`, `controller/base.py`), which is deliberately thin (construction/persistence/MRO only).
+
+- `controller/`: `settings_mixin.py` (`DEFAULT_SETTINGS` + docker/popup/HueSVC/Quick Adjust settings), `tab_mixin.py` (tab CRUD), `placement_mixin.py` (sequential placement cursor + Action `col_span` normalization), `item_crud_mixin.py` (item add/update/remove/move/resize), `base.py` (`PaletteController`, composing all four).
+- `docker/`: `drag_filter.py` (`GridItemDragFilter`, Ctrl+drag move), `ui_builder_mixin.py` (header/menu/tab-widget scaffolding), `item_rendering_mixin.py` (per-item-type widget construction + Property dialogs), `item_actions_mixin.py` (header-menu Add handlers + Grid Edit/Gesture/Resources/Settings dialogs), `activation_mixin.py` (click-time execution), `alias_bridge_mixin.py` (Alias Config read/write bridge), `widget.py` (`QuickAccessPaletteDockerWidget`), `factory.py` (`QuickAccessPaletteDockerFactory`).
+- `dialogs/`: `item_config_dialogs.py` (the 7 per-item-type config dialogs), `palette_settings_dialog.py` (`PaletteConfigDialog`), `grid_edit/` (`canvas.py`/`item_button.py`/`dialog.py` — see "Grid Edit dialog" below).
 
 ### Configuration file layout
 
@@ -106,13 +114,13 @@ Placement rules (`FreeGridLayoutEngine` in `shared/layout_engine.py`, fully gene
 
 ### Grid Edit dialog
 
-`GridEditDialog` (`quick_access_palette/dialogs.py`) edits every tab's grid without auto-compacting on save. Notable pieces:
-- Marquee (rubber-band) multi-select, Copy/Move-to-Tab context menu.
-- `GridEditItemButton` supports both a whole-item drag (move) and, for resizable types, an edge-grip drag (resize) — which edge and which cursor depends on `resize_axis()`/`is_resizable()`.
+`GridEditDialog` (`quick_access_palette/dialogs/grid_edit/dialog.py`) edits every tab's grid without auto-compacting on save. Notable pieces:
+- Marquee (rubber-band) multi-select via `GridEditCanvas` (`grid_edit/canvas.py`), Copy/Move-to-Tab context menu.
+- `GridEditItemButton` (`grid_edit/item_button.py`) supports both a whole-item drag (move) and, for resizable types, an edge-grip drag (resize) — which edge and which cursor depends on `resize_axis()`/`is_resizable()`.
 - `is_resizable(item)` centralizes "can this item be resized here": Label and Separator always; Action only when its alias has no icon (an icon-mode Action is pinned to `col_span=1` by the controller, so offering a resize handle that gets silently reverted would be misleading); everything else (Brush, Docker Toggle, Color, Script, Brush Size) never.
 - Undo history covers move/resize only (not add/remove).
 
-The docker itself also supports one direct manipulation: **Ctrl + left-drag** on a placed item moves it within the active grid (`GridItemDragFilter` in `docker.py`), independent of opening Grid Edit.
+The docker itself also supports one direct manipulation: **Ctrl + left-drag** on a placed item moves it within the active grid (`GridItemDragFilter` in `docker/drag_filter.py`), independent of opening Grid Edit.
 
 ### Tab bar styling
 
@@ -120,7 +128,7 @@ The docker/popup's `QTabWidget` gets a `QTabBar::tab` / `QTabBar::tab:selected` 
 
 ### Gesture system
 
-`GestureDetector` (in [gesture/gesture_main.py](quick_access_manager/remaster/gesture/gesture_main.py)) is a `QObject` event filter installed on `QApplication`. It fires on `KeyPress`/`KeyRelease`/`MouseMove`. A module-level singleton owns the detector instance; the public API exported from `gesture/__init__.py` (`initialize_gesture_system`, `pause_gesture_event_filter`, `resume_gesture_event_filter`, etc.) is what external callers use. Its own config lives under `remaster/gesture/` (see file layout above), independent of the palette's `settings.json`.
+`GestureDetector` (in [gesture/gesture_main.py](quick_access_manager/remaster/gesture/gesture_main.py)) is a `QObject` event filter installed on `QApplication`. It fires on `KeyPress`/`KeyRelease`/`MouseMove`. A module-level singleton owns the detector instance; the public API exported from `gesture/__init__.py` (`initialize_gesture_system`, `pause_gesture_event_filter`, `resume_gesture_event_filter`, etc.) is what external callers use. Its own config lives under `remaster/gesture/` (see file layout above), independent of the palette's `settings.json`. `GestureConfigDialog` (`gesture_config_dialog.py`) is the per-config-tab editor; the small "press any key" `KeyCaptureDialog` it opens lives in its own `key_capture_dialog.py`.
 
 ### Shared brush/layer controls (Quick Adjust docker + HueSVC popup)
 

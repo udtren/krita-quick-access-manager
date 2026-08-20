@@ -58,6 +58,15 @@
 ### Cleanup
 - [X] Removed unused empty `remaster/core/` and `remaster/ui/` placeholder packages.
 - [X] Moved `remaster/features/quick_access_palette/` to `remaster/quick_access_palette/` and removed the now-empty `remaster/features/` package.
+- [X] Maintainability split of the largest files, done in 6 mechanical, behavior-preserving steps (each verified with `tests/` + `py_compile` and committed separately):
+  1. `quick_access_palette/item_style_mixin.py`: `ItemStyleMixin` shared by the docker and popup for item styling/icon lookups (`apply_action_style`, `apply_label_style`, `apply_brush_size_style`, `apply_brush_blend_mode_style`, `tab_bar_stylesheet`, `resolve_icon_path`, `alias_entry`, `item_icon_size`) - previously duplicated in both files, meaning every new palette item type needed the same style edit twice.
+  2. `quick_access_palette/dialogs.py` (2119 lines) → `dialogs/` package: `item_config_dialogs.py` (the 7 per-item-type config dialogs), `palette_settings_dialog.py` (`PaletteConfigDialog`), `grid_edit/{canvas,item_button,dialog}.py` (the Grid Edit feature). `dialogs/__init__.py` re-exports everything.
+  3. `quick_access_palette/controller.py` (683 lines, one class) → `controller/` package: `settings_mixin.py`, `tab_mixin.py`, `placement_mixin.py`, `item_crud_mixin.py`, composed by `base.py`'s `PaletteController`. `controller/__init__.py` re-exports `PaletteController`/`DEFAULT_SETTINGS`.
+  4. `quick_access_palette/docker.py` (1103 lines, one class) → `docker/` package: `drag_filter.py`, `ui_builder_mixin.py`, `item_rendering_mixin.py`, `item_actions_mixin.py`, `activation_mixin.py`, `alias_bridge_mixin.py`, composed by `widget.py`'s `QuickAccessPaletteDockerWidget`, plus `factory.py`. `docker/__init__.py` re-exports the public names.
+  5. `color_selector/docker.py` (698 lines): extracted the generic, docker-independent `HueBar`/`SVBox`/`ChannelBar`/`FgBgColorWidget` widgets into `color_selector/widgets/`.
+  6. `gesture/gesture_config_dialog.py` (672 lines): extracted the self-contained `KeyCaptureDialog` into its own `gesture/key_capture_dialog.py`.
+
+  Every step kept the pre-existing import surface (`from .dialogs import X`, `from .controller import PaletteController`, `from .quick_access_palette.docker import QuickAccessPaletteDockerFactory`, etc.) unchanged via `__init__.py` re-exports, so no caller needed editing.
 
 ## Open Items
 
