@@ -13,11 +13,9 @@ from ..compat import (
     QIcon,
     QLabel,
     QMessageBox,
-    QPixmap,
     QPushButton,
     QScrollArea,
     QShortcut,
-    QSize,
     Qt,
     QTabWidget,
     QVBoxLayout,
@@ -27,12 +25,13 @@ from ..infrastructure import (
     ActionManager,
     AliasRepository,
     DockerManager,
-    get_default_icons_dir,
     get_system_icons_dir,
 )
 from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
+    BRUSH_BLEND_MODE_ITEM,
+    BRUSH_SIZE_ITEM,
     COLOR_ITEM,
     COLOR_SWATCH_BORDER_COLOR,
     COLOR_SWATCH_BORDER_WIDTH,
@@ -40,11 +39,13 @@ from ..shared import (
     LABEL_ITEM,
     SCRIPT_ITEM,
     SEPARATOR_ITEM,
+    SEPARATOR_ORIENTATION_VERTICAL,
 )
 from .controller import PaletteController
+from .item_style_mixin import ItemStyleMixin
 
 
-class QuickAccessPalettePopup(QDialog):
+class QuickAccessPalettePopup(QDialog, ItemStyleMixin):
     """Read-only popup that executes palette items."""
 
     def __init__(self, parent=None, close_shortcuts=None):
@@ -168,7 +169,11 @@ class QuickAccessPalettePopup(QDialog):
             return
         super().mouseReleaseEvent(event)
 
+    def item_cell_size(self):
+        return self.cell_size
+
     def reload_tabs(self):
+        self.tab_widget.setStyleSheet(self.tab_bar_stylesheet())
         while self.tab_widget.count():
             self.tab_widget.removeTab(0)
         for tab in self.controller.document.tabs:
@@ -255,16 +260,28 @@ class QuickAccessPalettePopup(QDialog):
 
         if item.type == LABEL_ITEM:
             label = QLabel(item.payload.get("text", "Label"))
-            label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            label.setAlignment(Qt.AlignCenter)
             self.apply_label_style(label, item)
             return label
 
         if item.type == SEPARATOR_ITEM:
+            vertical = item.payload.get("orientation") == SEPARATOR_ORIENTATION_VERTICAL
+            container = QWidget()
             separator = QFrame()
-            separator.setFrameShape(QFrame.HLine)
+            if vertical:
+                layout = QHBoxLayout(container)
+                layout.setContentsMargins(0, 0, 0, 0)
+                separator.setFrameShape(QFrame.VLine)
+                separator.setFixedWidth(12)
+                layout.addWidget(separator, alignment=Qt.AlignHCenter)
+            else:
+                layout = QVBoxLayout(container)
+                layout.setContentsMargins(0, 0, 0, 0)
+                separator.setFrameShape(QFrame.HLine)
+                separator.setFixedHeight(12)
+                layout.addWidget(separator, alignment=Qt.AlignVCenter)
             separator.setFrameShadow(QFrame.Sunken)
-            separator.setMinimumHeight(12)
-            return separator
+            return container
 
         if item.type == DOCKER_TOGGLE_ITEM:
             docker_id = item.payload.get("docker_id", "")
@@ -320,64 +337,42 @@ class QuickAccessPalettePopup(QDialog):
             )
             return button
 
+        if item.type == BRUSH_SIZE_ITEM:
+            button = QPushButton(item.payload.get("text", ""))
+            button.setFixedSize(self.cell_size, self.cell_size)
+            button.setToolTip(f"Set brush size to {item.payload.get('text', '')}")
+            self.apply_brush_size_style(button, item)
+            size_text = item.payload.get("text", "")
+            button.clicked.connect(
+                lambda checked=False, size_text=size_text: self.activate_brush_size(
+                    size_text
+                )
+            )
+            return button
+
+        if item.type == BRUSH_BLEND_MODE_ITEM:
+            button = QPushButton(item.payload.get("text", ""))
+            button.setMinimumHeight(36)
+            button.setToolTip(f"Set brush blend mode to {item.payload.get('text', '')}")
+            self.apply_brush_blend_mode_style(button, item)
+            blend_mode_text = item.payload.get("text", "")
+            button.clicked.connect(
+                lambda checked=False, blend_mode_text=blend_mode_text: self.activate_brush_blend_mode(
+                    blend_mode_text
+                )
+            )
+            return button
+
         return QLabel(item.type)
-
-    def item_icon_size(self):
-        size = max(16, self.cell_size - 4)
-        return QSize(size, size)
-
-    def resolve_icon_path(self, icon_name):
-        if not icon_name:
-            return None
-        if os.path.isabs(icon_name) and os.path.exists(icon_name):
-            return icon_name
-        icon_path = os.path.join(get_default_icons_dir(), icon_name)
-        if os.path.exists(icon_path):
-            return icon_path
-        return None
 
     def apply_brush_icon(self, button, brush_name):
         try:
             preset = Krita.instance().resources("preset").get(brush_name)
-            image = preset.image() if preset else None
-            if image:
-                pixmap = QPixmap.fromImage(image)
-                if not pixmap.isNull():
-                    button.setIcon(QIcon(pixmap))
-                    button.setIconSize(self.item_icon_size())
-                    button.setText("")
-                    button.setStyleSheet(
-                        "QPushButton { padding: 0px; border: 1px solid #555; background: #2f2f2f; }"
-                    )
-                    return
+            if self._set_brush_pixmap(button, preset):
+                return
         except Exception as exc:
             print(f"Quick Access Palette popup brush icon error: {exc}")
         button.setText(brush_name[:1] if brush_name else "?")
-
-    def apply_action_style(
-        self, button, alias, has_icon=False, default_bg="#3a263f", default_fg="#ffffff"
-    ):
-        bg = alias.get("background_color") or default_bg
-        fg = alias.get("font_color") or default_fg
-        size = alias.get("font_size") or "18"
-        padding = "0px" if has_icon else "2px 6px"
-        button.setStyleSheet(
-            f"QPushButton {{ background: {bg}; color: {fg}; font-size: {size}px; border: 1px solid #6b4a73; border-radius: 4px; padding: {padding}; }}"
-        )
-
-    def alias_entry(self, category, item_id):
-        return self._alias_data.get(category, {}).get(item_id, {})
-
-    def apply_label_style(self, label, item):
-        bg = item.payload.get("backgroundColor", "transparent")
-        fg = item.payload.get("fontColor", "#4FC3F7")
-        size = item.payload.get("fontSize", "18")
-        background_rule = (
-            f"background: {bg};" if bg != "transparent" else "background: transparent;"
-        )
-        label.setStyleSheet(
-            f"QLabel {{ {background_rule} color: {fg}; font-size: {size}px; font-weight: bold; padding: 0px 4px; }}"
-        )
 
     def activate_brush(self, brush_name):
         if not brush_name:
@@ -408,6 +403,29 @@ class QuickAccessPalettePopup(QDialog):
             [qcolor.blueF(), qcolor.greenF(), qcolor.redF(), 1.0]
         )
         view.setForeGroundColor(managed_color)
+        self.close_after_execute()
+
+    def activate_brush_size(self, size_text):
+        window = Krita.instance().activeWindow()
+        view = window.activeView() if window else None
+        if not view or not size_text:
+            return
+        try:
+            size = float(size_text)
+        except ValueError:
+            return
+        view.setBrushSize(size)
+        self.close_after_execute()
+
+    def activate_brush_blend_mode(self, blend_mode):
+        window = Krita.instance().activeWindow()
+        view = window.activeView() if window else None
+        if not view or not blend_mode:
+            return
+        try:
+            view.setCurrentBlendingMode(blend_mode)
+        except Exception:
+            return
         self.close_after_execute()
 
     def run_script(self, script_path):

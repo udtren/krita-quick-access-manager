@@ -11,6 +11,7 @@ from .gesture import (
     is_gesture_enabled,
     shutdown_gesture_system,
 )
+from .infrastructure import DockerManager
 from .quick_access_palette.controller import PaletteController
 from .quick_access_palette.docker import QuickAccessPaletteDockerFactory
 from .quick_access_palette.popup import QuickAccessPalettePopup
@@ -134,6 +135,18 @@ class QuickAccessPaletteExtension(Extension):
         self.huesvc_popup_action = huesvc_action
         huesvc_action.triggered.connect(self.show_huesvc_popup)
 
+        move_palette_action = window.createAction(
+            "move_quick_access_palette_docker_to_cursor",
+            "Move Quick Access Palette Docker to Cursor",
+        )
+        move_palette_action.triggered.connect(self.move_palette_docker_to_cursor)
+
+        move_quick_adjust_action = window.createAction(
+            "move_quick_adjust_docker_to_cursor",
+            "Move Quick Adjust Docker to Cursor",
+        )
+        move_quick_adjust_action.triggered.connect(self.move_quick_adjust_docker_to_cursor)
+
     def show_palette_popup(self):
         global _popup_window
         if close_visible_palette_popups():
@@ -177,6 +190,12 @@ class QuickAccessPaletteExtension(Extension):
 
         popup.destroyed.connect(clear_popup_reference)
         popup.show_at_cursor()
+
+    def move_palette_docker_to_cursor(self):
+        DockerManager.toggle_docker_position_at_cursor("quick_access_palette_docker")
+
+    def move_quick_adjust_docker_to_cursor(self):
+        DockerManager.toggle_docker_position_at_cursor("brush_adjust_docker")
 
 
 app = Krita.instance()

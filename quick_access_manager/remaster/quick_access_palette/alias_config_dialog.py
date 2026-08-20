@@ -42,6 +42,7 @@ COLUMN_LABELS = [
     "Font Color",
     "Font Size",
     "Icon",
+    "Reset",
     "Add",
 ]
 
@@ -54,6 +55,7 @@ FIXED_COLUMN_WIDTHS = {
     "Font Color": 110,
     "Font Size": 70,
     "Icon": 70,
+    "Reset": 70,
     "Add": 70,
 }
 
@@ -79,7 +81,19 @@ class AliasConfigDialog(QDialog):
         self.on_item_added = on_item_added
         self.action_rows = {}
         self.docker_rows = {}
+        # Items added from this dialog fill the grid's last empty row from its
+        # left column onward (wrapping to the next row when full) instead of
+        # each Add starting a new row. The cursor lives for as long as this
+        # window is open; done() releases it.
+        if self.controller is not None:
+            self.controller.begin_sequential_placement()
         self.setup_ui()
+
+    def done(self, result):
+        # Covers Save, Cancel, Esc, and the window's close button alike.
+        if self.controller is not None:
+            self.controller.end_sequential_placement()
+        super().done(result)
 
     def setup_ui(self):
         layout = QVBoxLayout()
@@ -275,6 +289,17 @@ class AliasConfigDialog(QDialog):
             )
             table.setCellWidget(row, 5, icon_button)
 
+            reset_button = QPushButton("Reset")
+            reset_button.setToolTip(
+                "Clear background/font color, font size, and icon (keeps Custom Name)"
+            )
+            reset_button.clicked.connect(
+                lambda checked=False, iid=item_id, store=rows_store: self._reset_row(
+                    store, iid
+                )
+            )
+            table.setCellWidget(row, 6, reset_button)
+
             add_button = QPushButton("Add")
             add_button.setToolTip(f"Add to the active grid: {label} ({item_id})")
             add_button.clicked.connect(
@@ -282,7 +307,7 @@ class AliasConfigDialog(QDialog):
                     add_callback, iid, btn
                 )
             )
-            table.setCellWidget(row, 6, add_button)
+            table.setCellWidget(row, 7, add_button)
 
             rows_store[item_id] = {
                 "name_edit": name_edit,
@@ -312,6 +337,16 @@ class AliasConfigDialog(QDialog):
             button.setEnabled(True)
         except RuntimeError:
             pass  # dialog was closed before the timer fired; button is gone
+
+    def _reset_row(self, rows_store, item_id):
+        widgets = rows_store[item_id]
+        widgets["bg_button"].setProperty("color", "")
+        self.update_color_button(widgets["bg_button"])
+        widgets["font_button"].setProperty("color", "")
+        self.update_color_button(widgets["font_button"])
+        widgets["size_edit"].clear()
+        widgets["icon_button"].setProperty("icon_path", "")
+        self.update_icon_button(widgets["icon_button"])
 
     def _add_action_item(self, action_id):
         if self.controller is not None:

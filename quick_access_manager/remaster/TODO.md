@@ -16,6 +16,9 @@
 ### Palette Item Types
 - [X] Docker toggle items, color picker/swatch items, script file execution items.
 - [X] Per-item-type default size/icon/payload schema and config dialog fields.
+- [X] Vertical Separator orientation (`payload.orientation`, header menu "Add H Separator" / "Add V Separator") alongside the original horizontal one. A vertical Separator resizes by `row_span` instead of `col_span`; Grid Edit's Wider/Narrower buttons and the drag resize handle both switch axis automatically based on the selection.
+- [X] Brush Size item (`BRUSH_SIZE_ITEM`, header menu "Add Brush Size"): a fixed 1x1 button showing a digits-only number (text/font size/font color/background color set via a config popup at add time and from the right-click Property menu). Click sets the active brush's size to that number via `view.setBrushSize()`. Not resizable in Grid Edit (fixed 1x1, like Color Swatch/Script).
+- [X] Brush Blend Mode item (`BRUSH_BLEND_MODE_ITEM`, header menu "Add Brush Blend Mode"): a fixed 2x1 button showing free-text (a Krita blend mode id, e.g. "multiply" - not restricted to `quick_adjust`'s `blender_mode_list`, which is only a dropdown curation list, not a validator) with the same text/font size/font color/background color popup and right-click Property editing as Brush Size. Click sets the active brush's blend mode via `view.setCurrentBlendingMode()`, the same call `quick_adjust/brush_monitor.py`'s blend combo uses. Not resizable in Grid Edit.
 
 ### Alias Config
 - [X] Shared Alias Config system (`AliasRepository` + `AliasConfigDialog`) for custom name/color/icon per Krita action or docker, wired into Action/DockerToggle items and Gesture.
@@ -32,11 +35,16 @@
 ### Quick Adjust
 - [X] Docker migration minus `DockerButtonWidget` and all floating widgets except Tool Options.
 - [X] Temp Brush Set settings exposed in the Settings dialog.
+- [X] Floating Rotation Circle Widget ported from legacy (`quick_adjust/floating_widgets/rotation.py`, `FloatRotation`) — reuses the exact `WidgetPadPosition`/`ntWidgetPad`/`ntAdjustToSubwindowFilter` infra already ported for Tool Options. `controls_builder.py` already built `rotation_widget`/`rotation_value_label` for the docker but never placed them in a layout; `ControlButtonWidget.enableRotationExtension()` (in `quick_adjust/widgets/control_buttons_widgets.py`) now reparents them into the floating pad (top-right of `brush_adjust_docker`, same as legacy) and wires a toggle button next to the existing Tool Options one. Visibility persists via `rotation_widget_start_visible` (`quick_adjust/settings.py`, mirrored in `DEFAULT_SETTINGS["quick_adjust"]`), also exposed as a "Start Visible" checkbox in the Settings dialog's Quick Adjust tab. `BrushAdjustmentWidget.closeEvent()` closes it alongside `float_tool_options`.
+
+### Docker Positioning
+- [X] "Move docker to cursor" toggle, ported from the dock<->float core of [DockerUnderCursor](https://github.com/Aqaao/DockerUnderCursor) (`DockerManager.toggle_docker_position_at_cursor()` in `infrastructure/docker_manager.py`): floats the docker and centers it on the mouse cursor, or re-docks it if already floating. Scoped to the Quick Access Palette docker (`quick_access_palette_docker`) and the Quick Adjust docker (`brush_adjust_docker`) only — pin/leave/hide/clamp-to-window states from the reference plugin were intentionally not ported. Two new actions in `actions.action` (`move_quick_access_palette_docker_to_cursor`, `move_quick_adjust_docker_to_cursor`), wired in `plugin.py`, with no default `<shortcut>` so the user assigns one from Krita's Shortcuts settings.
 
 ### Settings / Config Dialog
 - [X] Split settings out of `quick_access_palette.json` into a dedicated `settings.json` (grid file now holds only tab/grid data).
 - [X] Settings dialog renamed to "Settings"; vertical scrollbar added; configurable dialog width/height.
 - [X] "Features" section with Gesture/HueSVC/Quick Adjust enable checkboxes, wired into `plugin.py`'s conditional docker registration.
+- [X] Active-vs-other tab bar styling (font size/color, background color) in the Default tab, applied via `QTabBar::tab`/`QTabBar::tab:selected` in both the docker and popup. One shared style pair across all tabs, not per-tab.
 
 ### Grid Editing
 - [X] Marquee (rubber-band) multi-select.
@@ -54,6 +62,15 @@
 ### Cleanup
 - [X] Removed unused empty `remaster/core/` and `remaster/ui/` placeholder packages.
 - [X] Moved `remaster/features/quick_access_palette/` to `remaster/quick_access_palette/` and removed the now-empty `remaster/features/` package.
+- [X] Maintainability split of the largest files, done in 6 mechanical, behavior-preserving steps (each verified with `tests/` + `py_compile` and committed separately):
+  1. `quick_access_palette/item_style_mixin.py`: `ItemStyleMixin` shared by the docker and popup for item styling/icon lookups (`apply_action_style`, `apply_label_style`, `apply_brush_size_style`, `apply_brush_blend_mode_style`, `tab_bar_stylesheet`, `resolve_icon_path`, `alias_entry`, `item_icon_size`) - previously duplicated in both files, meaning every new palette item type needed the same style edit twice.
+  2. `quick_access_palette/dialogs.py` (2119 lines) → `dialogs/` package: `item_config_dialogs.py` (the 7 per-item-type config dialogs), `palette_settings_dialog.py` (`PaletteConfigDialog`), `grid_edit/{canvas,item_button,dialog}.py` (the Grid Edit feature). `dialogs/__init__.py` re-exports everything.
+  3. `quick_access_palette/controller.py` (683 lines, one class) → `controller/` package: `settings_mixin.py`, `tab_mixin.py`, `placement_mixin.py`, `item_crud_mixin.py`, composed by `base.py`'s `PaletteController`. `controller/__init__.py` re-exports `PaletteController`/`DEFAULT_SETTINGS`.
+  4. `quick_access_palette/docker.py` (1103 lines, one class) → `docker/` package: `drag_filter.py`, `ui_builder_mixin.py`, `item_rendering_mixin.py`, `item_actions_mixin.py`, `activation_mixin.py`, `alias_bridge_mixin.py`, composed by `widget.py`'s `QuickAccessPaletteDockerWidget`, plus `factory.py`. `docker/__init__.py` re-exports the public names.
+  5. `color_selector/docker.py` (698 lines): extracted the generic, docker-independent `HueBar`/`SVBox`/`ChannelBar`/`FgBgColorWidget` widgets into `color_selector/widgets/`.
+  6. `gesture/gesture_config_dialog.py` (672 lines): extracted the self-contained `KeyCaptureDialog` into its own `gesture/key_capture_dialog.py`.
+
+  Every step kept the pre-existing import surface (`from .dialogs import X`, `from .controller import PaletteController`, `from .quick_access_palette.docker import QuickAccessPaletteDockerFactory`, etc.) unchanged via `__init__.py` re-exports, so no caller needed editing.
 
 ## Open Items
 
@@ -63,9 +80,11 @@
 - [ ] Add optional popup width/height settings if icon-size-only control is not enough (already done for HueSVC popup; still open for the Quick Access Palette popup).
 
 ### Grid Editing
-- [ ] Add drag resize handles for Label and Separator width changes (currently Wider/Narrower buttons only).
+- [X] Add drag resize handles for Label and Separator width changes (right-edge grip on the item button; Wider/Narrower buttons still work too).
 - [ ] Extend multi-select UX: Shift+click range selection, Ctrl+A select-all, Escape-to-clear.
 - [ ] Add "confirm discard on close if dirty" safety net around Grid Edit changes (undo history currently covers move/resize only).
+- [X] Horizontal-only drag resize for Action item width (col_span) in Grid Edit, reusing the Label/Separator resize handle/axis machinery via `GridEditDialog.is_resizable()`. An icon-mode Action (has an alias icon) is excluded - it's pinned to col_span=1 by `PaletteController._action_col_span()` on every load, so widening it in Grid Edit would just get silently reverted; `is_resizable()` hides the grip/cursor for it entirely rather than letting the resize appear to work.
+- [ ] Full free-size Action items (and other text buttons) beyond the col_span-only resize above: row_span resizing plus auto text wrap for a tall/narrow layout. Deferred - needs (1) reworking `PaletteController._action_col_span()`/`normalize_action_spans()`'s min-2 floor so a manual narrower-than-2 resize sticks across reload, (2) extending Grid Edit's resize UI from single-axis to independent row+col handles on one item, and (3) a custom word-wrapping button widget since QPushButton has no native wrap (QLabel overlay or custom paintEvent). Scope decision still open: Action items only, or also Docker Toggle's text-fallback mode.
 
 ### Tabs And Config
 - [ ] Consider per-tab or per-grid column settings UI if one global active-grid column control becomes confusing.
@@ -80,5 +99,5 @@
 ### Packaging / Cleanup
 - [ ] Update `SPEC.md` so it matches current decisions: no UseGlobalSetting, Label/Separator width-only resize, popup shortcut behavior, new settings tabs, multi-tab Grid Edit, and the `remaster/quick_access_palette/` path (no longer under `features/`).
 - [ ] Review `actions.action` placement and confirm Krita reliably discovers it from the remaster folder.
-- [ ] Add lightweight model/layout tests that can run outside Krita.
+- [X] Add lightweight model/layout tests that can run outside Krita (`tests/`, stdlib `unittest`, covers `shared/` and `quick_access_palette/controller.py`; `AliasRepository` gained a `path` constructor param and `PaletteController` an `alias_repository` param so tests never touch the real Krita config dir).
 - [ ] Runtime-test all migrated features inside actual Krita — everything so far has only been verified via static diagnostics (`get_errors`), never run inside Krita.

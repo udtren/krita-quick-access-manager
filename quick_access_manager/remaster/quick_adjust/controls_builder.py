@@ -184,8 +184,9 @@ def create_brush_layer_controls(
     else:
         widget.layer_blend_combo = None
 
-    # Rotation widget - always created but not placed by this function; the
-    # docker never adds it to a floating pad since we don't port that feature.
+    # Rotation widget - always created but not placed by this function. The
+    # popup layout below adds it inline; the docker instead reparents it into
+    # a floating pad (ControlButtonWidget.enableRotationExtension()).
     rotation_config = brush_config.get("rotation_slider", {})
     widget.rotation_widget = CircularRotationWidget()
     widget.rotation_widget.setValue(0)

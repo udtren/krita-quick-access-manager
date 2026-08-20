@@ -15,8 +15,17 @@ def get_alias_config_path():
 class AliasRepository:
     """Loads/saves the shared alias config (actions + dockers) as plain dicts."""
 
+    def __init__(self, path: str | None = None):
+        # Defaults to the real Krita config path, resolved lazily (not at
+        # __init__ time) so constructing this class alone never touches disk.
+        # Tests pass an explicit path to stay off the real Krita data dir.
+        self._path = path
+
+    def _resolve_path(self):
+        return self._path or get_alias_config_path()
+
     def load(self):
-        path = get_alias_config_path()
+        path = self._resolve_path()
         if os.path.exists(path):
             try:
                 data = read_json(path, default={}) or {}
@@ -29,4 +38,4 @@ class AliasRepository:
         return {"actions": {}, "dockers": {}}
 
     def save(self, data):
-        write_json(get_alias_config_path(), data, indent=4)
+        write_json(self._resolve_path(), data, indent=4)

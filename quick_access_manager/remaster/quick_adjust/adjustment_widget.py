@@ -250,4 +250,6 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
             self.control_buttons_layout.cleanup()
             if self.control_buttons_layout.float_tool_options is not None:
                 self.control_buttons_layout.float_tool_options.close()
+            if self.control_buttons_layout.float_rotation is not None:
+                self.control_buttons_layout.float_rotation.close()
         super().closeEvent(event)

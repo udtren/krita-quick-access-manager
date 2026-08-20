@@ -19,17 +19,21 @@ from ...gesture import (
     resume_gesture_event_filter,
 )
 from ...infrastructure import get_quick_adjust_icons_dir
+from ..floating_widgets.rotation import FloatRotation
 from ..floating_widgets.tool_options import FloatToolOptions
 from ..settings import (
+    is_rotation_widget_start_visible,
     is_tool_options_enabled,
     is_tool_options_start_visible,
+    set_rotation_widget_start_visible,
     set_tool_options_start_visible,
 )
 
 
 class ControlButtonWidget(QWidget):
-    """Status/toggle button column: Tool Options floating widget, erase mode,
-    preserve alpha, selection status, and gesture pause/resume.
+    """Status/toggle button column: Tool Options floating widget, floating
+    rotation widget, erase mode, preserve alpha, selection status, and
+    gesture pause/resume.
     """
 
     def __init__(self, parent=None):
@@ -41,6 +45,7 @@ class ControlButtonWidget(QWidget):
         self.is_preserve_alpha = False
         self.is_erase_mode = False
         self.float_tool_options = None
+        self.float_rotation = None
 
         self.init_ui()
         self.update_status()
@@ -70,6 +75,16 @@ class ControlButtonWidget(QWidget):
         self.tool_options_toggle_btn.clicked.connect(
             self.toggle_tool_options_visibility
         )
+
+        self.rotation_toggle_btn = QPushButton()
+        self.rotation_toggle_btn.setFixedSize(16, 16)
+        self.rotation_toggle_btn.setToolTip("Toggle Floating Rotation Widget")
+        self.rotation_toggle_btn.setIcon(
+            QIcon(os.path.join(self.icon_dir, "rotate-off.png"))
+        )
+        self.rotation_toggle_btn.setCheckable(True)
+        self.rotation_toggle_btn.setChecked(False)
+        self.rotation_toggle_btn.clicked.connect(self.toggle_rotation_visibility)
 
         self.preserve_alpha_label = QLabel()
         self.preserve_alpha_label.setFixedSize(16, 16)
@@ -110,6 +125,8 @@ class ControlButtonWidget(QWidget):
         self.gesture_status_label.mousePressEvent = self.toggle_gesture_status
 
         layout.addWidget(self.tool_options_toggle_btn)
+        layout.addWidget(self._create_separator())
+        layout.addWidget(self.rotation_toggle_btn)
         layout.addWidget(self._create_separator())
         layout.addWidget(self.erase_mode_label)
         layout.addWidget(self._create_separator())
@@ -256,6 +273,8 @@ class ControlButtonWidget(QWidget):
         else:
             self.tool_options_toggle_btn.hide()
 
+        self.enableRotationExtension()
+
     def toggle_tool_options_visibility(self):
         if self.float_tool_options:
             is_checked = self.tool_options_toggle_btn.isChecked()
@@ -270,3 +289,69 @@ class ControlButtonWidget(QWidget):
                     QIcon(os.path.join(self.icon_dir, "tool_options_off.png"))
                 )
             set_tool_options_start_visible(is_checked)
+
+    def enableRotationExtension(self):
+        """Enable the floating rotation widget extension.
+
+        Reparents the docker's already-built rotation_widget/rotation_value_label
+        (built by controls_builder but never placed into the docker's own
+        layout) into the floating pad.
+        """
+        if self.float_rotation is not None:
+            # Already built for a previous window - don't build a second pad.
+            return
+        window = Krita.instance().activeWindow()
+        if not window:
+            return
+
+        adjustment_widget = self.parent()
+        rotation_widget = getattr(adjustment_widget, "rotation_widget", None)
+        if rotation_widget is None:
+            self.rotation_toggle_btn.hide()
+            return
+        rotation_label = adjustment_widget.rotation_value_label
+
+        self.float_rotation = FloatRotation(window, rotation_widget, rotation_label)
+        rotation_widget.setParent(self.float_rotation.container)
+        rotation_label.setParent(self.float_rotation.container)
+
+        start_visible = is_rotation_widget_start_visible()
+        if start_visible:
+            self.float_rotation.pad.show()
+            rotation_widget.show()
+            rotation_label.show()
+            self.rotation_toggle_btn.setChecked(True)
+            self.rotation_toggle_btn.setIcon(
+                QIcon(os.path.join(self.icon_dir, "rotate-on.png"))
+            )
+        else:
+            self.float_rotation.pad.hide()
+            rotation_widget.hide()
+            rotation_label.hide()
+            self.rotation_toggle_btn.setChecked(False)
+            self.rotation_toggle_btn.setIcon(
+                QIcon(os.path.join(self.icon_dir, "rotate-off.png"))
+            )
+
+    def toggle_rotation_visibility(self):
+        """Toggle the visibility of the floating rotation widget"""
+        if not self.float_rotation:
+            return
+
+        is_checked = self.rotation_toggle_btn.isChecked()
+        if is_checked:
+            self.float_rotation.pad.show()
+            self.float_rotation.rotation_widget.show()
+            self.float_rotation.rotation_label.show()
+            self.float_rotation.pad.adjustToView()
+            self.rotation_toggle_btn.setIcon(
+                QIcon(os.path.join(self.icon_dir, "rotate-on.png"))
+            )
+        else:
+            self.float_rotation.pad.hide()
+            self.float_rotation.rotation_widget.hide()
+            self.float_rotation.rotation_label.hide()
+            self.rotation_toggle_btn.setIcon(
+                QIcon(os.path.join(self.icon_dir, "rotate-off.png"))
+            )
+        set_rotation_widget_start_visible(is_checked)
