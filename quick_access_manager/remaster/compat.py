@@ -363,6 +363,9 @@ except ImportError:
     QSizePolicy.Maximum = QSizePolicy.Policy.Maximum
     QSizePolicy.MinimumExpanding = QSizePolicy.Policy.MinimumExpanding
 
+    QRubberBand.Rectangle = QRubberBand.Shape.Rectangle
+    QRubberBand.Line = QRubberBand.Shape.Line
+
     QAbstractItemView.SelectRows = QAbstractItemView.SelectionBehavior.SelectRows
     QAbstractItemView.SingleSelection = QAbstractItemView.SelectionMode.SingleSelection
     QAbstractItemView.ExtendedSelection = (
