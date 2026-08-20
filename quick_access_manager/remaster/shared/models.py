@@ -28,6 +28,13 @@ ITEM_TYPES = {
 DEFAULT_ACTION_COL_SPAN = 2
 DEFAULT_ROW_SPAN = 1
 DEFAULT_COL_SPAN = 1
+# Default height (in rows) for a newly-added vertical Separator - mirrors
+# DEFAULT_ACTION_COL_SPAN's role for the horizontal one, just tall enough to
+# read as a divider without the user needing to resize it immediately.
+DEFAULT_V_SEPARATOR_ROW_SPAN = 3
+
+SEPARATOR_ORIENTATION_HORIZONTAL = "horizontal"
+SEPARATOR_ORIENTATION_VERTICAL = "vertical"
 
 # A neutral mid-gray frame around a Color Swatch item's fill, so the swatch
 # isn't rendered edge-to-edge against its neighbors - simultaneous contrast
@@ -121,15 +128,26 @@ class PaletteItem:
         item_id: str,
         row: int = 0,
         col: int = 0,
-        col_span: int = DEFAULT_ACTION_COL_SPAN,
+        col_span: int | None = None,
+        row_span: int | None = None,
+        orientation: str = SEPARATOR_ORIENTATION_HORIZONTAL,
     ):
+        """A horizontal separator resizes by col_span (row_span pinned to 1);
+        a vertical one resizes by row_span (col_span pinned to 1) - the two
+        orientations grow along different axes, never both."""
+        vertical = orientation == SEPARATOR_ORIENTATION_VERTICAL
         return cls(
             id=item_id,
             type=SEPARATOR_ITEM,
             row=row,
             col=col,
-            row_span=1,
-            col_span=col_span,
+            row_span=(
+                row_span if row_span is not None else DEFAULT_V_SEPARATOR_ROW_SPAN
+            )
+            if vertical
+            else 1,
+            col_span=1 if vertical else (col_span if col_span is not None else DEFAULT_ACTION_COL_SPAN),
+            payload={"orientation": orientation},
         )
 
     @classmethod

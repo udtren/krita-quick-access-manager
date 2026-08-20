@@ -51,6 +51,7 @@ from ..shared import (
     LABEL_ITEM,
     SCRIPT_ITEM,
     SEPARATOR_ITEM,
+    SEPARATOR_ORIENTATION_VERTICAL,
 )
 from .alias_config_dialog import AliasConfigDialog
 from .controller import PaletteController
@@ -266,7 +267,8 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         menu = QMenu(self)
         menu.addAction("Add Tab", self.add_tab)
         menu.addAction("Add Label", self.add_label)
-        menu.addAction("Add Separator", self.add_separator)
+        menu.addAction("Add H Separator", self.add_separator)
+        menu.addAction("Add V Separator", self.add_v_separator)
         menu.addAction("Add Color Swatch", self.add_color)
         menu.addAction("Add Script", self.add_script)
         menu.addSeparator()
@@ -433,14 +435,22 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             return label
 
         if item.type == SEPARATOR_ITEM:
+            vertical = item.payload.get("orientation") == SEPARATOR_ORIENTATION_VERTICAL
             container = QWidget()
-            layout = QVBoxLayout(container)
-            layout.setContentsMargins(0, 0, 0, 0)
             separator = QFrame()
-            separator.setFrameShape(QFrame.HLine)
+            if vertical:
+                layout = QHBoxLayout(container)
+                layout.setContentsMargins(0, 0, 0, 0)
+                separator.setFrameShape(QFrame.VLine)
+                separator.setFixedWidth(12)
+                layout.addWidget(separator, alignment=Qt.AlignHCenter)
+            else:
+                layout = QVBoxLayout(container)
+                layout.setContentsMargins(0, 0, 0, 0)
+                separator.setFrameShape(QFrame.HLine)
+                separator.setFixedHeight(12)
+                layout.addWidget(separator, alignment=Qt.AlignVCenter)
             separator.setFrameShadow(QFrame.Sunken)
-            separator.setFixedHeight(12)
-            layout.addWidget(separator, alignment=Qt.AlignVCenter)
             self.apply_issue_style(container, item)
             return container
 
@@ -787,6 +797,10 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
 
     def add_separator(self):
         self.controller.add_separator()
+        self.reload_tabs()
+
+    def add_v_separator(self):
+        self.controller.add_separator(orientation=SEPARATOR_ORIENTATION_VERTICAL)
         self.reload_tabs()
 
     def add_color(self):

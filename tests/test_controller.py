@@ -139,6 +139,42 @@ class MoveResizeRemoveTests(ControllerTestCase):
         self.assertFalse(result.valid)
 
 
+class SeparatorOrientationTests(ControllerTestCase):
+    def test_add_separator_defaults_to_horizontal(self):
+        controller = self.make_controller()
+        controller.add_separator()
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.payload.get("orientation"), "horizontal")
+        self.assertEqual(item.row_span, 1)
+
+    def test_add_separator_vertical_spans_multiple_rows_and_one_column(self):
+        controller = self.make_controller()
+        controller.add_separator(orientation="vertical")
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.payload.get("orientation"), "vertical")
+        self.assertEqual(item.col_span, 1)
+        self.assertGreater(item.row_span, 1)
+
+    def test_sequential_placement_advances_past_a_vertical_separators_single_column(self):
+        # A vertical separator only claims one column, so the cursor should
+        # move one cell right (same as any col_span=1 item), not skip the
+        # rows it occupies below.
+        controller = self.make_controller()
+        controller.set_columns(3)
+        controller.begin_sequential_placement()
+        controller.add_separator(orientation="vertical")
+        controller.add_brush("A")
+        controller.end_sequential_placement()
+
+        grid = controller.active_grid()
+        by_kind = {
+            (item.payload.get("orientation") or item.payload.get("brush_name")): item
+            for item in grid.items
+        }
+        self.assertEqual((by_kind["vertical"].row, by_kind["vertical"].col), (0, 0))
+        self.assertEqual((by_kind["A"].row, by_kind["A"].col), (0, 1))
+
+
 class TabManagementTests(ControllerTestCase):
     def test_add_tab_becomes_active(self):
         controller = self.make_controller()

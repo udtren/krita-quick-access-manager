@@ -40,6 +40,7 @@ from ..shared import (
     LABEL_ITEM,
     SCRIPT_ITEM,
     SEPARATOR_ITEM,
+    SEPARATOR_ORIENTATION_VERTICAL,
 )
 from .controller import PaletteController
 
@@ -260,14 +261,22 @@ class QuickAccessPalettePopup(QDialog):
             return label
 
         if item.type == SEPARATOR_ITEM:
+            vertical = item.payload.get("orientation") == SEPARATOR_ORIENTATION_VERTICAL
             container = QWidget()
-            layout = QVBoxLayout(container)
-            layout.setContentsMargins(0, 0, 0, 0)
             separator = QFrame()
-            separator.setFrameShape(QFrame.HLine)
+            if vertical:
+                layout = QHBoxLayout(container)
+                layout.setContentsMargins(0, 0, 0, 0)
+                separator.setFrameShape(QFrame.VLine)
+                separator.setFixedWidth(12)
+                layout.addWidget(separator, alignment=Qt.AlignHCenter)
+            else:
+                layout = QVBoxLayout(container)
+                layout.setContentsMargins(0, 0, 0, 0)
+                separator.setFrameShape(QFrame.HLine)
+                separator.setFixedHeight(12)
+                layout.addWidget(separator, alignment=Qt.AlignVCenter)
             separator.setFrameShadow(QFrame.Sunken)
-            separator.setFixedHeight(12)
-            layout.addWidget(separator, alignment=Qt.AlignVCenter)
             return container
 
         if item.type == DOCKER_TOGGLE_ITEM:

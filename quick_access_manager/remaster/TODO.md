@@ -16,6 +16,7 @@
 ### Palette Item Types
 - [X] Docker toggle items, color picker/swatch items, script file execution items.
 - [X] Per-item-type default size/icon/payload schema and config dialog fields.
+- [X] Vertical Separator orientation (`payload.orientation`, header menu "Add H Separator" / "Add V Separator") alongside the original horizontal one. A vertical Separator resizes by `row_span` instead of `col_span`; Grid Edit's Wider/Narrower buttons and the drag resize handle both switch axis automatically based on the selection.
 
 ### Alias Config
 - [X] Shared Alias Config system (`AliasRepository` + `AliasConfigDialog`) for custom name/color/icon per Krita action or docker, wired into Action/DockerToggle items and Gesture.

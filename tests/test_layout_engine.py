@@ -4,6 +4,10 @@ import unittest
 
 from quick_access_manager.remaster.shared import (
     ACTION_ITEM,
+    DEFAULT_V_SEPARATOR_ROW_SPAN,
+    SEPARATOR_ITEM,
+    SEPARATOR_ORIENTATION_HORIZONTAL,
+    SEPARATOR_ORIENTATION_VERTICAL,
     FreeGridLayoutEngine,
     PaletteItem,
 )
@@ -157,6 +161,60 @@ class PaletteItemModelTests(unittest.TestCase):
         self.assertGreaterEqual(default_span.col_span, 2)
         wide = PaletteItem.create_action("a", "action.id", col_span=4)
         self.assertEqual(wide.col_span, 4)
+
+
+class SeparatorOrientationTests(unittest.TestCase):
+    def test_horizontal_separator_defaults_span_the_width_axis(self):
+        item = PaletteItem.create_separator("s")
+        self.assertEqual(item.type, SEPARATOR_ITEM)
+        self.assertEqual(item.payload.get("orientation"), SEPARATOR_ORIENTATION_HORIZONTAL)
+        self.assertEqual(item.row_span, 1)
+        self.assertGreaterEqual(item.col_span, 1)
+
+    def test_vertical_separator_defaults_span_the_height_axis(self):
+        item = PaletteItem.create_separator("s", orientation=SEPARATOR_ORIENTATION_VERTICAL)
+        self.assertEqual(item.payload.get("orientation"), SEPARATOR_ORIENTATION_VERTICAL)
+        self.assertEqual(item.col_span, 1)
+        self.assertEqual(item.row_span, DEFAULT_V_SEPARATOR_ROW_SPAN)
+
+    def test_vertical_separator_col_span_is_pinned_to_one_even_if_requested_wider(self):
+        item = PaletteItem.create_separator(
+            "s", orientation=SEPARATOR_ORIENTATION_VERTICAL, col_span=5
+        )
+        self.assertEqual(item.col_span, 1)
+
+    def test_horizontal_separator_row_span_is_pinned_to_one_even_if_requested_taller(self):
+        item = PaletteItem.create_separator(
+            "s", orientation=SEPARATOR_ORIENTATION_HORIZONTAL, row_span=5
+        )
+        self.assertEqual(item.row_span, 1)
+
+    def test_a_tall_vertical_separator_does_not_corrupt_placement_of_other_items(self):
+        # Regression check for the "does placement logic need a rewrite"
+        # question: a multi-row item should just occupy its real footprint,
+        # with no special-casing anywhere in the engine.
+        engine = FreeGridLayoutEngine(columns=3)
+        tall = PaletteItem.create_separator(
+            "sep", row=0, col=0, orientation=SEPARATOR_ORIENTATION_VERTICAL
+        )
+        result = engine.add_item([], tall)
+        self.assertTrue(result.valid)
+        occupied = engine.occupied_cells(result.items)
+        self.assertEqual(
+            {cell for cell, item_id in occupied.items() if item_id == "sep"},
+            {(0, 0), (1, 0), (2, 0)},
+        )
+
+        # A second item requested directly inside the separator's footprint
+        # claims that cell (the engine always honors a new item's requested
+        # position - see AddItemTests.test_add_on_top_of_existing_item_*);
+        # the separator is the one that gets pushed elsewhere, and the result
+        # is still a fully valid, non-overlapping layout.
+        result = engine.add_item(result.items, brush("b", row=1, col=0))
+        self.assertTrue(engine.validate(result.items).valid)
+        by_id = {item.id: item for item in result.items}
+        self.assertEqual((by_id["b"].row, by_id["b"].col), (1, 0))
+        self.assertNotEqual((by_id["sep"].row, by_id["sep"].col), (0, 0))
 
 
 if __name__ == "__main__":

@@ -55,6 +55,7 @@ from ..shared import (
     LABEL_ITEM,
     SCRIPT_ITEM,
     SEPARATOR_ITEM,
+    SEPARATOR_ORIENTATION_VERTICAL,
     PaletteItem,
 )
 
@@ -1077,8 +1078,10 @@ RESIZE_HANDLE_WIDTH = 8
 
 class GridEditItemButton(QPushButton):
     """Grid edit item button that supports click selection, cell drag movement,
-    and - for Label/Separator items only - a right-edge drag handle that
-    changes col_span instead of moving the item."""
+    and - for Label/Separator items only - a drag handle that resizes instead
+    of moving the item: the right edge for width (col_span), or the bottom
+    edge for height (row_span) on a vertical Separator, which grows downward
+    instead of sideways."""
 
     def __init__(self, item, dialog):
         super().__init__(dialog.item_label(item))
@@ -1094,8 +1097,16 @@ class GridEditItemButton(QPushButton):
     def _resizable(self):
         return self.item.type in (LABEL_ITEM, SEPARATOR_ITEM)
 
+    @property
+    def _resize_axis(self):
+        return self.dialog.resize_axis(self.item) if self._resizable else None
+
     def _on_resize_handle(self, pos):
-        return self._resizable and pos.x() >= self.width() - RESIZE_HANDLE_WIDTH
+        if not self._resizable:
+            return False
+        if self._resize_axis == "row":
+            return pos.y() >= self.height() - RESIZE_HANDLE_WIDTH
+        return pos.x() >= self.width() - RESIZE_HANDLE_WIDTH
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -1103,8 +1114,12 @@ class GridEditItemButton(QPushButton):
             return
         painter = QPainter(self)
         painter.setPen(QPen(QColor(255, 255, 255, 110), 1))
-        x = self.width() - RESIZE_HANDLE_WIDTH // 2
-        painter.drawLine(x, 6, x, self.height() - 6)
+        if self._resize_axis == "row":
+            y = self.height() - RESIZE_HANDLE_WIDTH // 2
+            painter.drawLine(6, y, self.width() - 6, y)
+        else:
+            x = self.width() - RESIZE_HANDLE_WIDTH // 2
+            painter.drawLine(x, 6, x, self.height() - 6)
         painter.end()
 
     def mousePressEvent(self, event):
@@ -1116,17 +1131,29 @@ class GridEditItemButton(QPushButton):
             return
         super().mousePressEvent(event)
 
+    def _resize_delta(self, event):
+        """The along-axis delta (in cells) for the resize currently in progress."""
+        dx = event.globalPos().x() - self.drag_start_global_pos.x()
+        dy = event.globalPos().y() - self.drag_start_global_pos.y()
+        span = dy if self._resize_axis == "row" else dx
+        return int(round(span / float(self.dialog.cell_size)))
+
     def mouseMoveEvent(self, event):
         if self.drag_start_global_pos is not None and event.buttons() & Qt.LeftButton:
-            dx = event.globalPos().x() - self.drag_start_global_pos.x()
-            dy = event.globalPos().y() - self.drag_start_global_pos.y()
             if self.drag_mode == "resize":
-                col_delta = int(round(dx / float(self.dialog.cell_size)))
-                if col_delta:
-                    self.dialog.show_resize_highlight(self.item, col_delta)
+                delta = self._resize_delta(event)
+                if delta:
+                    kwargs = (
+                        {"row_delta": delta}
+                        if self._resize_axis == "row"
+                        else {"col_delta": delta}
+                    )
+                    self.dialog.show_resize_highlight(self.item, **kwargs)
                 else:
                     self.dialog.hide_drop_highlight()
             else:
+                dx = event.globalPos().x() - self.drag_start_global_pos.x()
+                dy = event.globalPos().y() - self.drag_start_global_pos.y()
                 col_delta = int(round(dx / float(self.dialog.cell_size)))
                 row_delta = int(round(dy / float(self.dialog.cell_size)))
                 if col_delta or row_delta:
@@ -1134,24 +1161,29 @@ class GridEditItemButton(QPushButton):
                 else:
                     self.dialog.hide_drop_highlight()
         elif self._resizable:
-            self.setCursor(
-                Qt.SizeHorCursor if self._on_resize_handle(event.pos()) else Qt.SizeAllCursor
-            )
+            if self._on_resize_handle(event.pos()):
+                cursor = Qt.SizeVerCursor if self._resize_axis == "row" else Qt.SizeHorCursor
+            else:
+                cursor = Qt.SizeAllCursor
+            self.setCursor(cursor)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
         self.dialog.hide_drop_highlight()
         if event.button() == Qt.LeftButton and self.drag_start_global_pos is not None:
-            dx = event.globalPos().x() - self.drag_start_global_pos.x()
-            dy = event.globalPos().y() - self.drag_start_global_pos.y()
             if self.drag_mode == "resize":
-                col_delta = int(round(dx / float(self.dialog.cell_size)))
-                if col_delta:
+                delta = self._resize_delta(event)
+                if delta:
                     self.dialog.ensure_selected_for_drag(self.item.id)
-                    self.dialog.resize_selected(0, col_delta)
+                    if self._resize_axis == "row":
+                        self.dialog.resize_selected(delta, 0)
+                    else:
+                        self.dialog.resize_selected(0, delta)
                 self.drag_start_global_pos = None
                 self.drag_mode = None
                 return
+            dx = event.globalPos().x() - self.drag_start_global_pos.x()
+            dy = event.globalPos().y() - self.drag_start_global_pos.y()
             col_delta = int(round(dx / float(self.dialog.cell_size)))
             row_delta = int(round(dy / float(self.dialog.cell_size)))
             if col_delta or row_delta:
@@ -1206,6 +1238,9 @@ class GridEditDialog(QDialog):
         self.item_widgets = {}
         self.drop_highlight = None
         self.grid_host = None
+        # "row" or "col" - which span the current selection's Wider/Narrower
+        # click resizes; set by update_resize_controls().
+        self._resize_axis_state = None
 
         self.setup_ui()
 
@@ -1255,8 +1290,8 @@ class GridEditDialog(QDialog):
         self.wider_btn = QPushButton("Wider")
         self.narrower_btn = QPushButton("Narrower")
 
-        self.wider_btn.clicked.connect(lambda: self.resize_selected(0, 1))
-        self.narrower_btn.clicked.connect(lambda: self.resize_selected(0, -1))
+        self.wider_btn.clicked.connect(lambda: self.grow_selected(1))
+        self.narrower_btn.clicked.connect(lambda: self.grow_selected(-1))
 
         for button in (
             self.wider_btn,
@@ -1382,12 +1417,15 @@ class GridEditDialog(QDialog):
         self.drop_highlight.raise_()
         self.drop_highlight.show()
 
-    def show_resize_highlight(self, item, col_delta):
-        """Outline the width a Label/Separator's right-edge drag would apply."""
+    def show_resize_highlight(self, item, row_delta=0, col_delta=0):
+        """Outline the size a Label/Separator's edge drag would apply -
+        col_delta for the right-edge (width) handle, row_delta for the
+        bottom-edge (height) handle a vertical Separator uses instead."""
+        target_row_span = max(1, item.row_span + row_delta)
         target_col_span = max(
             1, min(self.columns - item.col, item.col_span + col_delta)
         )
-        target = item.copy_with(col_span=target_col_span)
+        target = item.copy_with(row_span=target_row_span, col_span=target_col_span)
         x, y, width, height = self.item_geometry(target, self.spacing)
         if self.drop_highlight is None:
             self.drop_highlight = QFrame(self.grid_host)
@@ -1479,7 +1517,8 @@ class GridEditDialog(QDialog):
         if item.type == LABEL_ITEM:
             return item.payload.get("text", "Label")
         if item.type == SEPARATOR_ITEM:
-            return "---"
+            vertical = item.payload.get("orientation") == SEPARATOR_ORIENTATION_VERTICAL
+            return "|" if vertical else "---"
         if item.type == DOCKER_TOGGLE_ITEM:
             docker_id = item.payload.get("docker_id", "Docker")
             return self.alias_entry("dockers", docker_id).get("custom_name") or docker_id
@@ -1560,16 +1599,42 @@ class GridEditDialog(QDialog):
             "border-radius: 3px; padding: 0px 4px; }"
         )
 
+    def resize_axis(self, item):
+        """"row" for a vertical Separator (it grows/shrinks by row_span);
+        "col" for everything else resizable (Label, horizontal Separator)."""
+        if (
+            item.type == SEPARATOR_ITEM
+            and item.payload.get("orientation") == SEPARATOR_ORIENTATION_VERTICAL
+        ):
+            return "row"
+        return "col"
+
     def update_resize_controls(self):
         selected = self.selected_items()
-        can_resize = bool(selected) and all(
-            item.type in (LABEL_ITEM, SEPARATOR_ITEM) for item in selected
-        )
+        resizable = [item for item in selected if item.type in (LABEL_ITEM, SEPARATOR_ITEM)]
+        axes = {self.resize_axis(item) for item in resizable}
+        # Mixed row/col selections (e.g. a Label plus a vertical Separator)
+        # have no single delta that means the same thing for both, so the
+        # buttons stay disabled until the selection resizes along one axis.
+        can_resize = bool(selected) and len(resizable) == len(selected) and len(axes) == 1
+        self._resize_axis_state = next(iter(axes)) if can_resize else None
+        if self._resize_axis_state == "row":
+            self.wider_btn.setText("Taller")
+            self.narrower_btn.setText("Shorter")
+        else:
+            self.wider_btn.setText("Wider")
+            self.narrower_btn.setText("Narrower")
         self.wider_btn.setEnabled(can_resize)
         self.narrower_btn.setEnabled(can_resize)
         tooltip = "Resize selected Label/Separator items only"
         self.wider_btn.setToolTip(tooltip)
         self.narrower_btn.setToolTip(tooltip)
+
+    def grow_selected(self, delta):
+        if self._resize_axis_state == "row":
+            self.resize_selected(delta, 0)
+        else:
+            self.resize_selected(0, delta)
 
     def selected_items(self):
         return [item for item in self.items if item.id in self.selected_ids]

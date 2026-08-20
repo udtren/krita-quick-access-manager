@@ -11,6 +11,8 @@ from ..shared import (
     DOCKER_TOGGLE_ITEM,
     LABEL_ITEM,
     SCRIPT_ITEM,
+    SEPARATOR_ORIENTATION_HORIZONTAL,
+    SEPARATOR_ORIENTATION_VERTICAL,
     FreeGridLayoutEngine,
     LayoutResult,
     PaletteGrid,
@@ -377,11 +379,17 @@ class PaletteController:
         return self._add_new_item(grid, item)
 
     def add_separator(
-        self, row: int | None = None, col: int | None = None
+        self,
+        row: int | None = None,
+        col: int | None = None,
+        orientation: str = SEPARATOR_ORIENTATION_HORIZONTAL,
     ) -> LayoutResult:
         grid = self._require_active_grid()
-        row, col = self._resolve_position(grid, row, col)
-        item = PaletteItem.create_separator(self._new_id("separator"), row=row, col=col)
+        col_span = 1 if orientation == SEPARATOR_ORIENTATION_VERTICAL else DEFAULT_ACTION_COL_SPAN
+        row, col = self._resolve_position(grid, row, col, col_span=col_span)
+        item = PaletteItem.create_separator(
+            self._new_id("separator"), row=row, col=col, orientation=orientation
+        )
         return self._add_new_item(grid, item)
 
     def add_docker_toggle(
