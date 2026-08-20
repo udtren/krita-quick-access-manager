@@ -80,5 +80,5 @@
 ### Packaging / Cleanup
 - [ ] Update `SPEC.md` so it matches current decisions: no UseGlobalSetting, Label/Separator width-only resize, popup shortcut behavior, new settings tabs, multi-tab Grid Edit, and the `remaster/quick_access_palette/` path (no longer under `features/`).
 - [ ] Review `actions.action` placement and confirm Krita reliably discovers it from the remaster folder.
-- [ ] Add lightweight model/layout tests that can run outside Krita.
+- [X] Add lightweight model/layout tests that can run outside Krita (`tests/`, stdlib `unittest`, covers `shared/` and `quick_access_palette/controller.py`; `AliasRepository` gained a `path` constructor param and `PaletteController` an `alias_repository` param so tests never touch the real Krita config dir).
 - [ ] Runtime-test all migrated features inside actual Krita — everything so far has only been verified via static diagnostics (`get_errors`), never run inside Krita.

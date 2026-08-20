@@ -74,8 +74,13 @@ DEFAULT_SETTINGS = {
 class PaletteController:
     """Owns palette document state and applies layout mutations."""
 
-    def __init__(self, repository: PaletteRepository | None = None):
+    def __init__(
+        self,
+        repository: PaletteRepository | None = None,
+        alias_repository: AliasRepository | None = None,
+    ):
         self.repository = repository or PaletteRepository()
+        self.alias_repository = alias_repository or AliasRepository()
         self.document = self.repository.load()
         # Set while a Resources-style "add many items in a row" session is
         # open; see begin_sequential_placement().
@@ -133,7 +138,7 @@ class PaletteController:
     def normalize_action_spans(self):
         changed = False
         # Load the alias config once instead of once per action item.
-        aliases = AliasRepository().load().get("actions", {})
+        aliases = self.alias_repository.load().get("actions", {})
         for tab in self.document.tabs:
             for grid in tab.grids:
                 for index, item in enumerate(grid.items):
@@ -157,7 +162,7 @@ class PaletteController:
         aliases: dict | None = None,
     ) -> int:
         if aliases is None:
-            aliases = AliasRepository().load().get("actions", {})
+            aliases = self.alias_repository.load().get("actions", {})
         alias = aliases.get(action_id, {})
         if alias.get("icon_name"):
             return 1
