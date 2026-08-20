@@ -368,6 +368,14 @@ class PaletteConfigDialog(QDialog):
         quick_adjust_layout.addWidget(self.quick_adjust_tool_options_position_combo)
 
         quick_adjust_layout.addWidget(self._separator())
+        quick_adjust_layout.addWidget(QLabel("Floating Rotation Widget"))
+        self.quick_adjust_rotation_visible_checkbox = QCheckBox("Start Visible")
+        self.quick_adjust_rotation_visible_checkbox.setChecked(
+            quick_adjust_settings.get("rotation_widget_start_visible", False)
+        )
+        quick_adjust_layout.addWidget(self.quick_adjust_rotation_visible_checkbox)
+
+        quick_adjust_layout.addWidget(self._separator())
         quick_adjust_layout.addWidget(
             QLabel("Temporary Brush Sets (key hold → switch brush):")
         )
@@ -590,6 +598,7 @@ class PaletteConfigDialog(QDialog):
             "tool_options_enabled": self.quick_adjust_tool_options_checkbox.isChecked(),
             "tool_options_start_visible": self.quick_adjust_tool_options_visible_checkbox.isChecked(),
             "tool_options_position": self.quick_adjust_tool_options_position_combo.currentData(),
+            "rotation_widget_start_visible": self.quick_adjust_rotation_visible_checkbox.isChecked(),
             "temp_brush_sets": self._temp_brush_sets_from_table(),
             "blender_mode_list": self._blender_mode_list_from_editor(),
         }

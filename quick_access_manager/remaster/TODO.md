@@ -35,6 +35,10 @@
 ### Quick Adjust
 - [X] Docker migration minus `DockerButtonWidget` and all floating widgets except Tool Options.
 - [X] Temp Brush Set settings exposed in the Settings dialog.
+- [X] Floating Rotation Circle Widget ported from legacy (`quick_adjust/floating_widgets/rotation.py`, `FloatRotation`) — reuses the exact `WidgetPadPosition`/`ntWidgetPad`/`ntAdjustToSubwindowFilter` infra already ported for Tool Options. `controls_builder.py` already built `rotation_widget`/`rotation_value_label` for the docker but never placed them in a layout; `ControlButtonWidget.enableRotationExtension()` (in `quick_adjust/widgets/control_buttons_widgets.py`) now reparents them into the floating pad (top-right of `brush_adjust_docker`, same as legacy) and wires a toggle button next to the existing Tool Options one. Visibility persists via `rotation_widget_start_visible` (`quick_adjust/settings.py`, mirrored in `DEFAULT_SETTINGS["quick_adjust"]`), also exposed as a "Start Visible" checkbox in the Settings dialog's Quick Adjust tab. `BrushAdjustmentWidget.closeEvent()` closes it alongside `float_tool_options`.
+
+### Docker Positioning
+- [X] "Move docker to cursor" toggle, ported from the dock<->float core of [DockerUnderCursor](https://github.com/Aqaao/DockerUnderCursor) (`DockerManager.toggle_docker_position_at_cursor()` in `infrastructure/docker_manager.py`): floats the docker and centers it on the mouse cursor, or re-docks it if already floating. Scoped to the Quick Access Palette docker (`quick_access_palette_docker`) and the Quick Adjust docker (`brush_adjust_docker`) only — pin/leave/hide/clamp-to-window states from the reference plugin were intentionally not ported. Two new actions in `actions.action` (`move_quick_access_palette_docker_to_cursor`, `move_quick_adjust_docker_to_cursor`), wired in `plugin.py`, with no default `<shortcut>` so the user assigns one from Krita's Shortcuts settings.
 
 ### Settings / Config Dialog
 - [X] Split settings out of `quick_access_palette.json` into a dedicated `settings.json` (grid file now holds only tab/grid data).

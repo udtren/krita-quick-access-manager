@@ -35,6 +35,7 @@ DEFAULT_QUICK_ADJUST_SETTINGS = {
     "tool_options_enabled": False,
     "tool_options_start_visible": True,
     "tool_options_position": "left_align_top",
+    "rotation_widget_start_visible": False,
     "temp_brush_sets": [],
     "blender_mode_list": DEFAULT_BLENDER_MODE_LIST,
 }
@@ -167,5 +168,19 @@ def set_tool_options_start_visible(visible):
     quick_adjust = dict(DEFAULT_QUICK_ADJUST_SETTINGS)
     quick_adjust.update(document.settings.get("quick_adjust", {}))
     quick_adjust["tool_options_start_visible"] = bool(visible)
+    document.settings["quick_adjust"] = quick_adjust
+    repository.save(document)
+
+
+def is_rotation_widget_start_visible():
+    return _load()["rotation_widget_start_visible"]
+
+
+def set_rotation_widget_start_visible(visible):
+    repository = PaletteRepository()
+    document = repository.load()
+    quick_adjust = dict(DEFAULT_QUICK_ADJUST_SETTINGS)
+    quick_adjust.update(document.settings.get("quick_adjust", {}))
+    quick_adjust["rotation_widget_start_visible"] = bool(visible)
     document.settings["quick_adjust"] = quick_adjust
     repository.save(document)

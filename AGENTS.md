@@ -53,13 +53,13 @@ It also registers two popup actions (`quick_access_palette_popup`, `hue_svc_popu
 | [infrastructure/](quick_access_manager/remaster/infrastructure/) | `PaletteRepository`/`AliasRepository` (JSON load/save, both take an optional `path`/constructor override for test isolation), `json_cache.py` (mtime-validated read cache), `paths.py` (config dir resolution), `ActionManager`/`DockerManager` (Krita action/docker discovery — `None` outside Krita, see below) |
 | [gesture/](quick_access_manager/remaster/gesture/) | Application-level key+mouse gesture detection and execution; own config storage under `remaster/gesture/` |
 | [color_selector/](quick_access_manager/remaster/color_selector/) | HueSVC docker + popup. `docker.py` holds `ColorSelectorDock`/`ColorSelectorDockFactory`; the generic, docker-independent picker widgets (`HueBar`, `SVBox`, `ChannelBar`, `FgBgColorWidget`) live in `color_selector/widgets/`, re-exported from `docker.py` for `popup.py`'s import. Unlike the legacy popup, the popup's right-side panel (`BrushLayerControlsWidget`/`BrushToggleWidget`, both imported from `quick_adjust/`) is always shown, not config-gated. |
-| [quick_adjust/](quick_access_manager/remaster/quick_adjust/) | Brush/layer adjustment docker: sliders, color/brush history, temp-action keys, Tool Options floating pad. Ported from legacy minus `DockerButtonWidget` and every floating widget except Tool Options. |
+| [quick_adjust/](quick_access_manager/remaster/quick_adjust/) | Brush/layer adjustment docker: sliders, color/brush history, temp-action keys, Tool Options + Rotation floating pads. Ported from legacy minus `DockerButtonWidget` and every floating widget except Tool Options and the rotation dial. |
 | [compat.py](quick_access_manager/remaster/compat.py) | PyQt5/PyQt6 shim — **always import Qt symbols from here**, never directly from PyQt5/PyQt6 |
 | [focus_utils.py](quick_access_manager/remaster/focus_utils.py) | `is_text_input_focused()` — used by the gesture system to avoid firing gestures while the user is typing |
-| [actions.action](quick_access_manager/remaster/actions.action) | Krita action registration XML for the popup shortcuts |
+| [actions.action](quick_access_manager/remaster/actions.action) | Krita action registration XML for the popup shortcuts and the "move docker to cursor" shortcuts (both unbound by default — assign a key from Krita's Shortcuts settings) |
 | [resources/](quick_access_manager/remaster/resources/) | Bundled default icons (`default_icons/`, `system_icons/`, `quick_adjust/`, `gesture/`) |
 
-`ActionManager`/`DockerManager` (from `infrastructure/`) are `None` when the `krita` module isn't importable — `infrastructure/__init__.py` catches that specific `ModuleNotFoundError` so the rest of `infrastructure/` (and everything built on `PaletteRepository`/`AliasRepository`) still imports cleanly outside Krita.
+`ActionManager`/`DockerManager` (from `infrastructure/`) are `None` when the `krita` module isn't importable — `infrastructure/__init__.py` catches that specific `ModuleNotFoundError` so the rest of `infrastructure/` (and everything built on `PaletteRepository`/`AliasRepository`) still imports cleanly outside Krita. `DockerManager.toggle_docker_position_at_cursor(docker_id)` (ported from [DockerUnderCursor](https://github.com/Aqaao/DockerUnderCursor)'s dock<->float toggle) floats a docker and centers it on the cursor, or re-docks it if already floating; `plugin.py` wires it to the Quick Access Palette and Quick Adjust dockers only.
 
 ### The mixin-package pattern used across `quick_access_palette/`
 
@@ -138,7 +138,11 @@ The docker/popup's `QTabWidget` gets a `QTabBar::tab` / `QTabBar::tab:selected` 
 
 ### Floating widget system
 
-[quick_adjust/floating_widgets/tool_options.py](quick_access_manager/remaster/quick_adjust/floating_widgets/tool_options.py) (`FloatToolOptions`) is the one floating widget ported from legacy — it "borrows" Krita's own Tool Options docker (`sharedtooldocker`) and repositions it via `ntWidgetPad`/`WidgetPadPosition`. Every other legacy floating widget (widget pads for other dockers) was intentionally not ported.
+Two floating widgets are ported from legacy, both built on `quick_adjust/floating_widgets/base_tools/` (`ntWidgetPad`/`WidgetPadPosition`/`ntAdjustToSubwindowFilter`):
+- [quick_adjust/floating_widgets/tool_options.py](quick_access_manager/remaster/quick_adjust/floating_widgets/tool_options.py) (`FloatToolOptions`) "borrows" Krita's own Tool Options docker (`sharedtooldocker`) via `ntWidgetPad.borrowDocker()`.
+- [quick_adjust/floating_widgets/rotation.py](quick_access_manager/remaster/quick_adjust/floating_widgets/rotation.py) (`FloatRotation`) instead adds a plain container widget (the `CircularRotationWidget` dial + its value label, already built by `controls_builder.py` but never placed into the docker's own layout) directly into the pad's layout — there's no real docker to borrow. Both are constructed by `ControlButtonWidget` (`quick_adjust/widgets/control_buttons_widgets.py`) off `Krita.instance().notifier().windowCreated`, each behind its own toggle button; `rotation_widget_start_visible` (Settings dialog's Quick Adjust tab) persists the rotation pad's shown/hidden state the same way `tool_options_start_visible` does for Tool Options.
+
+Every other legacy floating widget (widget pads for other dockers) was intentionally not ported.
 
 ### PyQt compatibility
 

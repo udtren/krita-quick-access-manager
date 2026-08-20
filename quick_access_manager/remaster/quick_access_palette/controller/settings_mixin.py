@@ -49,6 +49,7 @@ DEFAULT_SETTINGS = {
         "tool_options_enabled": False,
         "tool_options_start_visible": True,
         "tool_options_position": "left_align_top",
+        "rotation_widget_start_visible": False,
         "temp_brush_sets": [],
         "blender_mode_list": [
             "normal",
