@@ -93,6 +93,7 @@ krita_data/ (e.g. AppData/Roaming/krita/)
 | `color` | 1x1 | `payload.color` — sets the active view's foreground color |
 | `script` | 1x1 | `payload.script_path` — executes the file with a minimal globals dict (`Krita` only) |
 | `brush_size` | 1x1, never resizable | `payload.text` (digits only) `/fontSize/backgroundColor/fontColor` — click sets the active brush's size via `view.setBrushSize()` |
+| `brush_blend_mode` | 2x1, never resizable | `payload.text` (free-text Krita blend mode id, e.g. `"multiply"`) `/fontSize/backgroundColor/fontColor` — click sets the active brush's blend mode via `view.setCurrentBlendingMode()`, the same call `quick_adjust/brush_monitor.py`'s blend combo uses |
 
 Placement rules (`FreeGridLayoutEngine` in `shared/layout_engine.py`, fully generic over `row_span`/`col_span` — no item-type special-casing at the engine level):
 - Dropping/adding an item onto occupied cells pushes the *existing* items to the next free cell; the newly placed/moved item always keeps its requested position.
@@ -141,4 +142,4 @@ Both `legacy/compat.py` and [remaster/compat.py](quick_access_manager/remaster/c
 
 ### Remaster's own docs
 
-[remaster/TODO.md](quick_access_manager/remaster/TODO.md) tracks completed work and open items in detail (grid editing, settings, per-feature status). [remaster/SPEC.md](quick_access_manager/remaster/SPEC.md) is the original design spec for the palette rewrite — it predates several since-implemented features (e.g. it doesn't mention the `brush_size` item type or vertical separators) and is flagged in TODO.md as needing a refresh; prefer this file and TODO.md over SPEC.md when they disagree.
+[remaster/TODO.md](quick_access_manager/remaster/TODO.md) tracks completed work and open items in detail (grid editing, settings, per-feature status). [remaster/SPEC.md](quick_access_manager/remaster/SPEC.md) is the original design spec for the palette rewrite — it predates several since-implemented features (e.g. it doesn't mention the `brush_size`/`brush_blend_mode` item types or vertical separators) and is flagged in TODO.md as needing a refresh; prefer this file and TODO.md over SPEC.md when they disagree.

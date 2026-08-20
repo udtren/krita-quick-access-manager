@@ -18,6 +18,7 @@
 - [X] Per-item-type default size/icon/payload schema and config dialog fields.
 - [X] Vertical Separator orientation (`payload.orientation`, header menu "Add H Separator" / "Add V Separator") alongside the original horizontal one. A vertical Separator resizes by `row_span` instead of `col_span`; Grid Edit's Wider/Narrower buttons and the drag resize handle both switch axis automatically based on the selection.
 - [X] Brush Size item (`BRUSH_SIZE_ITEM`, header menu "Add Brush Size"): a fixed 1x1 button showing a digits-only number (text/font size/font color/background color set via a config popup at add time and from the right-click Property menu). Click sets the active brush's size to that number via `view.setBrushSize()`. Not resizable in Grid Edit (fixed 1x1, like Color Swatch/Script).
+- [X] Brush Blend Mode item (`BRUSH_BLEND_MODE_ITEM`, header menu "Add Brush Blend Mode"): a fixed 2x1 button showing free-text (a Krita blend mode id, e.g. "multiply" - not restricted to `quick_adjust`'s `blender_mode_list`, which is only a dropdown curation list, not a validator) with the same text/font size/font color/background color popup and right-click Property editing as Brush Size. Click sets the active brush's blend mode via `view.setCurrentBlendingMode()`, the same call `quick_adjust/brush_monitor.py`'s blend combo uses. Not resizable in Grid Edit.
 
 ### Alias Config
 - [X] Shared Alias Config system (`AliasRepository` + `AliasConfigDialog`) for custom name/color/icon per Krita action or docker, wired into Action/DockerToggle items and Gesture.

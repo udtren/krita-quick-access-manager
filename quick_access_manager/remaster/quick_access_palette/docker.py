@@ -44,6 +44,7 @@ from ..infrastructure import (
 from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
+    BRUSH_BLEND_MODE_ITEM,
     BRUSH_SIZE_ITEM,
     COLOR_ITEM,
     COLOR_SWATCH_BORDER_COLOR,
@@ -58,6 +59,7 @@ from .alias_config_dialog import AliasConfigDialog
 from .controller import PaletteController
 from .dialogs import (
     ActionItemConfigDialog,
+    BrushBlendModeItemConfigDialog,
     BrushSizeItemConfigDialog,
     ColorItemConfigDialog,
     DockerToggleItemConfigDialog,
@@ -273,6 +275,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         menu.addAction("Add V Separator", self.add_v_separator)
         menu.addAction("Add Color Swatch", self.add_color)
         menu.addAction("Add Brush Size", self.add_brush_size)
+        menu.addAction("Add Brush Blend Mode", self.add_brush_blend_mode)
         menu.addAction("Add Script", self.add_script)
         menu.addSeparator()
         menu.addAction("Resources", self.show_alias_config_dialog)
@@ -553,6 +556,20 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             self.apply_issue_style(button, item)
             return button
 
+        if item.type == BRUSH_BLEND_MODE_ITEM:
+            button = QPushButton(item.payload.get("text", ""))
+            button.setMinimumHeight(36)
+            button.setToolTip(f"Set brush blend mode to {item.payload.get('text', '')}")
+            self.apply_brush_blend_mode_style(button, item)
+            blend_mode_text = item.payload.get("text", "")
+            button.clicked.connect(
+                lambda checked=False, blend_mode_text=blend_mode_text: self.activate_brush_blend_mode(
+                    blend_mode_text
+                )
+            )
+            self.apply_issue_style(button, item)
+            return button
+
         fallback = QLabel(item.type)
         self.apply_issue_style(fallback, item)
         return fallback
@@ -603,6 +620,7 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             COLOR_ITEM,
             SCRIPT_ITEM,
             BRUSH_SIZE_ITEM,
+            BRUSH_BLEND_MODE_ITEM,
         ):
             property_action = menu.addAction("Property")
         selected = menu.exec(widget.mapToGlobal(pos))
@@ -622,6 +640,8 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
                 self.show_script_property(item)
             elif item.type == BRUSH_SIZE_ITEM:
                 self.show_brush_size_property(item)
+            elif item.type == BRUSH_BLEND_MODE_ITEM:
+                self.show_brush_blend_mode_property(item)
 
     def show_label_property(self, item):
         dialog = LabelItemConfigDialog(dict(item.payload), parent=self)
@@ -657,6 +677,12 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         dialog = BrushSizeItemConfigDialog(dict(item.payload), parent=self)
         if dialog.exec():
             self.controller.update_brush_size_item(item.id, dialog.get_config())
+            self.reload_tabs()
+
+    def show_brush_blend_mode_property(self, item):
+        dialog = BrushBlendModeItemConfigDialog(dict(item.payload), parent=self)
+        if dialog.exec():
+            self.controller.update_brush_blend_mode_item(item.id, dialog.get_config())
             self.reload_tabs()
 
     def action_map(self, refresh=False):
@@ -805,6 +831,14 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             f"QPushButton {{ background: {bg}; color: {fg}; font-size: {size}px; font-weight: bold; border: 1px solid #6b4a73; border-radius: 4px; }}"
         )
 
+    def apply_brush_blend_mode_style(self, button, item):
+        bg = item.payload.get("backgroundColor", "#263a3a")
+        fg = item.payload.get("fontColor", "#ffffff")
+        size = item.payload.get("fontSize", "18")
+        button.setStyleSheet(
+            f"QPushButton {{ background: {bg}; color: {fg}; font-size: {size}px; font-weight: bold; border: 1px solid #4a8b8b; border-radius: 4px; padding: 0px 4px; }}"
+        )
+
     def apply_issue_style(self, widget, item):
         issues = self.issue_map.get(item.id)
         if not issues:
@@ -887,6 +921,14 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
             config = dialog.get_config()
             text = config.pop("text", "1")
             self.controller.add_brush_size(text, config=config)
+            self.reload_tabs()
+
+    def add_brush_blend_mode(self):
+        dialog = BrushBlendModeItemConfigDialog(parent=self)
+        if dialog.exec():
+            config = dialog.get_config()
+            text = config.pop("text", "")
+            self.controller.add_brush_blend_mode(text, config=config)
             self.reload_tabs()
 
     def show_grid_edit_dialog(self):
@@ -1017,6 +1059,15 @@ class QuickAccessPaletteDockerWidget(QDockWidget):
         except ValueError:
             return
         view.setBrushSize(size)
+
+    def activate_brush_blend_mode(self, blend_mode):
+        view = self.active_view()
+        if not view or not blend_mode:
+            return
+        try:
+            view.setCurrentBlendingMode(blend_mode)
+        except Exception:
+            pass
 
     def run_script(self, script_path):
         if not script_path or not os.path.isfile(script_path):

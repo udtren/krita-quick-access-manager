@@ -16,6 +16,7 @@ DOCKER_TOGGLE_ITEM = "docker_toggle"
 COLOR_ITEM = "color"
 SCRIPT_ITEM = "script"
 BRUSH_SIZE_ITEM = "brush_size"
+BRUSH_BLEND_MODE_ITEM = "brush_blend_mode"
 
 ITEM_TYPES = {
     BRUSH_ITEM,
@@ -26,6 +27,7 @@ ITEM_TYPES = {
     COLOR_ITEM,
     SCRIPT_ITEM,
     BRUSH_SIZE_ITEM,
+    BRUSH_BLEND_MODE_ITEM,
 }
 DEFAULT_ACTION_COL_SPAN = 2
 DEFAULT_ROW_SPAN = 1
@@ -236,6 +238,31 @@ class PaletteItem:
             col=col,
             row_span=1,
             col_span=1,
+            payload=payload,
+        )
+
+    @classmethod
+    def create_brush_blend_mode(
+        cls,
+        item_id: str,
+        text: str,
+        row: int = 0,
+        col: int = 0,
+        config: dict[str, Any] | None = None,
+    ):
+        """A 2x1 button that sets the active brush's blend mode to `text`
+        (a Krita blend mode id, e.g. "multiply" - free text, not validated
+        here) when clicked, via view.setCurrentBlendingMode()."""
+        payload = {"text": text}
+        if config:
+            payload.update(config)
+        return cls(
+            id=item_id,
+            type=BRUSH_BLEND_MODE_ITEM,
+            row=row,
+            col=col,
+            row_span=1,
+            col_span=2,
             payload=payload,
         )
 

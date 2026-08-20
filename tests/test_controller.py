@@ -188,6 +188,68 @@ class BrushSizeItemTests(ControllerTestCase):
         self.assertEqual(item.payload["fontColor"], "#abcdef")
 
 
+class BrushBlendModeItemTests(ControllerTestCase):
+    def test_add_brush_blend_mode_creates_a_two_by_one_item_with_text(self):
+        controller = self.make_controller()
+        controller.add_brush_blend_mode("multiply")
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.type, "brush_blend_mode")
+        self.assertEqual(item.payload.get("text"), "multiply")
+        self.assertEqual((item.row_span, item.col_span), (1, 2))
+
+    def test_add_brush_blend_mode_accepts_style_config(self):
+        controller = self.make_controller()
+        controller.add_brush_blend_mode(
+            "screen",
+            config={
+                "fontSize": "16",
+                "backgroundColor": "#111111",
+                "fontColor": "#eeeeee",
+            },
+        )
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.payload["fontSize"], "16")
+        self.assertEqual(item.payload["backgroundColor"], "#111111")
+        self.assertEqual(item.payload["fontColor"], "#eeeeee")
+
+    def test_update_brush_blend_mode_item_replaces_payload_fields(self):
+        controller = self.make_controller()
+        controller.add_brush_blend_mode("multiply")
+        item_id = controller.active_grid().items[0].id
+        controller.update_brush_blend_mode_item(
+            item_id, {"text": "darken", "fontSize": "20"}
+        )
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.payload["text"], "darken")
+        self.assertEqual(item.payload["fontSize"], "20")
+
+    def test_update_brush_blend_mode_item_rejects_wrong_item_type(self):
+        controller = self.make_controller()
+        controller.add_brush("A")
+        item_id = controller.active_grid().items[0].id
+        with self.assertRaises(ValueError):
+            controller.update_brush_blend_mode_item(item_id, {"text": "multiply"})
+
+    def test_brush_blend_mode_survives_reload_from_disk(self):
+        controller = self.make_controller()
+        controller.add_brush_blend_mode("multiply", config={"fontColor": "#abcdef"})
+        reloaded = self.make_controller()
+        item = reloaded.active_grid().items[0]
+        self.assertEqual(item.payload["text"], "multiply")
+        self.assertEqual(item.payload["fontColor"], "#abcdef")
+
+    def test_add_brush_blend_mode_default_position_respects_its_own_width(self):
+        # The 2-wide item must not collide with an existing item in the row
+        # it's placed below.
+        controller = self.make_controller()
+        controller.set_columns(4)
+        controller.add_brush("A")
+        controller.add_brush_blend_mode("multiply")
+        grid = controller.active_grid()
+        self.assertTrue(controller.validate_active_grid().valid)
+        self.assertEqual(len(grid.items), 2)
+
+
 class SeparatorOrientationTests(ControllerTestCase):
     def test_add_separator_defaults_to_horizontal(self):
         controller = self.make_controller()

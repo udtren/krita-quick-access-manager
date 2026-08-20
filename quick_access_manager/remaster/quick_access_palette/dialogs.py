@@ -49,6 +49,7 @@ from ..infrastructure import (
 from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
+    BRUSH_BLEND_MODE_ITEM,
     BRUSH_SIZE_ITEM,
     COLOR_ITEM,
     COLOR_SWATCH_BORDER_COLOR,
@@ -374,6 +375,92 @@ class BrushSizeItemConfigDialog(QDialog):
         digits = "".join(ch for ch in self.text_edit.text() if ch.isdigit())
         return {
             "text": digits or "1",
+            "fontSize": self.font_size_edit.text().strip() or "18",
+            "backgroundColor": self.bg_color.name(),
+            "fontColor": self.font_color.name(),
+        }
+
+
+class BrushBlendModeItemConfigDialog(QDialog):
+    """Configure a Brush Blend Mode palette item - a 2x1 button that sets
+    the active brush's blend mode to a Krita blend mode id (free text,
+    e.g. "multiply") when clicked."""
+
+    def __init__(self, config=None, parent=None):
+        super().__init__(parent)
+        self.config = dict(config or {})
+        self.bg_color = QColor(self.config.get("backgroundColor", "#263a3a"))
+        self.font_color = QColor(self.config.get("fontColor", "#ffffff"))
+        self.setup_ui()
+        self.load_values()
+
+    def setup_ui(self):
+        self.setWindowTitle("Brush Blend Mode Config")
+        self.resize(300, 180)
+        self.setMinimumWidth(280)
+        layout = QVBoxLayout()
+
+        layout.addWidget(QLabel("Text:"))
+        self.text_edit = QLineEdit()
+        layout.addWidget(self.text_edit)
+
+        layout.addWidget(QLabel("Font Size:"))
+        self.font_size_edit = QLineEdit()
+        layout.addWidget(self.font_size_edit)
+
+        layout.addWidget(QLabel("Background Color:"))
+        self.bg_color_button = QPushButton()
+        self.bg_color_button.setFixedHeight(24)
+        self.bg_color_button.clicked.connect(self.pick_bg_color)
+        layout.addWidget(self.bg_color_button)
+
+        layout.addWidget(QLabel("Font Color:"))
+        self.font_color_button = QPushButton()
+        self.font_color_button.setFixedHeight(24)
+        self.font_color_button.clicked.connect(self.pick_font_color)
+        layout.addWidget(self.font_color_button)
+
+        button_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("OK")
+        self.cancel_btn = QPushButton("Cancel")
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.cancel_btn)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    def load_values(self):
+        self.text_edit.setText(str(self.config.get("text", "")))
+        self.font_size_edit.setText(str(self.config.get("fontSize", "18")))
+        self.update_color_buttons()
+
+    def pick_bg_color(self):
+        color = QColorDialog.getColor(self.bg_color, self, "Select Background Color")
+        if color.isValid():
+            self.bg_color = color
+            self.update_color_buttons()
+
+    def pick_font_color(self):
+        color = QColorDialog.getColor(self.font_color, self, "Select Font Color")
+        if color.isValid():
+            self.font_color = color
+            self.update_color_buttons()
+
+    def update_color_buttons(self):
+        self.bg_color_button.setStyleSheet(
+            f"background-color: {self.bg_color.name()}; border: 1px solid #888;"
+        )
+        self.bg_color_button.setText(self.bg_color.name())
+        self.font_color_button.setStyleSheet(
+            f"background-color: {self.font_color.name()}; border: 1px solid #888;"
+        )
+        self.font_color_button.setText(self.font_color.name())
+
+    def get_config(self):
+        return {
+            "text": self.text_edit.text().strip(),
             "fontSize": self.font_size_edit.text().strip() or "18",
             "backgroundColor": self.bg_color.name(),
             "fontColor": self.font_color.name(),
@@ -1712,6 +1799,8 @@ class GridEditDialog(QDialog):
             return item.payload.get("customName") or "Script"
         if item.type == BRUSH_SIZE_ITEM:
             return item.payload.get("text", "")
+        if item.type == BRUSH_BLEND_MODE_ITEM:
+            return item.payload.get("text", "")
         return item.type
 
     def ensure_selected_for_drag(self, item_id):
@@ -1769,6 +1858,10 @@ class GridEditDialog(QDialog):
                 item.payload.get("backgroundColor", "#3a263f"),
                 "#6b4a73",
             ),
+            BRUSH_BLEND_MODE_ITEM: (
+                item.payload.get("backgroundColor", "#263a3a"),
+                "#4a8b8b",
+            ),
         }
         background, border = colors.get(item.type, ("#333333", "#555555"))
         if item.type == COLOR_ITEM and not selected:
@@ -1776,7 +1869,7 @@ class GridEditDialog(QDialog):
         else:
             border_width = 2 if selected else 1
         border_color = "#4FC3F7" if selected else border
-        custom_text_color_types = (LABEL_ITEM, BRUSH_SIZE_ITEM)
+        custom_text_color_types = (LABEL_ITEM, BRUSH_SIZE_ITEM, BRUSH_BLEND_MODE_ITEM)
         text_color = (
             item.payload.get("fontColor", "#ffffff")
             if item.type in custom_text_color_types

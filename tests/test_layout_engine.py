@@ -4,6 +4,7 @@ import unittest
 
 from quick_access_manager.remaster.shared import (
     ACTION_ITEM,
+    BRUSH_BLEND_MODE_ITEM,
     BRUSH_SIZE_ITEM,
     DEFAULT_V_SEPARATOR_ROW_SPAN,
     SEPARATOR_ITEM,
@@ -250,6 +251,40 @@ class BrushSizeItemTests(unittest.TestCase):
         by_id = {item.id: item for item in result.items}
         self.assertEqual((by_id["bs2"].row, by_id["bs2"].col), (0, 0))
         self.assertNotEqual((by_id["bs1"].row, by_id["bs1"].col), (0, 0))
+
+
+class BrushBlendModeItemTests(unittest.TestCase):
+    def test_create_brush_blend_mode_is_a_fixed_two_by_one_cell(self):
+        item = PaletteItem.create_brush_blend_mode("bm", "multiply")
+        self.assertEqual(item.type, BRUSH_BLEND_MODE_ITEM)
+        self.assertEqual((item.row_span, item.col_span), (1, 2))
+        self.assertEqual(item.payload.get("text"), "multiply")
+
+    def test_create_brush_blend_mode_merges_style_config_into_payload(self):
+        item = PaletteItem.create_brush_blend_mode(
+            "bm",
+            "screen",
+            config={
+                "fontSize": "16",
+                "backgroundColor": "#112233",
+                "fontColor": "#445566",
+            },
+        )
+        self.assertEqual(item.payload["text"], "screen")
+        self.assertEqual(item.payload["fontSize"], "16")
+        self.assertEqual(item.payload["backgroundColor"], "#112233")
+        self.assertEqual(item.payload["fontColor"], "#445566")
+
+    def test_add_brush_blend_mode_participates_in_normal_grid_placement(self):
+        engine = FreeGridLayoutEngine(columns=4)
+        first = PaletteItem.create_brush_blend_mode("bm1", "multiply", row=0, col=0)
+        result = engine.add_item([], first)
+        second = PaletteItem.create_brush_blend_mode("bm2", "screen", row=0, col=0)
+        result = engine.add_item(result.items, second)
+        self.assertTrue(engine.validate(result.items).valid)
+        by_id = {item.id: item for item in result.items}
+        self.assertEqual((by_id["bm2"].row, by_id["bm2"].col), (0, 0))
+        self.assertNotEqual((by_id["bm1"].row, by_id["bm1"].col), (0, 0))
 
 
 if __name__ == "__main__":

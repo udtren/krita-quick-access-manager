@@ -33,6 +33,7 @@ from ..infrastructure import (
 from ..shared import (
     ACTION_ITEM,
     BRUSH_ITEM,
+    BRUSH_BLEND_MODE_ITEM,
     BRUSH_SIZE_ITEM,
     COLOR_ITEM,
     COLOR_SWATCH_BORDER_COLOR,
@@ -364,6 +365,19 @@ class QuickAccessPalettePopup(QDialog):
             )
             return button
 
+        if item.type == BRUSH_BLEND_MODE_ITEM:
+            button = QPushButton(item.payload.get("text", ""))
+            button.setMinimumHeight(36)
+            button.setToolTip(f"Set brush blend mode to {item.payload.get('text', '')}")
+            self.apply_brush_blend_mode_style(button, item)
+            blend_mode_text = item.payload.get("text", "")
+            button.clicked.connect(
+                lambda checked=False, blend_mode_text=blend_mode_text: self.activate_brush_blend_mode(
+                    blend_mode_text
+                )
+            )
+            return button
+
         return QLabel(item.type)
 
     def item_icon_size(self):
@@ -431,6 +445,14 @@ class QuickAccessPalettePopup(QDialog):
             f"QPushButton {{ background: {bg}; color: {fg}; font-size: {size}px; font-weight: bold; border: 1px solid #6b4a73; border-radius: 4px; }}"
         )
 
+    def apply_brush_blend_mode_style(self, button, item):
+        bg = item.payload.get("backgroundColor", "#263a3a")
+        fg = item.payload.get("fontColor", "#ffffff")
+        size = item.payload.get("fontSize", "18")
+        button.setStyleSheet(
+            f"QPushButton {{ background: {bg}; color: {fg}; font-size: {size}px; font-weight: bold; border: 1px solid #4a8b8b; border-radius: 4px; padding: 0px 4px; }}"
+        )
+
     def activate_brush(self, brush_name):
         if not brush_name:
             return
@@ -472,6 +494,17 @@ class QuickAccessPalettePopup(QDialog):
         except ValueError:
             return
         view.setBrushSize(size)
+        self.close_after_execute()
+
+    def activate_brush_blend_mode(self, blend_mode):
+        window = Krita.instance().activeWindow()
+        view = window.activeView() if window else None
+        if not view or not blend_mode:
+            return
+        try:
+            view.setCurrentBlendingMode(blend_mode)
+        except Exception:
+            return
         self.close_after_execute()
 
     def run_script(self, script_path):
