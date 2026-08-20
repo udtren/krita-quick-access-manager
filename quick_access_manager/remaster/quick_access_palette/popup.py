@@ -255,16 +255,20 @@ class QuickAccessPalettePopup(QDialog):
 
         if item.type == LABEL_ITEM:
             label = QLabel(item.payload.get("text", "Label"))
-            label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            label.setAlignment(Qt.AlignCenter)
             self.apply_label_style(label, item)
             return label
 
         if item.type == SEPARATOR_ITEM:
+            container = QWidget()
+            layout = QVBoxLayout(container)
+            layout.setContentsMargins(0, 0, 0, 0)
             separator = QFrame()
             separator.setFrameShape(QFrame.HLine)
             separator.setFrameShadow(QFrame.Sunken)
-            separator.setMinimumHeight(12)
-            return separator
+            separator.setFixedHeight(12)
+            layout.addWidget(separator, alignment=Qt.AlignVCenter)
+            return container
 
         if item.type == DOCKER_TOGGLE_ITEM:
             docker_id = item.payload.get("docker_id", "")
