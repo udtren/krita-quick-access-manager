@@ -1,6 +1,6 @@
 """Shared rendering constants/helpers for palette separator items."""
 
-SEPARATOR_EDGE_MARGIN = 3
+SEPARATOR_EDGE_MARGIN = 5
 
 
 def separator_stylesheet(color, thickness):

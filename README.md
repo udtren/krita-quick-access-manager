@@ -1,31 +1,11 @@
 # Krita Quick Access Manager
 
-Krita Quick Access Manager is Krita Python plugin focused on a free-layout Quick Access Palette, gesture input,
-quick brush/layer adjustments, and the HueSVC color selector.
-The orignal concept was to bring the Clip Studio Paint's quick access palette to the krita.
+Krita Quick Access Manager is a Krita Python plugin focused on quickly accessing
+various Krita resources by arranging them all in one place.
+The original concept was to bring Clip Studio Paint's Quick Access palette to Krita.
 
 ![alt text](image/1_overview.png)
 
-
-## Features
-
-![alt text](image/2_quick_access_palette.png)
-- **Quick Access Palette**: A tabbed, free-layout grid for brushes, Krita actions,
-  docker toggles, colors, scripts, labels, separators, brush-size buttons, and
-  brush-blend-mode buttons.
-
-![alt text](image/3_gesture.png)
-- **Gesture System**: Executes brush/action/docker commands through key + mouse
-  directional gestures with preview support.
-
-![alt text](image/4_quick_adjust.png) 
-- **Quick Adjust Docker**: Brush and layer sliders/dropdowns, color history, brush
-  history, temporary key modes, temporary brush sets, and floating Tool Options /
-  Rotation widgets.
-
-![alt text](image/5_huesvc.png)
-- **HueSVC Color Selector**: Hue/SV color selector docker and popup. The popup also
-  includes the shared brush/layer controls panel.
 
 ## Table of Contents
 
@@ -43,18 +23,14 @@ The orignal concept was to bring the Clip Studio Paint's quick access palette to
 
 ## Quick Access Palette
 
-The Quick Access Palette is the main Remaster docker.
+![alt text](image/2_quick_access_palette.png)
 
-Documentation draft:
+The Quick Access Palette is the main docker used to manage quick access to
+supported Krita resources and settings.
 
-- Add/remove tabs.
-- Add items from the header menu or Resources dialog.
-- Use Ctrl + drag to move placed items directly in the docker.
-- Use the popup action for cursor-centered access.
+### Palette Item Types
 
-## Palette Item Types
-
-Documentation draft:
+The following item types are supported:
 
 | Item Type | Purpose | Size Behavior |
 | --- | --- | --- |
@@ -62,40 +38,68 @@ Documentation draft:
 | Action | Run a Krita action | Text mode defaults to 2x1 and is resizable; icon mode is fixed 1x1 |
 | Docker Toggle | Show/hide a Krita docker | Text mode defaults to 2x1 and is resizable; icon mode is fixed 1x1 |
 | Color | Set foreground color | Fixed 1x1 |
+| Brush Size | Set the active brush size | Fixed 1x1 |
+| Brush Blend Mode | Set the active brush blend mode | Fixed 2x1 |
 | Script | Execute a Python script | Text mode defaults to 2x1 and is resizable; icon mode is fixed 1x1 |
 | Label | Display custom text | Resizable width |
 | Separator | Horizontal or vertical separator | Resizable on its orientation axis |
-| Brush Size | Set the active brush size | Fixed 1x1 |
-| Brush Blend Mode | Set the active brush blend mode | Fixed 2x1 |
 
-## Grid Edit
+### Resources And Aliases
 
-Documentation draft:
+To add a Brush, Action, or Docker Toggle item, click the **Resources** button
+to open the Resources dialog. From there, pick a brush/action/docker and click
+**Add** to place it on the palette.
 
-- Open Grid Edit from the palette header.
-- Select one or more items.
-- Move or resize supported item types.
-- Right-click selected items to copy, move, or remove them.
-- Use Undo for layout move/resize operations.
+For brushes, you can select multiple presets and add them all at once. You can
+also use **Add Brush** in the header menu to add the currently active brush
+preset directly.
 
-## Resources And Aliases
+Every other item type (Label, Separator, Color, Script, Brush Size, Brush
+Blend Mode) is added from the header **Menu** button instead.
 
-Documentation draft:
+The Resources dialog also manages **aliases**: a custom display name, icon,
+and color for a given Krita action or docker. Aliases are shared, so setting
+one updates every Action/Docker Toggle item — and every Gesture binding — that
+references that action or docker.
 
-- Resources dialog tabs: Actions, Dockers, Brushes.
-- Action and Docker entries can use aliases.
-- Aliases can override display name, background color, and icon.
-- Qt mnemonic ampersands in Krita action names are removed for display.
+### Manage Item Property
 
-## Popup
+Most item properties can be edited by right-clicking the item and choosing
+**Property**. This opens a dialog where you can change the text, color, or
+icon, depending on the item type.
 
-Documentation draft:
+For Action and Docker Toggle items, you can also edit these properties from
+the Resources dialog, which updates the shared alias everywhere it's used.
 
-- Quick Access Palette popup action.
-- Toggle-close-on-repress behavior.
-- Popup icon size and related settings.
+### Move Item
+
+Ctrl + left-drag moves a single item within the grid. You can remove an item
+via its right-click menu, or drop it onto another item to push that item
+aside and take its place. For multi-item selection, cross-tab moves, or
+resizing, use Grid Edit.
+
+### Grid Edit
+
+Click **Grid Edit** to open the Grid Edit dialog, where you can:
+
+- Select multiple items and move them together
+- Select multiple items and copy/move them to another tab
+- Resize text-mode items by dragging their edge
+- Undo an accidental move or resize with the Undo button
+
+### Popup
+
+The Quick Access Palette can also open as a popup at the cursor position via
+its shortcut. The popup shares the same tabs and items as the docker but is
+execution-only — layout editing is only available in the docker.
+
+The docker itself also supports **Move To Cursor**, which floats it and
+centers it on the cursor (or re-docks it if it's already floating), letting
+you reposition it without leaving the canvas.
+
 
 ## Gesture System
+![alt text](image/3_gesture.png)
 
 Documentation draft:
 
@@ -106,7 +110,7 @@ Documentation draft:
 - Temporary pause/resume support.
 
 ## Quick Adjust Docker
-
+![alt text](image/4_quick_adjust.png)
 Documentation draft:
 
 - Brush controls: size, opacity, flow, blend mode, reset, rotation.
@@ -121,7 +125,7 @@ Documentation draft:
 - Floating Rotation widget.
 
 ## HueSVC
-
+![alt text](image/5_huesvc.png)
 Documentation draft:
 
 - Hue bar and SV box.
@@ -158,20 +162,3 @@ krita/
          `- config/
 ```
 
-Main files:
-
-- `quick_access_palette.json`: tabs, grids, and palette items.
-- `settings.json`: shared Remaster settings.
-- `alias_config.json`: action/docker alias settings.
-- `gesture/`: gesture settings and per-page gesture config.
-
-## Development Notes
-
-Run the lightweight tests outside Krita:
-
-```bash
-python -m unittest discover -s tests -t . -v
-```
-
-The test suite covers pure model/layout/controller logic. Qt/Krita-dependent UI
-features still need runtime testing inside Krita.
