@@ -11,7 +11,6 @@ from .gesture import (
 from .gesture.shortcut.toggle_gesture_recognition import (
     ToggleGestureExtension,
 )
-from .popup import SavePresetsExtension
 from .utils.data_manager import get_performance_mode
 
 performance_mode = get_performance_mode()
@@ -65,7 +64,6 @@ app = Krita.instance()
 extensions = [
     QuickAccessManagerExtension,
     ToggleGestureExtension,
-    SavePresetsExtension,
 ]
 
 for extension_class in extensions:
