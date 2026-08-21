@@ -328,12 +328,6 @@ class PaletteGrid:
     def __post_init__(self):
         self.columns = max(1, int(self.columns))
 
-    def get_item(self, item_id: str) -> PaletteItem | None:
-        for item in self.items:
-            if item.id == item_id:
-                return item
-        return None
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,

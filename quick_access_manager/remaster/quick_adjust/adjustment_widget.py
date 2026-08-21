@@ -5,7 +5,6 @@ Main brush adjustment widget with UI and coordination logic.
 from ..compat import (
     QDockWidget,
     QHBoxLayout,
-    QLabel,
     QTimer,
     QVBoxLayout,
     QWidget,
@@ -29,7 +28,6 @@ from .settings import (
     get_color_history_icon_size,
     get_color_history_section,
     get_color_history_total,
-    get_font_size,
     get_layer_section,
     get_preserve_alpha_key,
     get_select_outline_key,
@@ -235,13 +233,6 @@ class BrushAdjustmentWidget(QWidget, BrushMonitorMixin, LayerMonitorMixin):
                     main_widget.adjustSize()
                 break
             parent_widget = parent_widget.parent()
-
-    def refresh_styles(self):
-        """Refresh styles when settings change"""
-        style = f"font-size: {get_font_size()};"
-        for label in self.findChildren(QLabel):
-            if label.text() not in ["Brush Adjustments"]:
-                label.setStyleSheet(style)
 
     def closeEvent(self, event):
         """Stop every timer, event filter, and notifier connection we own."""

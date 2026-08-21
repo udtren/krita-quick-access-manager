@@ -199,18 +199,6 @@ class BrushHistoryWidget(QWidget):
     def force_brush_update(self):
         self.check_brush_change()
 
-    def add_test_brush(self):
-        app = Krita.instance()
-        if app.activeWindow() and app.activeWindow().activeView():
-            view = app.activeWindow().activeView()
-            try:
-                current_preset = view.currentBrushPreset()
-                if current_preset:
-                    test_name = f"Test_{current_preset.name()}"
-                    self.add_brush_to_history(test_name, current_preset)
-            except Exception as e:
-                print(f"Error adding test brush: {e}")
-
     def closeEvent(self, event):
         self.set_filter_active(False)
         super().closeEvent(event)

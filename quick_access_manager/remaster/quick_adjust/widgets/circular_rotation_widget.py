@@ -24,9 +24,6 @@ class CircularRotationWidget(QWidget):
         self.value = max(0, min(360, value))
         self.update()
 
-    def getValue(self):
-        return self.value
-
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)

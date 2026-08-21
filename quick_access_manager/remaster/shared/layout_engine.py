@@ -8,7 +8,7 @@ validation state.
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
-from .models import PaletteGrid, PaletteItem
+from .models import PaletteItem
 
 
 @dataclass(frozen=True)
@@ -103,13 +103,6 @@ class FreeGridLayoutEngine:
             candidate = self._first_free_position(candidate, placed)
             placed.append(candidate)
         return self.validate(placed)
-    def change_columns(self, items: Sequence[PaletteItem], columns: int) -> LayoutResult:
-        """Return validation for a different column count without moving data."""
-        return FreeGridLayoutEngine(columns).validate(items)
-
-    def normalize_grid(self, grid: PaletteGrid) -> LayoutResult:
-        """Validate the current stored grid without changing item positions."""
-        return FreeGridLayoutEngine(grid.columns).validate(grid.items)
 
     def _place_with_push(
         self, existing_items: List[PaletteItem], active_item: PaletteItem

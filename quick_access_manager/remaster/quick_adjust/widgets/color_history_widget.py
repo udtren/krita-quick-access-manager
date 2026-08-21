@@ -168,16 +168,6 @@ class ColorHistoryWidget(QWidget):
     def force_color_update(self):
         self.check_color_change()
 
-    def add_test_color(self):
-        import random
-
-        test_color = (
-            random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255),
-        )
-        self.add_color_to_history(test_color)
-
     def closeEvent(self, event):
         self.set_filter_active(False)
         super().closeEvent(event)

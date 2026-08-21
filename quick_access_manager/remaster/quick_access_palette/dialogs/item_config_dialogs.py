@@ -22,7 +22,7 @@ from ...compat import (
 )
 from ...infrastructure import DockerManager, get_default_icons_dir
 from ...shared import ACTION_ITEM
-from ..action_text import display_action_text
+from ..presentation import display_action_text
 
 
 class ActionItemConfigDialog(QDialog):

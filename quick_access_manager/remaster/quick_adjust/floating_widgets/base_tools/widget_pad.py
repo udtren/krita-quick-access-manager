@@ -62,13 +62,6 @@ class WidgetPadPosition:
                     f"For TOP/BOTTOM side, alignment must be one of: {valid_alignments}"
                 )
 
-    def is_horizontal_side(self):
-        return self.side in [self.TOP, self.BOTTOM]
-
-    def is_vertical_side(self):
-        return self.side in [self.LEFT, self.RIGHT]
-
-
 class ntWidgetPad(QWidget):
     def __init__(self, parent, position_config=None):
         super().__init__(parent)
@@ -307,9 +300,6 @@ class ntWidgetPad(QWidget):
         if Krita.instance().readSetting("", "hideScrollbars", "false") == "true":
             return 0
         return 14
-
-    def getViewAlignment(self):
-        return self.alignment
 
     def setUserVisible(self, visible):
         """Set user's visibility preference and show/hide accordingly"""

@@ -58,12 +58,6 @@ class FloatToolOptions:
         self.pad.returnDocker()
         self.pad.hide()
 
-    def reborrowDocker(self):
-        """Reborrow the docker and show the pad"""
-        if self.pad.borrowDocker(self.toolOptions):
-            self.pad.show()
-            self.pad.adjustToView()
-
     def close(self):
         self.dockerAction.setEnabled(True)
         return self.pad.close()

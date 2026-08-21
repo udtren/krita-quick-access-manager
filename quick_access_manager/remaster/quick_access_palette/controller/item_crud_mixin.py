@@ -249,12 +249,6 @@ class ItemCrudMixin:
                 return self._apply_result(grid, result, compact=False)
         raise ValueError(f"Palette item not found: {item_id}")
 
-    def compact_active_grid(self) -> LayoutResult:
-        grid = self._require_active_grid()
-        return self._apply_result(
-            grid, FreeGridLayoutEngine(grid.columns).compact(grid.items), compact=False
-        )
-
     def move_item(self, item_id: str, row: int, col: int) -> LayoutResult:
         grid = self._require_active_grid()
         return self._apply_result(
@@ -272,11 +266,6 @@ class ItemCrudMixin:
             ),
             compact=False,
         )
-
-    def replace_active_grid_items(self, items, compact: bool = False) -> LayoutResult:
-        grid = self._require_active_grid()
-        result = FreeGridLayoutEngine(grid.columns).validate(items)
-        return self._apply_result(grid, result, compact=compact)
 
     def replace_tab_grid_items(
         self, tab_id: str, items, compact: bool = False

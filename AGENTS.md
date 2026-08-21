@@ -8,12 +8,9 @@ A Krita Python plugin (pykrita). The active implementation is the **Quick Access
 
 ## Installation / Development
 
-No build step. To test changes, copy `quick_access_manager/` and `quick_access_manager.desktop` into Krita's pykrita folder and restart Krita:
+No build step. `C:\Users\udtre\AppData\Roaming\krita\pykrita\quick_access_manager` is a symlink into this repo's `quick_access_manager/`, so edits are live immediately — just restart Krita to pick them up. (If working on a fresh machine without that symlink, copy `quick_access_manager/` and `quick_access_manager.desktop` into Krita's pykrita folder instead.)
 
-- Source: `c:\Users\udtre\Projects\krita-plugin\quick_access_manager\`
-- Install target: `C:\Users\udtre\AppData\Roaming\krita\pykrita\`
-
-The installed copy is in the additional working directory `C:\Users\udtre\AppData\Roaming\krita\quick_access_manager` (config) and `C:\Users\udtre\AppData\Roaming\krita\pykrita\quick_access_manager` (plugin code).
+User config lives outside pykrita under `C:\Users\udtre\AppData\Roaming\krita\quick_access_manager\` (legacy) and `C:\Users\udtre\AppData\Roaming\krita\quick_access_manager\remaster\` (remaster — see "Configuration file layout" below).
 
 There is no linter config and no package manager. The `.venv` at the project root is for IDE support only.
 
@@ -48,7 +45,7 @@ It also registers two popup actions (`quick_access_palette_popup`, `hue_svc_popu
 
 | Module | Responsibility |
 |--------|---------------|
-| [quick_access_palette/](quick_access_manager/remaster/quick_access_palette/) | The Quick Access Palette: `docker/` (docker widget, split into mixins — see below), `popup.py` (execution-only popup, mirrors the docker's renderers), `controller/` (`PaletteController` — document mutations and settings, split into mixins — see below), `dialogs/` (per-item-type config dialogs, the Settings dialog, and the Grid Edit feature — see below), `item_style_mixin.py` (`ItemStyleMixin`, shared item styling/icon-lookup logic used by both `docker/` and `popup.py`), `alias_config_dialog.py` (shared "Resources" dialog for Action/Docker aliases and bulk Add) |
+| [quick_access_palette/](quick_access_manager/remaster/quick_access_palette/) | The Quick Access Palette: `docker/` (docker widget, split into mixins — see below), `popup.py` (execution-only popup, mirrors the docker's renderers), `controller/` (`PaletteController` — document mutations and settings, split into mixins — see below), `dialogs/` (per-item-type config dialogs, the Settings dialog, and the Grid Edit feature — see below), `item_style_mixin.py` (`ItemStyleMixin`, shared item styling/icon-lookup logic used by both `docker/` and `popup.py`), `presentation/` (`display_action_text` — strips Qt mnemonic `&` markers; `separator_stylesheet`/`SEPARATOR_EDGE_MARGIN` — shared separator rendering, used by both `docker/` and `popup.py`), `alias_config_dialog.py` (shared "Resources" dialog for Action/Docker aliases and bulk Add) |
 | [shared/](quick_access_manager/remaster/shared/) | `models.py` (`PaletteItem`, `PaletteGrid`, `PaletteTab`, `PaletteDocument` — Krita/Qt-free) and `layout_engine.py` (`FreeGridLayoutEngine` — placement/overlap/bounds/compact, also Krita/Qt-free). This is what `tests/` exercises directly. |
 | [infrastructure/](quick_access_manager/remaster/infrastructure/) | `PaletteRepository`/`AliasRepository` (JSON load/save, both take an optional `path`/constructor override for test isolation), `json_cache.py` (mtime-validated read cache), `paths.py` (config dir resolution), `ActionManager`/`DockerManager` (Krita action/docker discovery — `None` outside Krita, see below) |
 | [gesture/](quick_access_manager/remaster/gesture/) | Application-level key+mouse gesture detection and execution; own config storage under `remaster/gesture/` |
@@ -97,9 +94,9 @@ krita_data/ (e.g. AppData/Roaming/krita/)
 | `action` | default 2x1, resizable (col only unless icon-mode) | `payload.action_id`; col_span floored to 2 (or pinned to 1 if the alias has an icon) by `PaletteController._action_col_span()`/`normalize_action_spans()` on every load |
 | `label` | row fixed at 1, col resizable | `payload.text/fontSize/backgroundColor/fontColor` |
 | `separator` | horizontal: row=1, col resizable; vertical: col=1, row resizable (`payload.orientation`) | see "Separator orientation" below |
-| `docker_toggle` | 1x1 | `payload.docker_id` |
+| `docker_toggle` | default 2x1, resizable (col only unless icon-mode) | `payload.docker_id`; col_span floored to 2 (or pinned to 1 if the alias has an icon) by `PaletteController._docker_toggle_col_span()` on every load, mirroring `action`'s `_action_col_span()` |
 | `color` | 1x1 | `payload.color` — sets the active view's foreground color |
-| `script` | 1x1 | `payload.script_path` — executes the file with a minimal globals dict (`Krita` only) |
+| `script` | default 2x1, resizable (col only unless icon-mode) | `payload.script_path`; col_span floored to 2 (or pinned to 1 if `payload.icon_name` is set) by `PaletteController._script_col_span()` on every load — executes the file with a minimal globals dict (`Krita` only) |
 | `brush_size` | 1x1, never resizable | `payload.text` (digits only) `/fontSize/backgroundColor/fontColor` — click sets the active brush's size via `view.setBrushSize()` |
 | `brush_blend_mode` | 2x1, never resizable | `payload.text` (free-text Krita blend mode id, e.g. `"multiply"`) `/fontSize/backgroundColor/fontColor` — click sets the active brush's blend mode via `view.setCurrentBlendingMode()`, the same call `quick_adjust/brush_monitor.py`'s blend combo uses |
 
@@ -117,7 +114,7 @@ Placement rules (`FreeGridLayoutEngine` in `shared/layout_engine.py`, fully gene
 `GridEditDialog` (`quick_access_palette/dialogs/grid_edit/dialog.py`) edits every tab's grid without auto-compacting on save. Notable pieces:
 - Marquee (rubber-band) multi-select via `GridEditCanvas` (`grid_edit/canvas.py`), Copy/Move-to-Tab context menu.
 - `GridEditItemButton` (`grid_edit/item_button.py`) supports both a whole-item drag (move) and, for resizable types, an edge-grip drag (resize) — which edge and which cursor depends on `resize_axis()`/`is_resizable()`.
-- `is_resizable(item)` centralizes "can this item be resized here": Label and Separator always; Action only when its alias has no icon (an icon-mode Action is pinned to `col_span=1` by the controller, so offering a resize handle that gets silently reverted would be misleading); everything else (Brush, Docker Toggle, Color, Script, Brush Size) never.
+- `is_resizable(item)` centralizes "can this item be resized here": Label and Separator always; Action, Docker Toggle, and Script only when their alias/payload has no icon (an icon-mode item is pinned to `col_span=1` by the controller, so offering a resize handle that gets silently reverted would be misleading); everything else (Brush, Color, Brush Size, Brush Blend Mode) never.
 - Undo history covers move/resize only (not add/remove).
 
 The docker itself also supports one direct manipulation: **Ctrl + left-drag** on a placed item moves it within the active grid (`GridItemDragFilter` in `docker/drag_filter.py`), independent of opening Grid Edit.
@@ -151,7 +148,3 @@ Both `legacy/compat.py` and [remaster/compat.py](quick_access_manager/remaster/c
 ### Legacy namespace
 
 `quick_access_manager/legacy/` is the pre-rewrite implementation (separate Quick Brush Sets docker, Quick Actions docker, Brush Adjustments docker with its own docker-toggle-button row and full floating-widget set, preset XML pressure-toggle panel, preset switcher). It is not imported by `quick_access_manager/__init__.py` and its dockers are never registered — kept only as a reference for porting remaining functionality into `remaster/`. Treat any AGENTS.md-adjacent notes about `quick_access_manager.py`, `shortcut_manager.py`, `brush_adjust/`, `popup/`, `widgets/`, `dialogs/`, `utils/`, `config/` at the top level of `quick_access_manager/` as describing `legacy/`, not the active plugin.
-
-### Remaster's own docs
-
-[remaster/TODO.md](quick_access_manager/remaster/TODO.md) tracks completed work and open items in detail (grid editing, settings, per-feature status). [remaster/SPEC.md](quick_access_manager/remaster/SPEC.md) is the original design spec for the palette rewrite — it predates several since-implemented features (e.g. it doesn't mention the `brush_size`/`brush_blend_mode` item types or vertical separators) and is flagged in TODO.md as needing a refresh; prefer this file and TODO.md over SPEC.md when they disagree.

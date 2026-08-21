@@ -36,6 +36,7 @@ from ..dialogs import (
     ScriptItemConfigDialog,
     SeparatorItemConfigDialog,
 )
+from ..presentation import SEPARATOR_EDGE_MARGIN, separator_stylesheet
 from .drag_filter import GRID_CELL_SPACING
 
 
@@ -98,15 +99,19 @@ class ItemRenderingMixin:
             separator.setFrameShape(QFrame.NoFrame)
             thickness = max(1, int(item.payload.get("thickness", 2)))
             color = item.payload.get("color", "#5a5a5a")
-            separator.setStyleSheet(f"background-color: {color};")
+            separator.setStyleSheet(separator_stylesheet(color, thickness))
             if vertical:
                 layout = QHBoxLayout(container)
-                layout.setContentsMargins(0, 0, 0, 0)
+                layout.setContentsMargins(
+                    0, SEPARATOR_EDGE_MARGIN, 0, SEPARATOR_EDGE_MARGIN
+                )
                 separator.setFixedWidth(thickness)
                 layout.addWidget(separator, alignment=Qt.AlignHCenter)
             else:
                 layout = QVBoxLayout(container)
-                layout.setContentsMargins(0, 0, 0, 0)
+                layout.setContentsMargins(
+                    SEPARATOR_EDGE_MARGIN, 0, SEPARATOR_EDGE_MARGIN, 0
+                )
                 separator.setFixedHeight(thickness)
                 layout.addWidget(separator, alignment=Qt.AlignVCenter)
             self.apply_issue_style(container, item)

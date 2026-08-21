@@ -43,11 +43,6 @@ _MODIFIER_MAP = {
 }
 
 
-def resolve_key(key_string: str) -> int:
-    """Convert a key name string to a Qt key code."""
-    return _KEY_MAP.get(key_string, Qt.Key_Alt)
-
-
 def _parse_combo(key_string: str):
     """Parse a combo key string into (modifier_flags, key_code).
 

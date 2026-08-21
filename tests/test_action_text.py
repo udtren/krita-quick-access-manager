@@ -1,6 +1,6 @@
 import unittest
 
-from quick_access_manager.remaster.quick_access_palette.action_text import (
+from quick_access_manager.remaster.quick_access_palette.presentation import (
     display_action_text,
 )
 

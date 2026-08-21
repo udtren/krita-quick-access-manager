@@ -43,12 +43,3 @@ class QuickAccessPaletteDockerWidget(
         self.setMinimumWidth(160)
         self.setMinimumHeight(120)
         self.build_ui()
-
-    def reload_ui(self):
-        self.controller = PaletteController()
-        old_widget = self.widget()
-        self.root_widget = QWidget()
-        self.setWidget(self.root_widget)
-        self.build_ui()
-        if old_widget:
-            old_widget.deleteLater()
