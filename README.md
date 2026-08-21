@@ -115,7 +115,7 @@ The Quick Access Palette can also open as a popup at the cursor position via
 its shortcut. The popup shares the same tabs and items as the docker but is
 execution-only — layout editing is only available in the docker.
 
-The docker itself also supports **[Move to Cursor](https://github.com/Aqaao/DockerUnderCursor)**, which floats it and
+The docker itself also supports [Move to Cursor](https://github.com/Aqaao/DockerUnderCursor), which floats it and
 centers it on the cursor (or re-docks it if it's already floating), letting
 you reposition it without leaving the canvas.
 
