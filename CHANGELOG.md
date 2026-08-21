@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-08-21
+### Added
+- **Remaster** (`remaster/`): the plugin was rewritten from scratch as the sole active implementation — a single free-layout grid Quick Access Palette (replacing the legacy Quick Brush Sets/Quick Actions dockers), a Quick Adjust docker, a HueSVC color selector, and a gesture system, each independently toggleable from Settings; 
+- Shared Alias Config (custom name/icon/color per action/docker), reused by Action/Docker Toggle items and Gesture
+- Multi-tab Grid Edit: marquee multi-select, move/resize undo, copy/move items across tabs
+- Lightweight `tests/` suite (stdlib `unittest`, no Krita/PyQt required) covering `shared/` and the palette controller
+
+
 ## 2026-08-12
 ### Added
 - Floating Tool Options: added `bottom_left` position option, placing the Tool Options pad below the Quick Brush Adjustments docker with left edges aligned.
