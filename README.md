@@ -1,105 +1,150 @@
 # Krita Quick Access Manager
 
-A plugin for Krita that provides quick access to brush presets, shortcut management, brush preset config switching, advanced gesture input, and floating brush/layer controls.
+Krita Quick Access Manager is a Krita Python plugin focused on quickly accessing
+various Krita resources by arranging them all in one place.
+The original concept was to bring Clip Studio Paint's Quick Access palette to Krita.
 
-## Features
+![alt text](image/1_overview.png)
 
-- **Quick Brush Sets**: Organize brush presets into customizable grids; open a popup (configurable shortcut) to switch presets without leaving the canvas
-- **Quick Actions**: Create custom shortcut buttons for any Krita action; open an actions popup for instant one-key access
-- **Preset Switcher**: Save multiple XML configurations per brush preset and switch between them via a cursor-centered popup
-- **Gesture System**: Execute Krita actions via keyboard + mouse directional gestures with a real-time visual preview overlay
-- **Quick Brush Adjustments Docker**: Dedicated docker with brush size/opacity/flow/rotation, layer opacity, blend mode dropdowns, color & brush history, docker toggle buttons, floating widget support, and real-time selection/gesture status indicators
-- **HueSVC Color Selector**: Floating Hue + SV box color picker with R/G/B channel bars, FG/BG color swatch, and configurable display modes — available as both a docker and a cursor-centered popup that also bundles the same brush/layer adjustment controls as the Quick Brush Adjustments docker
-
-![Sample](./quick_access_manager/image/000.png)
----
-
-
-## Support
-
-If you find this tool helpful, you can support its development:
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/toma_omito)
 
 ## Table of Contents
-- [How to Add a Brush Preset](#how-to-add-a-brush-preset)
-- [How to Add a Shortcut](#how-to-add-a-shortcut)
-- [Popup Window](#popup-window)
+
+- [Quick Access Palette](#quick-access-palette)
+  - [Palette Item Types](#palette-item-types)
+  - [Resources And Aliases](#resources-and-aliases)
+  - [Manage Item Property](#manage-item-property)
+  - [Move Item](#move-item)
+  - [Grid Edit](#grid-edit)
+  - [Popup](#popup)
 - [Gesture System](#gesture-system)
   - [Features](#features)
   - [How to Use](#how-to-use)
   - [Temporarily Disable](#temporarily-disable)
-  - [Preview](#preview-overlay)
-  - [Alias](#alias)
-  - [External API](#external-api)
-- [Presets Switcher](#presets-switcher)
+  - [Preview Overlay](#preview-overlay)
 - [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker)
+  - [Features](#features-1)
   - [Temp Action Mode](#temp-action-mode)
   - [Temp Brush Sets](#temp-brush-sets)
   - [Floating Widget](#floating-widget)
+  - [Move To Cursor](#move-to-cursor)
 - [HueSVC](#huesvc)
-- [HueSVC / BrushLayer Control Popup](#huesvc--brushlayer-control-popup)
-- [Config Files Location](#config-files-location)
-- [Global Config](#global-config)
-- [Shortcut Button Config](#shortcut-button-config)
-- [Sort/Remove](#sortremove)
-- [Performance](#performance)
+- [Settings](#settings)
+- [Config Files](#config-files)
 
-## How to Add a Brush Preset
-1. In the "Quick Brush Sets" section, activate the grid you want to add to.
-2. Select the brush preset you want to add from Krita's brush preset.
-3. Click the "AddBrush" button in the docker.
-4. The selected preset will be added to the active grid.
-![How to Add a Brush Preset](./quick_access_manager/image/qam_add_brush.gif)
+## Quick Access Palette
 
-**Multi-tab support:** Click the `+Tab` button in the toolbar to create a new tab. Each tab holds its own set of grids. Right-click any tab header to **Rename Tab** or **Delete Tab** (the last remaining tab cannot be deleted).
+![alt text](image/2_quick_access_palette.png)
 
-## How to Add a Shortcut
-1. In the "Quick Actions" section, activate the grid you want to add to.
-2. Click the "Actions" button to open the shortcut selection popup.
-3. Select the action you want to add from the table.
-4. Click the "AddAction" button.
-5. The selected shortcut will be added to the active grid.
-![How to Add a Shortcut](./quick_access_manager/image/qam_add_action.gif)
+The Quick Access Palette is the main docker used to manage quick access to
+supported Krita resources and settings.
 
-**Multi-tab support:** Click the `+Tab` button in the toolbar to create a new tab. Each tab holds its own set of grids. Right-click any tab header to **Rename Tab** or **Delete Tab** (the last remaining tab cannot be deleted).
- 
-## Popup Window
-![Popup Demo](./quick_access_manager/image/popup_demo.gif)
-![Popup](./quick_access_manager/image/popup.png)
+### Palette Item Types
 
-### How to change shortcut and icon size
-![Popup Demo](./quick_access_manager/image/qam_popup_config.gif)
+The following item types are supported:
 
-**The default key for both popup are `W` and `Tab`.**
+| Item Type | Purpose | Size Behavior |
+| --- | --- | --- |
+| Brush | Switch to a brush preset | Fixed 1x1 |
+| Action | Run a Krita action | Text mode defaults to 2x1 and is resizable; icon mode is fixed 1x1 |
+| Docker Toggle | Show/hide a Krita docker | Text mode defaults to 2x1 and is resizable; icon mode is fixed 1x1 |
+| Color | Set foreground color | Fixed 1x1 |
+| Brush Size | Set the active brush size | Fixed 1x1 |
+| Brush Blend Mode | Set the active brush blend mode | Fixed 2x1 |
+| Script | Execute a Python script | Text mode defaults to 2x1 and is resizable; icon mode is fixed 1x1 |
+| Label | Display custom text | Resizable width |
+| Separator | Horizontal or vertical separator | Resizable on its orientation axis |
 
-**Krita uses `Tab` for `Show canvas only` action, so you need to remove the shortcut first.**
+### Resources And Aliases
+
+![alt text](image/add_resources_1.gif)
+
+To add a Brush, Action, or Docker Toggle item, click the **Resources** button
+to open the Resources dialog. From there, pick a brush/action/docker and click
+**Add** to place it on the palette.
+
+For brushes, you can select multiple presets and add them all at once. You can
+also use **Add Brush** in the header menu to add the currently active brush
+preset directly.
+
+![alt text](image/qap_menu.png)
+
+Every other item type (Label, Separator, Color, Script, Brush Size, Brush
+Blend Mode) is added from the header **Menu** button instead.
+
+The Resources dialog also manages **aliases**: a custom display name, icon,
+and color for a given Krita action or docker. Aliases are shared, so setting
+one updates every Action/Docker Toggle item — and every Gesture binding — that
+references that action or docker.
+
+### Manage Item Property
+
+![alt text](image/update_property.gif)
+
+Most item properties can be edited by right-clicking the item and choosing
+**Property**. This opens a dialog where you can change the text, color, or
+icon, depending on the item type.
+
+For Action and Docker Toggle items, you can also edit these properties from
+the Resources dialog, which updates the shared alias everywhere it's used.
+
+### Move Item
+
+![alt text](image/move_item.gif)
+
+Ctrl + left-drag moves a single item within the grid. You can remove an item
+via its right-click menu, or drop it onto another item to push that item
+aside and take its place. For multi-item selection, cross-tab moves, or
+resizing, use Grid Edit.
+
+### Grid Edit
+
+![alt text](image/grid_edit.gif)
+
+Click **Grid Edit** to open the Grid Edit dialog, where you can:
+
+- Select multiple items and move them together
+- Select multiple items and copy/move them to another tab
+- Resize text-mode items by dragging their edge
+- Undo an accidental move or resize with the Undo button
+
+### Popup
+
+![alt text](image/popup.gif)
+
+The Quick Access Palette can also open as a popup at the cursor position via
+its shortcut. The popup shares the same tabs and items as the docker but is
+execution-only — layout editing is only available in the docker.
+
+The docker itself also supports [Move to Cursor](https://github.com/Aqaao/DockerUnderCursor), which floats it and
+centers it on the cursor (or re-docks it if it's already floating), letting
+you reposition it without leaving the canvas.
+
 
 ## Gesture System
-![Gesture Demo2](./quick_access_manager/image/gesture_demo2.gif)
-![Gesture Demo](./quick_access_manager/image/gesture_demo.gif)
-![Gesture Configuration](./quick_access_manager/image/gesture.png)
+![alt text](image/3_gesture.png)
+![alt text](image/gesture_demo.gif)
+![alt text](image/gesture_demo2.gif)
 
-A gesture-based control system that allows you to trigger actions using keyboard + mouse movements.
+A gesture-based control system that lets you trigger actions with keyboard + mouse movement.
 
 ### Features
-- **9-Directional Gestures**: Execute different actions based on 8 directional swipes  plus a center tap action
-- **Multiple Gesture Pages**: Each with its own trigger key
-- **Gesture Actions**: Support for brush presets, actions, and docker visibility toggles
-- **Customizable Sensitivity**: Adjust the minimum pixel movement required to trigger gestures
-- **Visual Configuration**: Intuitive UI with arrow icons and action previews
+- **9-Directional Gestures**: run a different action for each of 8 directional swipes, plus a center-tap action
+- **Multiple Gesture Pages**: each page has its own trigger key
+- **Gesture Actions**: brush presets, Krita actions, and docker visibility toggles are all supported
+- **Customizable Sensitivity**: adjust the minimum pixel movement required to trigger a gesture
+- **Visual Configuration**: an intuitive UI with arrow icons and action previews
 
 ### How to Use
-![Gesture Config](./quick_access_manager/image/qam_gesture_config.gif)
+
 > **First-time setup**: When opening the gesture configuration dialog for the first time, you may see an empty "1" tab. Ignore it and simply click the "+" button to create your first gesture page.
 
-1. **Open Configuration**: Click the "Gesture" button in the Quick Access Manager docker to open the gesture configuration dialog
+1. **Open Configuration**: Click the "Gesture" button in the Quick Access Palette docker to open the gesture configuration dialog
 
-2. **Configure Trigger Key**: 
+2. **Configure Trigger Key**:
    - Click the center "Config Key" button
    - Press any key (A-Z, 0-9, F1-F12, etc.) to assign it as the gesture trigger
-   - Configure the center tap action (executed when you press and release the key without moving)
-   - **Important**: If the key is already assigned to a Krita shortcut, you must remove it first, as Krita's native shortcuts take priority
+   - Configure the center-tap action (executed when you press and release the key without moving)
+   - **Important**: if the key is already assigned to a Krita shortcut, remove that shortcut first — Krita's native shortcuts take priority
 
 3. **Configure Directional Gestures**:
    - Click any arrow button to configure an action for that direction
@@ -115,138 +160,33 @@ A gesture-based control system that allows you to trigger actions using keyboard
 
 5. **Settings**:
    - Click the "Settings" button to access:
-     - **Enable Gesture System**: Toggle the entire gesture system on/off (Require Krita restart)
-     - **Minimum Pixels to Move**: Adjust gesture sensitivity (1-200 pixels)
-     - **Preview Overlay**: Enable/Disable preview overlay
+     - **Enable Gesture System**: toggle the entire gesture system on/off (requires a Krita restart)
+     - **Minimum Pixels to Move**: adjust gesture sensitivity (1-200 pixels)
+     - **Preview Overlay**: enable/disable the preview overlay
 
 6. **Execute Gestures**:
    - Press and hold the configured trigger key
-   - Move(hover) your mouse in one of the 8 directions
+   - Move (hover) your mouse in one of the 8 directions
    - Release the key to execute the action
    - Or simply press and release without moving to trigger the center action
 
 ### Temporarily Disable
-There is a Krita shortcut `Toggle Gesture Recognition` that can be used to disable gesture recognition temporarily.
-
+The Krita shortcut `Toggle Gesture Recognition` disables gesture recognition temporarily without turning off the whole system.
 
 ### Preview Overlay
-By default, a visual preview overlay appears when you press and hold the gesture key, showing all configured actions for each direction. 
+
+![alt text](image/gesture_preview.png)
+
+By default, a visual preview overlay appears when you press and hold the gesture key, showing every configured action for each direction.
 You can disable the preview overlay in the gesture settings.
 
-#### Tips
-- The dialog is modeless, allowing you to continue working in Krita while it's open
-- Gesture detection is automatically disabled while the configuration dialog is active
-- All configurations are saved automatically when you click "Save"
-- Configuration files are stored in `quick_access_manager\gesture\config\`
-
-#### Alias
-![alt text](quick_access_manager/image/gesture_preview.png)
-
-You can rename actions and add custom icons to the gesture preview overlay.
-
-**How to set up aliases:**
-1. Open the gesture config dialog
-2. Click the "Settings" button in the top-right corner
-3. Edit the "Alias Settings (JSON)" field
-
-**Example:**
-```json
-{
-    "KisToolSelectOutline": {
-        "alias_name": "Free Hand",
-        "icon_name": "free_hand.png"
-    },
-    "invert_selection": {
-        "alias_name": "Invert"
-    },
-    "Tool Options": {
-        "icon_name": "tool_option.png"
-    }
-}
-```
-
-- `alias_name`: Custom name to show instead of the action ID
-- `icon_name`: PNG file name from `quick_access_manager\gesture\icon\` folder
-- Both fields are optional
-- Priority: Icon > Alias Name > Original Name
-
-### External API
-
-The gesture system provides a public API for external plugins to pause and resume gesture detection when needed:
-
-```python
-from quick_access_manager.gesture.gesture_main import (
-    pause_gesture_event_filter,
-    resume_gesture_event_filter,
-    is_gesture_filter_paused
-)
-
-# Pause gesture detection (completely removes event filter)
-pause_gesture_event_filter()
-
-# Resume gesture detection (reinstalls event filter)
-resume_gesture_event_filter()
-
-# Check if gesture filter is currently paused
-if is_gesture_filter_paused():
-    print("Gesture detection is paused")
-```
-
-**Use Cases:**
-- Pause gestures during heavy document operations to prevent UI freezing
-- Disable gestures when other plugins need exclusive keyboard/mouse control
-- Temporarily suspend gesture detection during critical operations
-
-**Example:**
-```python
-try:
-    pause_gesture_event_filter()
-    # Perform heavy operations (e.g., document loading, batch processing)
-    open_document(file_path)
-finally:
-    # Always resume in finally block to ensure gestures are re-enabled
-    resume_gesture_event_filter()
-```
-
-**Technical Details:**
-- `pause_gesture_event_filter()`: Calls `QApplication.removeEventFilter()` for zero overhead when paused
-- `resume_gesture_event_filter()`: Calls `QApplication.installEventFilter()` to restore gesture detection
-- When paused, the event filter is completely removed from Qt's event chain, eliminating all processing overhead
-
-## Presets Switcher
-
-![alt text](quick_access_manager/image/presets_switch.gif)
-
-Save and switch between multiple XML configurations for a single brush preset — useful for storing different setting variations (e.g. different sizes, textures, or opacity levels) without duplicating the preset itself.
-
-### Features
-
-- **Save Config** (`Save Presets XML Data` action): Captures the current brush preset's full XML state and saves it under a user-defined name. Assign a keyboard shortcut via Krita's **Settings → Configure Krita → Keyboard Shortcuts** and search for *Save Presets XML Data*.
-- **Switch Popup**: Press the configured shortcut (Settings → Popup tab → *Preset Switch Popup Shortcut*) to open a small frameless popup listing all saved configs for the current brush. Click a config to apply it instantly. Moving the mouse away closes the popup.
-- **Preset Switcher Tab**: Open **Settings → Preset Switcher** tab to view all saved configs grouped by brush. Check entries and click **Delete Selected** to remove them.
-
-### Data Storage
-
-Configs are stored as JSON files in `krita/quick_access_manager/presets/`, one file per brush (`{brush_name}.json`). Each file is a map of config name → XML string.
-
-### Usage
-
-1. Select a brush and dial in the settings you want to save.
-2. Trigger the **Save Presets XML Data** action (via keyboard shortcut or Krita's action system).
-3. Enter a name for the config in the dialog.
-4. Repeat for other variations.
-5. Use the **Switch Popup** shortcut while painting to cycle through saved configs for the active brush.
-6. Manage or delete saved configs via **Settings → Preset Switcher**.
-
 ## Quick Brush Adjustments Docker
-![Quick Brush Adjustments](./quick_access_manager/image/004.png)
+![alt text](image/4_quick_adjust.png)
 
-A dedicated docker for quick brush and layer adjustments, providing instant access to commonly used painting settings. 
-The docker also includes a control bar at the right side that has toggle button for floating widgets.
-It also displays real-time indicators for active selection and gesture system states. Click the gesture icon will toggle on/off the gesture system.
-You can enable/disable each slider via settings.
-
-> The same sliders/dropdowns (size, opacity, flow, blend mode, rotation, reset, layer opacity, layer blend mode) are also available in a compact form inside the [HueSVC / BrushLayer Control Popup](#huesvc--brushlayer-control-popup), so you don't need this docker open to adjust brush/layer settings while painting. The per-slider enabled/disabled settings below apply to both.
+A dedicated docker for quick brush and layer adjustments, giving instant access to commonly used painting settings.
+A control bar on the right side holds toggle buttons for the floating widgets, plus real-time indicators for the
+active-selection and gesture-system states — clicking the gesture icon toggles the gesture system on/off.
+Each slider can be individually enabled or disabled from Settings.
 
 ### Features
 
@@ -267,285 +207,99 @@ You can enable/disable each slider via settings.
 - **Brush History**: Switch between recently used brush presets
 
 **Control Bar**
-- **Toggle Widget Visibility**: Show/Hide the Floating widgets.
-- **Toggle Brush Preserve Alpha**: Enable/Disable the `Preserve Alpha` Setting.
-- **Active Selection Status**: If there is an active selection, the icon will turn green.
-- **Toggle Gesture System**: Pause/Unpause the gesture system.
+- **Toggle Widget Visibility**: show/hide the floating widgets
+- **Toggle Brush Preserve Alpha**: enable/disable the `Preserve Alpha` setting
+- **Active Selection Status**: turns green when there's an active selection
+- **Toggle Gesture System**: pause/resume the gesture system
 
 ### Temp Action Mode
+![alt text](image/qba_temp_action.png)
 
-Hold a configurable key to temporarily activate an action. Releasing the key restores the original state. All keys are empty (disabled) by default and can be changed via Settings → Quick Adjust tab (requires Krita restart to take effect).
+Hold a configurable key to temporarily activate an action; releasing the key restores the original state. All keys are empty (disabled) by default and can be set via Settings → Quick Adjust tab (requires a Krita restart to take effect).
 
-- **Temp Erase**: Hold key to temporarily activate Krita's erase mode. Configure under *[Alt Erase]*.
-- **Temp Preserve Alpha**: Hold key to temporarily enable Krita's Preserve Alpha mode. Configure under *[Preserve Alpha]*.
-- **Temp Freehand Selection**: Hold key to switch to the Freehand Selection tool; release to return to the Brush tool. Configure under *[Temp Freehand Selection]*.
+- **Temp Erase**: hold the key to temporarily activate Krita's erase mode. Configure under *[Alt Erase]*.
+- **Temp Preserve Alpha**: hold the key to temporarily enable Krita's Preserve Alpha mode. Configure under *[Preserve Alpha]*.
+- **Temp Freehand Selection**: hold the key to switch to the Freehand Selection tool; release to return to the Brush tool. Configure under *[Temp Freehand Selection]*.
 
 ### Temp Brush Sets
-
-![alt text](quick_access_manager/image/temp_brush_set.gif)
-
-![alt text](quick_access_manager/image/temp_brush_set.png)
+![alt text](image/qba_temp_brush_sets.png)
 
 Hold a key (or key combo) to temporarily switch to a configured brush preset; release to restore the original brush.
 
 **Configuration via Settings UI:**
-1. Click the "Setting" button in the docker
+1. Click the "Settings" button in the docker
 2. Go to the "Quick Adjust" tab
 3. Scroll down to the "[Temp Brush Set]" section
-4. Click "Add Entry" to create a new entry
+4. Click "Add Row" to create a new entry
 5. Configure each entry:
-   - **Hold Key**: Key or combo to trigger the swap (e.g. `Alt+1`, `Ctrl+F1`, `F5`)
-   - **Brush**: Name of the target brush preset — click "Set to Current Brush" to fill this from the active preset in Krita
-   - **Size Scale**: Float multiplier applied to your current brush size when switching (`0` = no size change, `0.5` = half size, `2.0` = double size)
-6. Click "Remove This Entry" to delete an entry
+   - **Hold Key**: key or combo to trigger the swap (e.g. `Alt+1`, `Ctrl+F1`, `F5`)
+   - **Brush**: name of the target brush preset
+   - **Size Scale**: float multiplier applied to your current brush size when switching (`0` = no size change, `0.5` = half size, `2.0` = double size)
+6. Click "Remove" to delete an entry
 7. Click "Save" to apply changes (takes effect after restarting the plugin)
 
 **Multiple entries** are supported — add as many key/brush pairs as you need.
 
-**Configuration File (`quick_adjust_docker.json`):**
-```json
-"temp_brush_sets": [
-  { "key": "Alt+1", "brush": "b) Basic-5 Size Opacity", "size_scale": 0.5 },
-  { "key": "Ctrl+F1", "brush": "Ink-2 Fineliner", "size_scale": 0.0 }
-]
-```
-
-### Customization
-To modify the docker's appearance and behavior, see "Global Config".
-
-### Docker Toggle Buttons
-The buttons at the bottom of the docker provide quick show/hide toggles for other Krita dockers (e.g., Tool Options, Layers, Brush Presets).
-
-**Configuration via Settings UI:**
-
-![docker button config](quick_access_manager/image/docker_button_config.png)
-
-1. Click the "Setting" button in the docker
-2. Go to the "Quick Adjust" tab
-3. Scroll down to the "[Docker Toggle Buttons]" section
-4. Use the "Add Button" button to create new docker toggles
-5. Configure each button's properties:
-   - **Button Name**: Display text on the button
-   - **Button Width**: Width in pixels
-   - **Button Icon**: Optional PNG filename from `quick_access_manager\config\icon\` (24×24px recommended)
-   - **Docker Keywords**: Comma-separated keywords to match docker names (e.g., "tool, option" matches "Tool Options")
-   - **Description**: Tooltip text shown on hover
-6. Click "Remove This Button" to delete unwanted buttons
-7. Click "Save" to apply changes
-
-**Configuration File:**
-- Settings are stored in `quick_access_manager\config\docker_buttons.json`
-- The file is auto-created with default buttons on first launch if it doesn't exist
-- You can manually edit the JSON file if preferred
-
-**Button Configuration Format:**
-```json
-{
-  "button_name": "Display Name",
-  "button_width": 50,
-  "button_icon": "filename.png",
-  "docker_keywords": ["keyword1", "keyword2"],
-  "description": "Tooltip text"
-}
-```
-
 ### Floating Widget
-![Floating Widget](./quick_access_manager/image/qam_floating_docker.gif)
+![alt text](image/qba_floating_widget.png)
 
-The Quick Brush Adjust docker includes companion floating widget that can be positioned relative to the docker.
-Currently support following widgets.
-- Tools Option Docker (position at left or right or bottom)
-- Specific Color Selector Docker (position at bottom)
-- Brush Rotation Widget (position at top align right)
+The Quick Brush Adjustments docker includes companion floating widgets that can be positioned relative to the docker.
+Currently supported widgets:
+- Tool Options docker (positioned left, right, or bottom)
+- Brush Rotation widget (positioned top, aligned right)
 
-For floating Tool Options widget, you need to set `Tool Options Location` to `In Docker`.
-
-![krita setting](quick_access_manager/image/tool_options.png)
+To float the Tool Options widget, set `Tool Options Location` to `In Docker`.
 
 **Features:**
-- Automatically positions itself to the left of the Quick Brush Adjust docker
-- Follows the docker when moved
+- Positioned relative to the docker per the configured location setting
+- Follows the docker when it's moved
 
-**Configuration:**
-The floating widget behavior can be customized in the Settings dialog under "Quick Adjust" tab:
-- **enabled**: Enable/disable the floating Tool Options widget
-- **start_visible**: Set whether the widget appears automatically on startup
+### Move To Cursor
 
-**Credits:**
-The floating widget system is based on the work from [Krita-UI-Redesign](https://github.com/veryprofessionaldodo/Krita-UI-Redesign) by veryprofessionaldodo.
+![alt text](image/qbs_move_to_cursor.gif)
+
+The docker itself also supports **Move To Cursor**, which floats it and
+centers it on the cursor (or re-docks it if it's already floating), letting
+you reposition it without leaving the canvas.
 
 ## HueSVC
-![HueSVC color selector](quick_access_manager/image/huesvc.png)
+![alt text](image/5_huesvc.png)
 
-A compact color selector docker with a vertical hue bar, saturation/value box, and 6 individual channel bars for H, S, V, R, G, B.
+A compact color selector docker with a vertical hue bar, a saturation/value box, and 6 individual channel bars for H, S, V, R, G, B.
 
 **Features:**
 - **FG/BG color swatch** — two stacked squares at the top display the current foreground (front) and background (back) colors; click either to swap them instantly
-- Drag any channel bar to adjust its value; color is applied to Krita after a short debounce delay
-- Use the ▲/▼ buttons or type a number directly into each channel's value field for precise control
+- Drag any channel bar to adjust its value; the color is applied to Krita after a short debounce delay
+- Use the ▲/▼ buttons, or type a number directly into a channel's value field, for precise control
 - Syncs automatically with Krita's active foreground and background colors at a configurable interval
-- Available as a **popup window** — press the configured shortcut key to open it at the cursor; the popup closes when the mouse leaves
+- Available as a **popup window** — press the configured shortcut key to open it at the cursor; the popup closes when the mouse leaves it
 
-**Popup Shortcut:** `A` (default)
+![alt text](image/5_huesvc_popup.png)
 
-**Configuration** (Settings → Popup tab):
-- **Color Selector Popup Shortcut** — key to open/close the popup
-- **Popup Width / Height** — dimensions of the color selector (left) side of the popup
-- **Value Font Size** — font size for the channel value inputs
-- **Foreground Color Check Interval (ms)** — how often the docker/popup polls Krita's foreground and background colors (default: 250 ms)
-- **R/G/B Display Mode** — choose `Percentage (0–100)` or `Value (0–255)` for the R, G, B channel bars and inputs
-
-See [HueSVC / BrushLayer Control Popup](#huesvc--brushlayer-control-popup) below — the popup also includes a brush/layer adjustment panel.
-
-## HueSVC / BrushLayer Control Popup
-![alt text](quick_access_manager/image/huesvc_popup.png)
-
-The HueSVC popup (see above) also bundles the sliders and dropdowns from the [Quick Brush Adjustments Docker](#quick-brush-adjustments-docker) into a panel on the right side, plus an optional brush pressure-toggle panel below it.
-
-**Right panel (top to bottom):**
-- **Brush/Layer Controls** — the same size/opacity/flow/blend mode/rotation/reset/layer opacity/layer blend mode controls as the Quick Adjust docker
-- **Brush Toggle Controls** — 4 buttons toggling pen-pressure sensitivity on the current brush preset: **Size**, **Opacity**, **Flow**, **Rotation**. States refresh automatically every time the popup opens, so switching brushes never leaves stale toggle states.
+The HueSVC popup also bundles the sliders and dropdowns from the Quick Brush Adjustments docker into a panel on the right side, plus a brush pressure-sensitivity toggle panel below it.
 
 
-**Configuration** (Settings → Popup tab, under *[Color Selector Popup]*):
-- **Show Brush/Layer Controls Panel** — uncheck to hide the sliders/dropdowns panel
-- **Show Brush Toggle Controls Panel** — check to show the 4 pressure-toggle buttons (off by default)
-- Hiding both panels shrinks the popup back down to just the color selector
+## Settings
+![alt text](image/settings.png)
 
+If the optional Gesture, HueSVC, or Quick Adjust features affect Krita's performance, you can disable each of them from the Settings dialog.
 
-## Config Files Location
-```
-krita_resource_folder
- ├─quick_access_manager
- │ ├─config
- │ │ │ common.json
- │ │ │ docker_buttons.json
- │ │ │ grids_data.json
- │ │ │ popup.json
- │ │ │ quick_adjust_docker.json
- │ │ │ shortcut_grid_data.json
- │ │ └─icon
- │ └─gesture
- │  │ gesture.json
- │  ├─config
- │  └─icon
- └─pykrita
+## Config Files
+
+User configuration is stored outside `pykrita`, under Krita's data folder:
+
+```text
+krita/
+|- pykrita/
+|  |- quick_access_manager/
+|  `- quick_access_manager.desktop
+`- quick_access_manager/
+   `- remaster/
+      |- quick_access_palette.json
+      |- settings.json
+      |- alias_config.json
+      `- gesture/
+         |- gesture.json
+         `- config/
 ```
 
-
-## Global Config
-![Global Config](./quick_access_manager/image/qam_global_setting.gif)
-
-The global configuration allows you to customize the default appearance and behavior for all shortcut buttons and UI elements.
-
-**How to Access:**
-- Click the "Setting" button in the docker
-
-**Available Settings:**
-- **Default Font Color**: Sets the default text color for shortcut buttons
-- **Default Background Color**: Sets the default background color for shortcut buttons
-- **Default Font Size**: Sets the default text size for shortcut buttons
-- **Max Shortcut Per Row**: Controls how many buttons appear in each row (default: 4)
-- **Spacing Between Buttons/Grids**: Adjusts the spacing between UI elements
-- **Quick Brush Adjustments Docker Settings**: Customize font sizes, history sizes, and other docker-specific options
-
-**Note:** Individual buttons can override these global settings. See "Shortcut Button Config" below.
-
-## Shortcut Button Config
-Each shortcut button can be individually customized with its own appearance settings.
-![Shortcut Button Config](./quick_access_manager/image/qam_shortcut_button_config.gif)
-
-**How to Access:**
-- Hold <kbd>Alt</kbd> and right-click any shortcut button
-
-![Shortcut Button Config](./quick_access_manager/image/image4.png)
-
-**Available Options:**
-- **Button Name**: Custom display name for the button
-- **Font Size**: Override the global font size for this button
-- **Background Color**: Custom background color (hex color code, e.g., `#3d3d3d`)
-- **Font Color**: Custom text color (hex color code, e.g., `#ffffff`)
-- **Icon Name**: PNG filename to display as an icon instead of text
-- **Use Global Settings**: When checked, the button uses colors from the global config
-
-
-**Icon Support:**
-To display a button as an icon instead of text:
-1. Place your PNG icon file in `krita_resource_folder\quick_access_manager\config\icon\`
-2. Open the button config dialog (<kbd>Alt</kbd> + right-click)
-3. Enter the filename in the "Icon Name" field (e.g., `my_icon.png`)
-4. Configure the grid's "Icon Size" parameter (see "Edit Grid Parameter" below)
-5. When both icon name and grid icon size are set, the icon will be displayed
-
-![Shortcut Button Config](./quick_access_manager/image/image5.png)
-
-**Tips:**
-- Leave "Icon Name" empty to display text instead
-- Icons automatically replace text when configured
-
-## Sort/Remove
-
-**Sort:**  
-To reorder a brush or shortcut button within a grid or move it between grids, hold <kbd>Ctrl</kbd> and left-click and drag the button to the desired position or grid.
-
-**Advanced Sort:**  
-- To move a shortcut button up by one position within the same grid, hold <kbd>Shift</kbd> and left-click the grid name.
-- To move a shortcut button down by one position within the same grid, hold <kbd>Shift</kbd> and right-click the grid name.
-- To move a grid up by one position, hold <kbd>Shift</kbd> and left-click the grid name.
-- To move a grid down by one position, hold <kbd>Shift</kbd> and right-click the grid name.
-
-**Remove:**  
-To remove a brush or shortcut from a grid, hold <kbd>Ctrl</kbd> and right-click on the button you want to remove.
-
-**Remove Grid:**  
-To delete an entire grid, hold <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> and right-click the grid name.
-
-**Grid Context Menu (right-click the grid name):**  
-Right-clicking a grid name (without any modifier key) opens a context menu with the following options:
-- **Rename** — rename the grid
-- **Move Up** — move the grid one position up within the same tab
-- **Move Down** — move the grid one position down within the same tab
-- **Move to Tab** — move the grid to another tab (submenu lists available tabs; only shown when multiple tabs exist)
-- **Delete** — delete the grid
-
-**Tab Context Menu (right-click a tab header):**  
-Right-clicking a tab header opens a context menu with:
-- **Rename Tab** — rename the tab
-- **Delete Tab** — delete the tab and all its grids (only shown when more than one tab exists)
-
-**Edit Grid Parameter:**
-Each grid can have its own configuration parameters that override global settings.
-
-**How to Access:**
-- Hold <kbd>Alt</kbd> and right-click the grid name
-
-**Available Parameters:**
-- **Grid Name**: Rename the grid to organize your shortcuts
-- **Max Shortcut Per Row**: Set a grid-specific column count (overrides global setting)
-  - Leave empty to use the global "Max Shortcut Per Row" setting
-  - Set a number (e.g., `6`) to use a custom column count for this grid only
-- **Icon Size**: Set the size for icon buttons in this grid (in pixels)
-  - Required for buttons with icons to display properly
-  - Leave empty for text-only grids
-  - Recommended value: `24` (pixels)
-  - Buttons with `icon_name` configured will only display icons if this is set
-
-**Activate Grid:**  
-To activate a grid, simply left-click the grid name.
-
-
-## Performance
-
-This plugin uses background timers and application-level event listeners to power its features. On low-end hardware, these can contribute to input lag — particularly when using a pen tablet with a high event rate.
-
-**Fine-grained tuning** — disable individual features to reduce overhead:
-- **Gesture system** — disable via Settings → Gesture → Settings → *Enable Gesture System*
-- **Brush Adjustments Docker sliders / history** — disable each section individually via Settings → Quick Adjust tab
-- **Temp action keys** — leave the key fields empty (Settings → Quick Adjust tab) to remove those listeners entirely
-
-**Performance Mode** — enable *Performance Mode* via Settings → Main tab → **Performance** section, then restart Krita. This disables:
-- Quick Brush Adjustments Docker
-- Gesture system
-- HueSVC Color Selector Docker
-
-Only the **Quick Brush Sets** and **Quick Actions** dockers remain active.
