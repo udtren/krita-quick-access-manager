@@ -214,6 +214,7 @@ Each slider can be individually enabled or disabled from Settings.
 
 ### Temp Action Mode
 ![alt text](image/qba_temp_action.png)
+
 Hold a configurable key to temporarily activate an action; releasing the key restores the original state. All keys are empty (disabled) by default and can be set via Settings → Quick Adjust tab (requires a Krita restart to take effect).
 
 - **Temp Erase**: hold the key to temporarily activate Krita's erase mode. Configure under *[Alt Erase]*.
