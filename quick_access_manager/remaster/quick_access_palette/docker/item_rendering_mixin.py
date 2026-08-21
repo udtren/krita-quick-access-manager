@@ -157,15 +157,16 @@ class ItemRenderingMixin:
 
         if item.type == SCRIPT_ITEM:
             button = QPushButton()
-            button.setFixedSize(self.item_cell_size(), self.item_cell_size())
             script_path = item.payload.get("script_path", "")
             button.setToolTip(item.payload.get("customName") or script_path)
             icon_path = self.resolve_icon_path(item.payload.get("icon_name"))
             if icon_path:
+                button.setFixedSize(self.item_cell_size(), self.item_cell_size())
                 button.setIcon(QIcon(icon_path))
                 button.setIconSize(self.item_icon_size())
             else:
-                button.setText((item.payload.get("customName") or "Sc")[:2])
+                button.setText(item.payload.get("customName") or script_path or "Script")
+                button.setMinimumHeight(36)
             button.clicked.connect(
                 lambda checked=False, script_path=script_path: self.run_script(
                     script_path

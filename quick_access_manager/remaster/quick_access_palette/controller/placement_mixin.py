@@ -1,7 +1,14 @@
-"""New-item placement: sequential-cursor tracking (Resources dialog) and
-Action item col_span normalization from the Alias Config."""
+"""New-item placement and icon/text sizing normalization."""
 
-from ...shared import ACTION_ITEM, DEFAULT_ACTION_COL_SPAN, DEFAULT_COL_SPAN, LayoutResult, PaletteGrid
+from ...shared import (
+    ACTION_ITEM,
+    DEFAULT_ACTION_COL_SPAN,
+    DEFAULT_COL_SPAN,
+    DOCKER_TOGGLE_ITEM,
+    SCRIPT_ITEM,
+    LayoutResult,
+    PaletteGrid,
+)
 
 
 class PlacementMixin:
@@ -57,24 +64,26 @@ class PlacementMixin:
         cursor["row"], cursor["col"] = row, col
 
     # ------------------------------------------------------------------
-    # Action item col_span normalization
+    # Icon/text item col_span normalization
     # ------------------------------------------------------------------
     def normalize_action_spans(self):
         changed = False
-        # Load the alias config once instead of once per action item.
-        aliases = self.alias_repository.load().get("actions", {})
+        # Load the alias config once instead of once per item.
+        alias_data = self.alias_repository.load()
+        action_aliases = alias_data.get("actions", {})
+        docker_aliases = alias_data.get("dockers", {})
         for tab in self.document.tabs:
             for grid in tab.grids:
                 for index, item in enumerate(grid.items):
-                    if item.type != ACTION_ITEM:
-                        continue
-                    expected_col_span = self._action_col_span(
-                        item.payload.get("action_id", ""),
-                        min_col_span=item.col_span,
-                        aliases=aliases,
+                    expected_col_span = self._icon_text_col_span(
+                        item, action_aliases=action_aliases, docker_aliases=docker_aliases
                     )
-                    if item.col_span != expected_col_span:
-                        grid.items[index] = item.copy_with(col_span=expected_col_span)
+                    if expected_col_span is None:
+                        continue
+                    if item.row_span != 1 or item.col_span != expected_col_span:
+                        grid.items[index] = item.copy_with(
+                            row_span=1, col_span=expected_col_span
+                        )
                         changed = True
         if changed:
             self.save()
@@ -91,6 +100,50 @@ class PlacementMixin:
         if alias.get("icon_name"):
             return 1
         return max(DEFAULT_ACTION_COL_SPAN, min_col_span)
+
+    def _docker_toggle_col_span(
+        self,
+        docker_id: str,
+        min_col_span: int = DEFAULT_ACTION_COL_SPAN,
+        aliases: dict | None = None,
+    ) -> int:
+        if aliases is None:
+            aliases = self.alias_repository.load().get("dockers", {})
+        alias = aliases.get(docker_id, {})
+        if alias.get("icon_name"):
+            return 1
+        return max(DEFAULT_ACTION_COL_SPAN, min_col_span)
+
+    def _script_col_span(
+        self,
+        config: dict | None = None,
+        min_col_span: int = DEFAULT_ACTION_COL_SPAN,
+    ) -> int:
+        if config and config.get("icon_name"):
+            return 1
+        return max(DEFAULT_ACTION_COL_SPAN, min_col_span)
+
+    def _icon_text_col_span(
+        self,
+        item,
+        action_aliases: dict | None = None,
+        docker_aliases: dict | None = None,
+    ) -> int | None:
+        if item.type == ACTION_ITEM:
+            return self._action_col_span(
+                item.payload.get("action_id", ""),
+                min_col_span=item.col_span,
+                aliases=action_aliases,
+            )
+        if item.type == DOCKER_TOGGLE_ITEM:
+            return self._docker_toggle_col_span(
+                item.payload.get("docker_id", ""),
+                min_col_span=item.col_span,
+                aliases=docker_aliases,
+            )
+        if item.type == SCRIPT_ITEM:
+            return self._script_col_span(item.payload, min_col_span=item.col_span)
+        return None
 
     # ------------------------------------------------------------------
     # New-item position resolution

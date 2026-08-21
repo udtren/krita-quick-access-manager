@@ -108,6 +108,12 @@ class GridEditDialog(QDialog):
             alias = self.alias_entry("actions", item.payload.get("action_id", ""))
             if alias.get("icon_name"):
                 return item.copy_with(col_span=1)
+        if item.type == DOCKER_TOGGLE_ITEM:
+            alias = self.alias_entry("dockers", item.payload.get("docker_id", ""))
+            if alias.get("icon_name"):
+                return item.copy_with(col_span=1)
+        if item.type == SCRIPT_ITEM and item.payload.get("icon_name"):
+            return item.copy_with(col_span=1)
         return item
 
     def setup_ui(self):
@@ -461,15 +467,19 @@ class GridEditDialog(QDialog):
         return "col"
 
     def is_resizable(self, item):
-        """Label/Separator resize freely; an Action item resizes only when it
-        has no alias icon - an icon-mode Action is pinned to col_span=1 by
-        PaletteController._action_col_span() on every load, so letting it
-        widen here would just get silently reverted."""
+        """Label/Separator resize freely; text-mode Action/Docker/Script items
+        resize by width, while icon-mode variants are pinned to col_span=1 by
+        the controller on load/update."""
         if item.type in (LABEL_ITEM, SEPARATOR_ITEM):
             return True
         if item.type == ACTION_ITEM:
             action_id = item.payload.get("action_id", "")
             return not self.alias_entry("actions", action_id).get("icon_name")
+        if item.type == DOCKER_TOGGLE_ITEM:
+            docker_id = item.payload.get("docker_id", "")
+            return not self.alias_entry("dockers", docker_id).get("icon_name")
+        if item.type == SCRIPT_ITEM:
+            return not item.payload.get("icon_name")
         return False
 
     def selected_items(self):

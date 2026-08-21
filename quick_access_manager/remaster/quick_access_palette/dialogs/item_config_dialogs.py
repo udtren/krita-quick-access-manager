@@ -22,6 +22,7 @@ from ...compat import (
 )
 from ...infrastructure import DockerManager, get_default_icons_dir
 from ...shared import ACTION_ITEM
+from ..action_text import display_action_text
 
 
 class ActionItemConfigDialog(QDialog):
@@ -54,7 +55,9 @@ class ActionItemConfigDialog(QDialog):
         layout.addWidget(QLabel("Action:"))
         self.action_combo = QComboBox()
         for action_id, action in sorted(self._actions.items()):
-            text = action.text() if hasattr(action, "text") else action_id
+            text = (
+                display_action_text(action.text()) if hasattr(action, "text") else action_id
+            )
             self.action_combo.addItem(f"{text} ({action_id})", action_id)
         layout.addWidget(self.action_combo)
         if self.selected_action_id:

@@ -21,8 +21,8 @@ from ...shared import (
 
 class ItemCrudMixin:
     """Requires `self.document`, `self.save()`, `self._new_id()`,
-    `self.active_grid()`, `self._resolve_position()`, `self._action_col_span()`
-    and `self._advance_sequential_cursor()` from the composed controller."""
+    `self.active_grid()`, `self._resolve_position()`, item span helpers, and
+    `self._advance_sequential_cursor()` from the composed controller."""
 
     def add_brush(
         self, brush_name: str, row: int | None = None, col: int | None = None
@@ -77,9 +77,14 @@ class ItemCrudMixin:
         self, docker_id: str, row: int | None = None, col: int | None = None
     ) -> LayoutResult:
         grid = self._require_active_grid()
-        row, col = self._resolve_position(grid, row, col)
+        col_span = self._docker_toggle_col_span(docker_id)
+        row, col = self._resolve_position(grid, row, col, col_span=col_span)
         item = PaletteItem.create_docker_toggle(
-            self._new_id("docker_toggle"), docker_id, row=row, col=col
+            self._new_id("docker_toggle"),
+            docker_id,
+            row=row,
+            col=col,
+            col_span=col_span,
         )
         return self._add_new_item(grid, item)
 
@@ -99,9 +104,15 @@ class ItemCrudMixin:
         col: int | None = None,
     ) -> LayoutResult:
         grid = self._require_active_grid()
-        row, col = self._resolve_position(grid, row, col)
+        col_span = self._script_col_span(config)
+        row, col = self._resolve_position(grid, row, col, col_span=col_span)
         item = PaletteItem.create_script(
-            self._new_id("script"), script_path, row=row, col=col, config=config
+            self._new_id("script"),
+            script_path,
+            row=row,
+            col=col,
+            col_span=col_span,
+            config=config,
         )
         return self._add_new_item(grid, item)
 
@@ -155,11 +166,11 @@ class ItemCrudMixin:
             if item.id == item_id:
                 if item.type != ACTION_ITEM:
                     raise ValueError(f"Palette item is not an action: {item_id}")
-                col_span = self._action_col_span(
-                    item.payload.get("action_id", ""), min_col_span=item.col_span
+                col_span = self._icon_text_col_span(
+                    item, action_aliases=self.alias_repository.load().get("actions", {})
                 )
-                if col_span != item.col_span:
-                    grid.items[index] = item.copy_with(col_span=col_span)
+                if col_span != item.col_span or item.row_span != 1:
+                    grid.items[index] = item.copy_with(row_span=1, col_span=col_span)
                 result = FreeGridLayoutEngine(grid.columns).validate(grid.items)
                 return self._apply_result(grid, result, compact=False)
         raise ValueError(f"Palette item not found: {item_id}")
@@ -184,7 +195,13 @@ class ItemCrudMixin:
             if item.id == item_id:
                 if item.type != DOCKER_TOGGLE_ITEM:
                     raise ValueError(f"Palette item is not a docker toggle: {item_id}")
-                grid.items[index] = item.copy_with(payload={"docker_id": docker_id})
+                payload = {"docker_id": docker_id}
+                col_span = self._docker_toggle_col_span(
+                    docker_id, min_col_span=item.col_span
+                )
+                grid.items[index] = item.copy_with(
+                    row_span=1, col_span=col_span, payload=payload
+                )
                 result = FreeGridLayoutEngine(grid.columns).validate(grid.items)
                 return self._apply_result(grid, result, compact=False)
         raise ValueError(f"Palette item not found: {item_id}")
@@ -193,7 +210,20 @@ class ItemCrudMixin:
         return self._update_payload(item_id, COLOR_ITEM, config)
 
     def update_script_item(self, item_id: str, config) -> LayoutResult:
-        return self._update_payload(item_id, SCRIPT_ITEM, config)
+        grid = self._require_active_grid()
+        for index, item in enumerate(grid.items):
+            if item.id == item_id:
+                if item.type != SCRIPT_ITEM:
+                    raise ValueError(f"Palette item is not a script: {item_id}")
+                payload = dict(item.payload)
+                payload.update(config)
+                col_span = self._script_col_span(payload, min_col_span=item.col_span)
+                grid.items[index] = item.copy_with(
+                    row_span=1, col_span=col_span, payload=payload
+                )
+                result = FreeGridLayoutEngine(grid.columns).validate(grid.items)
+                return self._apply_result(grid, result, compact=False)
+        raise ValueError(f"Palette item not found: {item_id}")
 
     def update_brush_size_item(self, item_id: str, config) -> LayoutResult:
         return self._update_payload(item_id, BRUSH_SIZE_ITEM, config)

@@ -34,6 +34,7 @@ from ..infrastructure import (
     DockerManager,
     get_default_icons_dir,
 )
+from .action_text import display_action_text
 
 COLUMN_LABELS = [
     "ID",
@@ -135,7 +136,9 @@ class AliasConfigDialog(QDialog):
         actions = ActionManager.get_actions_dict() if ActionManager else {}
         entries = []
         for action_id, action in sorted(actions.items()):
-            label = action.text() if hasattr(action, "text") else action_id
+            label = (
+                display_action_text(action.text()) if hasattr(action, "text") else action_id
+            )
             entries.append((action_id, label))
         return entries
 

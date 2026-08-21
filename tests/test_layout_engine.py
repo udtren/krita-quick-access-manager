@@ -164,6 +164,28 @@ class PaletteItemModelTests(unittest.TestCase):
         wide = PaletteItem.create_action("a", "action.id", col_span=4)
         self.assertEqual(wide.col_span, 4)
 
+    def test_docker_toggle_col_span_defaults_and_can_be_overridden(self):
+        default_span = PaletteItem.create_docker_toggle("d", "docker.id")
+        self.assertEqual(default_span.type, "docker_toggle")
+        self.assertGreaterEqual(default_span.col_span, 2)
+        wide = PaletteItem.create_docker_toggle("d", "docker.id", col_span=4)
+        self.assertEqual(wide.col_span, 4)
+        icon = PaletteItem.create_docker_toggle(
+            "d", "docker.id", col_span=4, config={"icon_name": "foo.png"}
+        )
+        self.assertEqual((icon.row_span, icon.col_span), (1, 1))
+
+    def test_script_col_span_defaults_and_can_be_overridden(self):
+        default_span = PaletteItem.create_script("s", "script.py")
+        self.assertEqual(default_span.type, "script")
+        self.assertGreaterEqual(default_span.col_span, 2)
+        wide = PaletteItem.create_script("s", "script.py", col_span=4)
+        self.assertEqual(wide.col_span, 4)
+        icon = PaletteItem.create_script(
+            "s", "script.py", col_span=4, config={"icon_name": "foo.png"}
+        )
+        self.assertEqual((icon.row_span, icon.col_span), (1, 1))
+
 
 class SeparatorOrientationTests(unittest.TestCase):
     def test_horizontal_separator_defaults_span_the_width_axis(self):

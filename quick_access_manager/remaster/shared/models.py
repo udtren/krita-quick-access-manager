@@ -161,18 +161,23 @@ class PaletteItem:
         docker_id: str,
         row: int = 0,
         col: int = 0,
+        col_span: int = DEFAULT_ACTION_COL_SPAN,
+        row_span: int = DEFAULT_ROW_SPAN,
         config: dict[str, Any] | None = None,
     ):
         payload = {"docker_id": docker_id}
         if config:
             payload.update(config)
+        if payload.get("icon_name"):
+            row_span = 1
+            col_span = 1
         return cls(
             id=item_id,
             type=DOCKER_TOGGLE_ITEM,
             row=row,
             col=col,
-            row_span=1,
-            col_span=1,
+            row_span=row_span,
+            col_span=col_span,
             payload=payload,
         )
 
@@ -201,18 +206,23 @@ class PaletteItem:
         script_path: str,
         row: int = 0,
         col: int = 0,
+        col_span: int = DEFAULT_ACTION_COL_SPAN,
+        row_span: int = DEFAULT_ROW_SPAN,
         config: dict[str, Any] | None = None,
     ):
         payload = {"script_path": script_path}
         if config:
             payload.update(config)
+        if payload.get("icon_name"):
+            row_span = 1
+            col_span = 1
         return cls(
             id=item_id,
             type=SCRIPT_ITEM,
             row=row,
             col=col,
-            row_span=1,
-            col_span=1,
+            row_span=row_span,
+            col_span=col_span,
             payload=payload,
         )
 

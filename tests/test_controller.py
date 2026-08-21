@@ -139,6 +139,67 @@ class MoveResizeRemoveTests(ControllerTestCase):
         self.assertFalse(result.valid)
 
 
+class DockerToggleItemTests(ControllerTestCase):
+    def test_add_docker_toggle_defaults_to_two_by_one_text_button(self):
+        controller = self.make_controller()
+        controller.add_docker_toggle("docker.id")
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.type, "docker_toggle")
+        self.assertEqual(item.payload.get("docker_id"), "docker.id")
+        self.assertEqual(item.row_span, 1)
+        self.assertGreaterEqual(item.col_span, 2)
+
+    def test_docker_toggle_text_button_keeps_resized_width_on_reload(self):
+        controller = self.make_controller()
+        controller.add_docker_toggle("wide.docker")
+        item_id = controller.active_grid().items[0].id
+        controller.resize_item(item_id, col_span=4)
+
+        reloaded = self.make_controller()
+        self.assertEqual(reloaded.active_grid().items[0].col_span, 4)
+
+    def test_alias_icon_forces_docker_toggle_col_span_to_one_on_load(self):
+        controller = self.make_controller()
+        controller.add_docker_toggle("iconified.docker")
+        item_id = controller.active_grid().items[0].id
+        controller.resize_item(item_id, col_span=4)
+        self.alias_repository.save(
+            {"actions": {}, "dockers": {"iconified.docker": {"icon_name": "foo.png"}}}
+        )
+
+        reloaded = self.make_controller()
+        self.assertEqual(reloaded.active_grid().items[0].col_span, 1)
+
+
+class ScriptItemTests(ControllerTestCase):
+    def test_add_script_defaults_to_two_by_one_text_button(self):
+        controller = self.make_controller()
+        controller.add_script("script.py")
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.type, "script")
+        self.assertEqual(item.payload.get("script_path"), "script.py")
+        self.assertEqual(item.row_span, 1)
+        self.assertGreaterEqual(item.col_span, 2)
+
+    def test_script_text_button_keeps_resized_width_on_reload(self):
+        controller = self.make_controller()
+        controller.add_script("script.py")
+        item_id = controller.active_grid().items[0].id
+        controller.resize_item(item_id, col_span=4)
+
+        reloaded = self.make_controller()
+        self.assertEqual(reloaded.active_grid().items[0].col_span, 4)
+
+    def test_icon_script_is_one_by_one_on_add_and_reload(self):
+        controller = self.make_controller()
+        controller.add_script("script.py", config={"icon_name": "foo.png"})
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.col_span, 1)
+
+        reloaded = self.make_controller()
+        self.assertEqual(reloaded.active_grid().items[0].col_span, 1)
+
+
 class BrushSizeItemTests(ControllerTestCase):
     def test_add_brush_size_creates_a_one_by_one_item_with_text(self):
         controller = self.make_controller()
