@@ -99,7 +99,7 @@ class PlacementMixin:
         alias = aliases.get(action_id, {})
         if alias.get("icon_name"):
             return 1
-        return max(DEFAULT_ACTION_COL_SPAN, min_col_span)
+        return max(1, min_col_span)
 
     def _docker_toggle_col_span(
         self,
@@ -112,7 +112,7 @@ class PlacementMixin:
         alias = aliases.get(docker_id, {})
         if alias.get("icon_name"):
             return 1
-        return max(DEFAULT_ACTION_COL_SPAN, min_col_span)
+        return max(1, min_col_span)
 
     def _script_col_span(
         self,
@@ -121,7 +121,7 @@ class PlacementMixin:
     ) -> int:
         if config and config.get("icon_name"):
             return 1
-        return max(DEFAULT_ACTION_COL_SPAN, min_col_span)
+        return max(1, min_col_span)
 
     def _icon_text_col_span(
         self,

@@ -158,6 +158,16 @@ class DockerToggleItemTests(ControllerTestCase):
         reloaded = self.make_controller()
         self.assertEqual(reloaded.active_grid().items[0].col_span, 4)
 
+    def test_docker_toggle_text_button_can_stay_one_by_one_after_property_update(self):
+        controller = self.make_controller()
+        controller.add_docker_toggle("docker.id")
+        item_id = controller.active_grid().items[0].id
+        controller.resize_item(item_id, col_span=1)
+        controller.update_docker_toggle_item(item_id, "docker.id")
+
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.col_span, 1)
+
     def test_alias_icon_forces_docker_toggle_col_span_to_one_on_load(self):
         controller = self.make_controller()
         controller.add_docker_toggle("iconified.docker")
@@ -189,6 +199,16 @@ class ScriptItemTests(ControllerTestCase):
 
         reloaded = self.make_controller()
         self.assertEqual(reloaded.active_grid().items[0].col_span, 4)
+
+    def test_script_text_button_can_stay_one_by_one_after_property_update(self):
+        controller = self.make_controller()
+        controller.add_script("script.py")
+        item_id = controller.active_grid().items[0].id
+        controller.resize_item(item_id, col_span=1)
+        controller.update_script_item(item_id, {"customName": "Run"})
+
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.col_span, 1)
 
     def test_icon_script_is_one_by_one_on_add_and_reload(self):
         controller = self.make_controller()
@@ -364,6 +384,12 @@ class TabBarStyleSettingsTests(ControllerTestCase):
         )
         self.assertIsInstance(style["active_font_size"], int)
 
+    def test_floating_widget_visibility_defaults_to_off(self):
+        controller = self.make_controller()
+        quick_adjust = controller.quick_adjust_settings()
+        self.assertFalse(quick_adjust["tool_options_start_visible"])
+        self.assertFalse(quick_adjust["rotation_widget_start_visible"])
+
     def test_update_settings_persists_tab_style_and_survives_reload(self):
         controller = self.make_controller()
         controller.update_settings(
@@ -436,6 +462,19 @@ class PersistenceTests(ControllerTestCase):
         self.alias_repository.save(
             {"actions": {"iconified.action": {"icon_name": "foo.png"}}, "dockers": {}}
         )
+
+        reloaded = self.make_controller()
+        self.assertEqual(reloaded.active_grid().items[0].col_span, 1)
+
+    def test_action_text_button_can_stay_one_by_one_after_property_update_and_reload(self):
+        controller = self.make_controller()
+        controller.add_action("text.action")
+        item_id = controller.active_grid().items[0].id
+        controller.resize_item(item_id, col_span=1)
+        controller.update_action_item(item_id)
+
+        item = controller.active_grid().items[0]
+        self.assertEqual(item.col_span, 1)
 
         reloaded = self.make_controller()
         self.assertEqual(reloaded.active_grid().items[0].col_span, 1)

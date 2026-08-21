@@ -16,14 +16,22 @@ from ...compat import (
     QScrollArea,
     QSpinBox,
     Qt,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 from ...gesture import is_gesture_enabled
+
+INPUT_FIELD_MAX_WIDTH = 320
+MULTILINE_FIELD_MAX_WIDTH = 520
+COLOR_BUTTON_FIXED_WIDTH = 120
+COLOR_BUTTON_MAX_WIDTH = 320
+TEMP_BRUSH_SET_ACTION_BUTTON_WIDTH = 160
+TEMP_BRUSH_SET_COLUMN_WIDTHS = (120, 280, 120)
+TEMP_BRUSH_SET_TABLE_MAX_WIDTH = sum(TEMP_BRUSH_SET_COLUMN_WIDTHS) + 28
 
 
 class PaletteConfigDialog(QDialog):
@@ -111,9 +119,11 @@ class PaletteConfigDialog(QDialog):
         self.header_button_color = QColor(header_button_color)
         self.header_button_color_btn = QPushButton()
         self.header_button_color_btn.setFixedHeight(28)
+        self.header_button_color_btn.setMinimumWidth(COLOR_BUTTON_FIXED_WIDTH)
+        self.header_button_color_btn.setMaximumWidth(COLOR_BUTTON_FIXED_WIDTH)
         self.header_button_color_btn.clicked.connect(self.pick_header_button_color)
         self._update_header_button_color_btn()
-        default_layout.addWidget(self.header_button_color_btn)
+        default_layout.addWidget(self.header_button_color_btn, alignment=Qt.AlignLeft)
 
         default_layout.addWidget(self._separator())
         default_layout.addWidget(QLabel("Active Tab Style"))
@@ -146,7 +156,9 @@ class PaletteConfigDialog(QDialog):
         )
         default_layout.addWidget(QLabel("Background Color:"))
         self.tab_inactive_background_color_btn = self._add_tab_color_row(
-            default_layout, tab_inactive_background_color, "tab_inactive_background_color"
+            default_layout,
+            tab_inactive_background_color,
+            "tab_inactive_background_color",
         )
 
         default_layout.addStretch(1)
@@ -341,12 +353,6 @@ class PaletteConfigDialog(QDialog):
         )
         quick_adjust_layout.addWidget(self.quick_adjust_tool_options_checkbox)
 
-        self.quick_adjust_tool_options_visible_checkbox = QCheckBox("Start Visible")
-        self.quick_adjust_tool_options_visible_checkbox.setChecked(
-            quick_adjust_settings.get("tool_options_start_visible", True)
-        )
-        quick_adjust_layout.addWidget(self.quick_adjust_tool_options_visible_checkbox)
-
         quick_adjust_layout.addWidget(QLabel("Position:"))
         self.quick_adjust_tool_options_position_combo = QComboBox()
         self.quick_adjust_tool_options_position_combo.addItem(
@@ -369,11 +375,6 @@ class PaletteConfigDialog(QDialog):
 
         quick_adjust_layout.addWidget(self._separator())
         quick_adjust_layout.addWidget(QLabel("Floating Rotation Widget"))
-        self.quick_adjust_rotation_visible_checkbox = QCheckBox("Start Visible")
-        self.quick_adjust_rotation_visible_checkbox.setChecked(
-            quick_adjust_settings.get("rotation_widget_start_visible", False)
-        )
-        quick_adjust_layout.addWidget(self.quick_adjust_rotation_visible_checkbox)
 
         quick_adjust_layout.addWidget(self._separator())
         quick_adjust_layout.addWidget(
@@ -384,9 +385,11 @@ class PaletteConfigDialog(QDialog):
         self.temp_brush_set_table.setHorizontalHeaderLabels(
             ["Key", "Brush Name", "Size Scale"]
         )
-        self.temp_brush_set_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
+        temp_header = self.temp_brush_set_table.horizontalHeader()
+        temp_header.setSectionResizeMode(QHeaderView.Fixed)
+        for column, width in enumerate(TEMP_BRUSH_SET_COLUMN_WIDTHS):
+            self.temp_brush_set_table.setColumnWidth(column, width)
+        self.temp_brush_set_table.setMaximumWidth(TEMP_BRUSH_SET_TABLE_MAX_WIDTH)
         self.temp_brush_set_table.setMinimumHeight(120)
         for entry in (quick_adjust_settings or {}).get("temp_brush_sets", []):
             self._add_temp_brush_set_row(
@@ -397,25 +400,33 @@ class PaletteConfigDialog(QDialog):
         quick_adjust_layout.addWidget(self.temp_brush_set_table)
 
         temp_brush_set_btn_layout = QHBoxLayout()
+        temp_brush_set_btn_layout.setAlignment(Qt.AlignLeft)
         add_temp_brush_set_btn = QPushButton("Add Row")
+        add_temp_brush_set_btn.setMaximumWidth(TEMP_BRUSH_SET_ACTION_BUTTON_WIDTH)
         add_temp_brush_set_btn.clicked.connect(
             lambda: self._add_temp_brush_set_row("", "", 0.0)
         )
         remove_temp_brush_set_btn = QPushButton("Remove Selected")
+        remove_temp_brush_set_btn.setMaximumWidth(TEMP_BRUSH_SET_ACTION_BUTTON_WIDTH)
         remove_temp_brush_set_btn.clicked.connect(
             self._remove_selected_temp_brush_set_row
         )
-        temp_brush_set_btn_layout.addWidget(add_temp_brush_set_btn)
-        temp_brush_set_btn_layout.addWidget(remove_temp_brush_set_btn)
-        quick_adjust_layout.addLayout(temp_brush_set_btn_layout)
+        temp_brush_set_btn_layout.addWidget(
+            add_temp_brush_set_btn, alignment=Qt.AlignLeft
+        )
+        temp_brush_set_btn_layout.addWidget(
+            remove_temp_brush_set_btn, alignment=Qt.AlignLeft
+        )
+        temp_brush_set_btn_layout.addStretch(1)
+        temp_brush_set_btn_container = QWidget()
+        temp_brush_set_btn_container.setLayout(temp_brush_set_btn_layout)
+        temp_brush_set_btn_container.setMaximumWidth(TEMP_BRUSH_SET_TABLE_MAX_WIDTH)
+        quick_adjust_layout.addWidget(
+            temp_brush_set_btn_container, alignment=Qt.AlignLeft
+        )
 
         quick_adjust_layout.addWidget(self._separator())
-        quick_adjust_layout.addWidget(
-            QLabel(
-                "Blend Modes (one per line - shown in the Quick Adjust docker "
-                "and the HueSVC popup's blend mode dropdown):"
-            )
-        )
+        quick_adjust_layout.addWidget(QLabel("Blend Modes (one per line):"))
         self.quick_adjust_blender_mode_edit = QTextEdit()
         self.quick_adjust_blender_mode_edit.setPlainText(
             "\n".join(quick_adjust_settings.get("blender_mode_list", []))
@@ -429,6 +440,10 @@ class PaletteConfigDialog(QDialog):
 
         quick_adjust_layout.addStretch(1)
         self.tabs.addTab(quick_adjust_page, "Quick Adjust")
+
+        self._limit_tab_input_widths(
+            default_page, popup_page, huesvc_page, quick_adjust_page
+        )
 
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -477,11 +492,15 @@ class PaletteConfigDialog(QDialog):
         setattr(self, attr_name, QColor(initial_hex))
         button = QPushButton()
         button.setFixedHeight(28)
+        button.setMinimumWidth(COLOR_BUTTON_FIXED_WIDTH)
+        button.setMaximumWidth(COLOR_BUTTON_FIXED_WIDTH)
+        # button.setMinimumWidth(120)
+        # button.setMaximumWidth(COLOR_BUTTON_MAX_WIDTH)
         button.clicked.connect(
             lambda checked=False: self._pick_tab_color(attr_name, button)
         )
         self._update_tab_color_btn(attr_name, button)
-        layout.addWidget(button)
+        layout.addWidget(button, alignment=Qt.AlignLeft)
         return button
 
     def _pick_tab_color(self, attr_name, button):
@@ -493,8 +512,18 @@ class PaletteConfigDialog(QDialog):
 
     def _update_tab_color_btn(self, attr_name, button):
         color = getattr(self, attr_name)
-        button.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
+        button.setStyleSheet(
+            f"background-color: {color.name()}; border: 1px solid #888;"
+        )
         button.setText(color.name())
+
+    def _limit_tab_input_widths(self, *pages):
+        for page in pages:
+            for widget_type in (QLineEdit, QSpinBox, QComboBox):
+                for widget in page.findChildren(widget_type):
+                    widget.setMaximumWidth(INPUT_FIELD_MAX_WIDTH)
+            for widget in page.findChildren(QTextEdit):
+                widget.setMaximumWidth(MULTILINE_FIELD_MAX_WIDTH)
 
     def get_tab_active_font_size(self):
         return self.tab_active_font_size_spin.value()
@@ -596,9 +625,7 @@ class PaletteConfigDialog(QDialog):
             "preserve_alpha_key": self.quick_adjust_preserve_alpha_edit.text().strip(),
             "select_outline_key": self.quick_adjust_select_outline_edit.text().strip(),
             "tool_options_enabled": self.quick_adjust_tool_options_checkbox.isChecked(),
-            "tool_options_start_visible": self.quick_adjust_tool_options_visible_checkbox.isChecked(),
             "tool_options_position": self.quick_adjust_tool_options_position_combo.currentData(),
-            "rotation_widget_start_visible": self.quick_adjust_rotation_visible_checkbox.isChecked(),
             "temp_brush_sets": self._temp_brush_sets_from_table(),
             "blender_mode_list": self._blender_mode_list_from_editor(),
         }

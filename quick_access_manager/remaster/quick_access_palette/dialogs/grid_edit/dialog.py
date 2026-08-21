@@ -493,10 +493,13 @@ class GridEditDialog(QDialog):
             return
         other_tab_ids = [tid for tid in self.tab_order if tid != self.current_tab_id]
         menu = QMenu(self)
+        remove_action = menu.addAction("Remove")
+        menu.addSeparator()
         copy_menu = menu.addMenu("Copy to Tab")
         move_menu = menu.addMenu("Move to Tab")
         copy_menu.setEnabled(bool(other_tab_ids))
         move_menu.setEnabled(bool(other_tab_ids))
+        remove_action.triggered.connect(self.remove_selected_items)
         for tab_id in other_tab_ids:
             name = self.tab_names.get(tab_id, tab_id)
             copy_action = copy_menu.addAction(name)
@@ -531,6 +534,16 @@ class GridEditDialog(QDialog):
         self.selected_ids -= moved_ids
         self.rebuild_grid()
         self._append_items_to_tab(target_tab_id, clones)
+
+    def remove_selected_items(self):
+        selected = self.selected_items()
+        if not selected:
+            return
+        self._push_history()
+        removed_ids = {item.id for item in selected}
+        self.items = [item for item in self.items if item.id not in removed_ids]
+        self.selected_ids -= removed_ids
+        self.rebuild_grid()
 
     def _append_items_to_tab(self, target_tab_id, new_items):
         """Place copied/moved items below the target tab's last existing row, same as a new item add."""

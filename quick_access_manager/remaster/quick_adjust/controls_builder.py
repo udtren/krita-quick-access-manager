@@ -22,7 +22,7 @@ from ..compat import (
     Qt,
     QVBoxLayout,
 )
-from ..infrastructure import get_quick_adjust_icons_dir
+from ..infrastructure import get_system_icons_dir
 from .settings import get_font_size, get_number_size
 from .utils_adjust import brush_size_to_slider
 from .widgets import CircularRotationWidget
@@ -129,7 +129,7 @@ def create_brush_layer_controls(
         widget.blend_combo.currentTextChanged.connect(widget.on_blend_mode_changed)
 
         widget.reset_btn = QPushButton()
-        icon_path = os.path.join(get_quick_adjust_icons_dir(), "refresh.png")
+        icon_path = os.path.join(get_system_icons_dir(), "reset.png")
         if os.path.exists(icon_path):
             widget.reset_btn.setIcon(QIcon(icon_path))
             widget.reset_btn.setIconSize(QPixmap(16, 16).size())
