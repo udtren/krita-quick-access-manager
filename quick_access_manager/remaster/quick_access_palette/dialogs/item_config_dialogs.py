@@ -56,7 +56,9 @@ class ActionItemConfigDialog(QDialog):
         self.action_combo = QComboBox()
         for action_id, action in sorted(self._actions.items()):
             text = (
-                display_action_text(action.text()) if hasattr(action, "text") else action_id
+                display_action_text(action.text())
+                if hasattr(action, "text")
+                else action_id
             )
             self.action_combo.addItem(f"{text} ({action_id})", action_id)
         layout.addWidget(self.action_combo)
@@ -233,9 +235,7 @@ class LabelItemConfigDialog(QDialog):
         layout.addLayout(button_layout)
 
         self.reset_btn = QPushButton("Reset")
-        self.reset_btn.setToolTip(
-            "Reset font size and colors (keeps Label Name)"
-        )
+        self.reset_btn.setToolTip("Reset font size and colors (keeps Label Name)")
         self.reset_btn.clicked.connect(self.reset_to_defaults)
         layout.addWidget(self.reset_btn)
 

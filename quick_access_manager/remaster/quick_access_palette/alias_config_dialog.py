@@ -19,8 +19,8 @@ from ..compat import (
     QListWidgetItem,
     QPixmap,
     QPushButton,
-    Qt,
     QSize,
+    Qt,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -40,9 +40,9 @@ COLUMN_LABELS = [
     "ID",
     "Shortcut",
     "Custom Name",
-    "Background Color",
+    "BG Color",
     "Font Color",
-    "Font Size",
+    "Size",
     "Icon",
     "Reset",
     "Add",
@@ -54,9 +54,9 @@ COLUMN_LABELS = [
 FIXED_COLUMN_WIDTHS = {
     "Shortcut": 140,
     "Custom Name": 150,
-    "Background Color": 110,
+    "BG Color": 110,
     "Font Color": 110,
-    "Font Size": 70,
+    "Size": 70,
     "Icon": 70,
     "Reset": 70,
     "Add": 70,
@@ -137,7 +137,9 @@ class AliasConfigDialog(QDialog):
         entries = []
         for action_id, action in sorted(actions.items()):
             label = (
-                display_action_text(action.text()) if hasattr(action, "text") else action_id
+                display_action_text(action.text())
+                if hasattr(action, "text")
+                else action_id
             )
             entries.append((action_id, label))
         return entries
@@ -147,7 +149,9 @@ class AliasConfigDialog(QDialog):
         if action is None or not hasattr(action, "shortcuts"):
             return ""
         return ", ".join(
-            shortcut.toString() for shortcut in action.shortcuts() if not shortcut.isEmpty()
+            shortcut.toString()
+            for shortcut in action.shortcuts()
+            if not shortcut.isEmpty()
         )
 
     def docker_entries(self):
@@ -258,7 +262,12 @@ class AliasConfigDialog(QDialog):
     # Table construction
     # ------------------------------------------------------------------
     def build_tab(
-        self, rows_store, saved_entries, id_label_pairs, add_callback, shortcut_lookup=None
+        self,
+        rows_store,
+        saved_entries,
+        id_label_pairs,
+        add_callback,
+        shortcut_lookup=None,
     ):
         table = QTableWidget()
         table.setColumnCount(len(COLUMN_LABELS))
