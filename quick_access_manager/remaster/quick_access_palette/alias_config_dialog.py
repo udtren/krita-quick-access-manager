@@ -390,14 +390,13 @@ class AliasConfigDialog(QDialog):
                 self.on_item_added()
 
     def _wrap_with_id_filter(self, table):
-        """Add an ID filter box above `table` - same "Filter by internal ID..."
-        behavior as the rest of the plugin's ID filter fields."""
+        """Add a filter box above `table` for the ID/display text column."""
         container = QWidget()
         container_layout = QVBoxLayout(container)
         container_layout.setContentsMargins(0, 0, 0, 0)
 
         filter_edit = QLineEdit()
-        filter_edit.setPlaceholderText("Filter by internal ID...")
+        filter_edit.setPlaceholderText("Filter by ID or display name...")
         filter_edit.textChanged.connect(
             lambda text, t=table: self._apply_id_filter(t, text)
         )
@@ -409,8 +408,10 @@ class AliasConfigDialog(QDialog):
         needle = text.lower()
         for row in range(table.rowCount()):
             id_item = table.item(row, 0)
-            item_id = id_item.data(Qt.UserRole) or "" if id_item else ""
-            table.setRowHidden(row, bool(needle and needle not in item_id.lower()))
+            display_text = id_item.text() if id_item else ""
+            table.setRowHidden(
+                row, bool(needle and needle not in display_text.lower())
+            )
 
     def create_color_button(self, color, is_set):
         button = QPushButton(color.name() if is_set else "Default")

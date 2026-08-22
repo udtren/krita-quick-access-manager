@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026-08-22
+### Changed
+- Resources dialog's filter now work on both Krita actions's ID and display name.
+
 ## 2026-08-21
 ### Added
 - **Remaster** (`remaster/`): the plugin was rewritten from scratch as the sole active implementation — a single free-layout grid Quick Access Palette (replacing the legacy Quick Brush Sets/Quick Actions dockers), a Quick Adjust docker, a HueSVC color selector, and a gesture system, each independently toggleable from Settings; 
